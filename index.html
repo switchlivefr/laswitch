@@ -39,12 +39,21 @@
 body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;padding-bottom:calc(var(--nh) + env(safe-area-inset-bottom));-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none}
 @keyframes pIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideInLeft{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+@keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}}
+@keyframes slideOutLeft{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+@keyframes slideOutRight{from{transform:translateX(0)}to{transform:translateX(100%)}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 @keyframes titlepulse{0%,100%{opacity:.1}50%{opacity:1}}
 @keyframes hintpulse{0%,100%{color:var(--gold);opacity:.1}50%{color:var(--gold);opacity:1}}
 @keyframes rainbow{0%{color:#f2c94c}14%{color:#e8943a}28%{color:#e8407a}42%{color:#c471ed}57%{color:#5b9cf6}71%{color:#34d1c0}85%{color:#a8e063}100%{color:#f2c94c}}
 /* Pages - affichage/masquage par nav() */
-.page{display:none;position:relative;z-index:1}
+.page{display:none;position:absolute;top:0;left:0;right:0;bottom:0;z-index:1;transition:transform .3s cubic-bezier(.4,0,.2,1);will-change:transform}
+.page.active{display:block;position:relative;transform:translateX(0)}
+.page.slide-in-left{display:block;animation:slideInLeft .3s cubic-bezier(.4,0,.2,1) forwards}
+.page.slide-in-right{display:block;animation:slideInRight .3s cubic-bezier(.4,0,.2,1) forwards}
+.page.slide-out-left{display:block;animation:slideOutLeft .3s cubic-bezier(.4,0,.2,1) forwards}
+.page.slide-out-right{display:block;animation:slideOutRight .3s cubic-bezier(.4,0,.2,1) forwards}
 .page.active{display:block;animation:pIn .25s ease}
 /* ── ACCUEIL : zone titre principale ── */
 .home-hero{position:relative;padding:48px 20px 24px;text-align:center;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(242,201,76,.14) 0%,transparent 70%),linear-gradient(180deg,#0d0d1c 0%,var(--bg) 100%)}
@@ -396,21 +405,58 @@ function el(tag, attrs, content) {
 
 //    Navigation   
 var BNM = {'p-home':'bn-home','p-switch':'bn-switch','p-osl':'bn-osl','p-rules':'bn-rules','p-resa':'bn-resa'};
-function nav(id) {
+function nav(id, direction) {
+  // direction: 'left' = new page comes from right, 'right' = new page comes from left
+  var pages = ['p-home','p-switch','p-osl','p-rules'];
+  var oldId = currentPage;
+
+  // Hide old page with slide out
+  if (oldId && oldId !== id) {
+    var oldEl = document.getElementById(oldId);
+    if (oldEl && direction) {
+      oldEl.classList.add(direction === 'left' ? 'slide-out-left' : 'slide-out-right');
+      setTimeout(function() {
+        oldEl.style.display = 'none';
+        oldEl.classList.remove('slide-out-left','slide-out-right','active');
+      }, 300);
+    } else if (oldEl) {
+      oldEl.style.display = 'none';
+      oldEl.classList.remove('active');
+    }
+  }
+
   currentPage = id;
-  var pages = document.querySelectorAll('.page');
-  for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
-  document.getElementById(id).classList.add('active');
-  var bns = document.querySelectorAll('.bn');
-  for (var i = 0; i < bns.length; i++) bns[i].classList.remove('active');
-  if (BNM[id]) document.getElementById(BNM[id]).classList.add('active');
-  window.scrollTo(0, 0);
+
+  // Update nav buttons
+  Object.keys(BNM).forEach(function(k) {
+    var b = document.getElementById(BNM[k]);
+    if (b) b.classList.toggle('active', k === id);
+  });
+
+  // Show new page with slide in
+  var newEl = document.getElementById(id);
+  if (newEl) {
+    newEl.style.display = 'block';
+    if (direction) {
+      newEl.classList.remove('slide-in-left','slide-in-right','active');
+      void newEl.offsetWidth;
+      newEl.classList.add(direction === 'left' ? 'slide-in-right' : 'slide-in-left');
+      setTimeout(function() {
+        newEl.classList.remove('slide-in-left','slide-in-right');
+        newEl.classList.add('active');
+      }, 300);
+    } else {
+      newEl.classList.add('active');
+    }
+  }
+
   if (id === 'p-switch') { renderSwitch(); showHint(); }
   if (id === 'p-osl')    { renderOSL(); showHint(); }
   if (id === 'p-rules')  renderRules();
+  if (id === 'bn-resa')  { openM('m-resa'); return; }
 }
 
-//    Modals   
+
 function openM(id)  { document.getElementById(id).classList.add('open'); }
 function closeM(id) { document.getElementById(id).classList.remove('open'); }
 
@@ -446,10 +492,10 @@ history.pushState(null, '', window.location.href);
 
     if (dx < 0 && idx < pages.length - 1) {
       // Swipe gauche -> page suivante
-      nav(pages[idx + 1]);
+      nav(pages[idx + 1], 'left');
     } else if (dx > 0 && idx > 0) {
       // Swipe droite -> page precedente
-      nav(pages[idx - 1]);
+      nav(pages[idx - 1], 'right');
     }
   }, { passive: true });
 })();
