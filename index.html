@@ -414,7 +414,9 @@ function closeM(id) { document.getElementById(id).classList.remove('open'); }
 var quitting = false;
 var quitUrl = null;
 history.pushState(null, '', window.location.href);
-history.pushState(null, '', window.location.href);
+window.addEventListener('load', function() {
+  history.pushState(null, '', window.location.href);
+});
 
 window.addEventListener('popstate', function() {
   if (quitting) { quitting = false; return; }
