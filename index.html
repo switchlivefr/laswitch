@@ -415,15 +415,8 @@ function closeM(id) { document.getElementById(id).classList.remove('open'); }
 var quitting = false;
 var quitUrl = null;
 history.pushState(null, '', window.location.href);
-// Push 2 states so back button always has something to go back to
-history.pushState(null, '', window.location.href);
-history.pushState(null, '', window.location.href);
-
-window.addEventListener('popstate', function() {
-  if (quitting) { return; }
-  document.getElementById('c-quit').classList.add('open');
-  history.pushState(null, '', window.location.href);
-});
+// Bouton retour : quitte directement sans dialog
+window.addEventListener('popstate', function() {});
 
 //    HOME   
 // 
