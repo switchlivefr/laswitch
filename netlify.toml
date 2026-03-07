@@ -1,5 +1,8 @@
+[build]
+  functions = "netlify/functions"
+
 [[redirects]]
   from = "/api"
-  to = "https://script.google.com/macros/s/AKfycbz2XSC4nTEgfvTI7MVyAYCnn1SRf2dLX7DI0fBTLATl3Tb09z43JkvBmgPV8PjIvLBK/exec"
+  to = "/.netlify/functions/api"
   status = 200
   force = true
