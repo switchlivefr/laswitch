@@ -415,8 +415,13 @@ function closeM(id) { document.getElementById(id).classList.remove('open'); }
 var quitting = false;
 var quitUrl = null;
 history.pushState(null, '', window.location.href);
-// Bouton retour : quitte directement sans dialog
-window.addEventListener('popstate', function() {});
+history.pushState(null, '', window.location.href);
+
+window.addEventListener('popstate', function() {
+  if (quitting) { quitting = false; return; }
+  document.getElementById('c-quit').classList.add('open');
+  history.pushState(null, '', window.location.href);
+});
 
 //    HOME   
 // 
@@ -875,7 +880,7 @@ function doQuit() {
     quitUrl = null;
   } else {
     quitting = true;
-    history.back();
+    history.go(-2);
   }
 }
 
