@@ -415,8 +415,12 @@ function closeM(id) { document.getElementById(id).classList.remove('open'); }
 var quitting = false;
 var quitUrl = null;
 history.pushState(null, '', window.location.href);
+// Push 2 states so back button always has something to go back to
+history.pushState(null, '', window.location.href);
+history.pushState(null, '', window.location.href);
+
 window.addEventListener('popstate', function() {
-  if (quitting) return;
+  if (quitting) { return; }
   document.getElementById('c-quit').classList.add('open');
   history.pushState(null, '', window.location.href);
 });
@@ -878,13 +882,7 @@ function doQuit() {
     quitUrl = null;
   } else {
     quitting = true;
-    if (window.history.length > 1) {
-      history.back();
-    } else {
-      window.close();
-      // Si window.close() ne marche pas (PWA), on redirige vers une page vide
-      setTimeout(function() { window.location.href = 'about:blank'; }, 100);
-    }
+    history.back();
   }
 }
 
