@@ -1,55 +1,40 @@
-const API = 'https://script.google.com/macros/s/AKfycbz2XSC4nTEgfvTI7MVyAYCnn1SRf2dLX7DI0fBTLATl3Tb09z43JkvBmgPV8PjIvLBK/exec';
+const SHEET_ID = '1Z8GftsfaAgwDNuXLMTNrQwCV6V5W-hpHlI893INosSw';
+const API_KEY  = 'AIzaSyCTADjNIhq3jXSJiI_WO_jPsp63pTklT_A';
 
-exports.handler = async function(event, context) {
+const SHEETS = {
+  'switch':   'SWiTCH',
+  'osl':      'OSLSWiTCH',
+  'pitchSw':  'PITCH SWiTCH',
+  'regles':   'REGLES',
+  'pitchOsl': 'PITCH ONE SHOT LIVE'
+};
+
+async function readSheet(name) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(name)}?key=${API_KEY}`;
+  const r = await fetch(url);
+  const data = await r.json();
+  if (data.error) throw new Error(data.error.message);
+  const rows = (data.values || []).map(row => row.map(cell => String(cell || '').trim()));
+  return { rows, sheetName: name };
+}
+
+exports.handler = async function() {
   try {
-    // Follow all redirects manually to get final JSON response
-    let url = API;
-    let response;
-    let maxRedirects = 10;
-    
-    while (maxRedirects-- > 0) {
-      response = await fetch(url, { 
-        redirect: 'manual',
-        headers: {
-          'Accept': 'application/json, text/plain, */*',
-          'User-Agent': 'Mozilla/5.0'
-        }
-      });
-      
-      if (response.status === 301 || response.status === 302 || response.status === 307 || response.status === 308) {
-        url = response.headers.get('location');
-        if (!url) break;
-        continue;
-      }
-      break;
+    const result = {};
+    for (const [key, name] of Object.entries(SHEETS)) {
+      try { result[key] = await readSheet(name); }
+      catch(e) { result[key] = { error: e.message }; }
     }
-
-    const text = await response.text();
-    
-    // Extract JSON from response (Apps Script may wrap it)
-    let json = text;
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      // Validate it's real JSON
-      try {
-        JSON.parse(jsonMatch[0]);
-        json = jsonMatch[0];
-      } catch(e) {}
-    }
-
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
       },
-      body: json
+      body: JSON.stringify(result)
     };
-  } catch (err) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: err.message })
-    };
+  } catch(err) {
+    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };
 
