@@ -116,6 +116,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .clt{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:1px;margin-bottom:6px;color:var(--cyan)}
 .callout p{font-size:15px;line-height:1.7;color:#aaa9bc}
 /* ── NAVIGATION BAS D'ECRAN ── */
+/* ── BANDEAU INSTALLATION ── */
+#install-banner{position:fixed;bottom:calc(var(--nh) + env(safe-area-inset-bottom));left:0;right:0;z-index:200;background:linear-gradient(135deg,#13131f,#1a1a2e);border-top:1px solid var(--gold);padding:12px 16px;display:none;align-items:center;gap:12px}
+#install-banner .ib-icon{font-size:28px;flex-shrink:0}
+#install-banner .ib-text{flex:1}
+#install-banner .ib-title{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--gold);letter-spacing:1px;margin-bottom:2px}
+#install-banner .ib-sub{font-size:12px;color:var(--muted2);line-height:1.4}
+#install-banner .ib-close{background:none;border:none;color:var(--muted2);font-size:20px;cursor:pointer;padding:4px;flex-shrink:0}
 /* ── LOADER ── */
 #app-loader{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
 #app-loader .loader-title{font-family:'Bebas Neue',sans-serif;font-size:56px;color:var(--gold);letter-spacing:4px}
@@ -1042,6 +1049,52 @@ function openLink(url, modalId) {
   }, 150);
 }
 
+// ── BANDEAU INSTALLATION PWA ──
+function showInstallBanner() {
+  // Ne pas afficher si deja installée en PWA
+  if (window.matchMedia('(display-mode: standalone)').matches) return;
+  // Ne pas afficher si déjà fermé
+  try { if (localStorage.getItem('ib-dismissed')) return; } catch(e) {}
+
+  var ua = navigator.userAgent;
+  var isIOS = /iphone|ipad|ipod/i.test(ua);
+  var isSafari = isIOS && /safari/i.test(ua) && !/crios|fxios/i.test(ua);
+  var isChrome = /chrome/i.test(ua) && !/edg/i.test(ua);
+  var isFirefox = /firefox|fxios/i.test(ua);
+  var isSamsungBrowser = /samsungbrowser/i.test(ua);
+
+  var sub = '';
+  var icon = '📲';
+
+  if (isSafari) {
+    icon = '📲';
+    sub = 'Appuie sur ⬆️ Partager en bas → puis "Sur l'écran d'accueil"';
+  } else if (isChrome || isSamsungBrowser) {
+    icon = '📲';
+    sub = 'Appuie sur ⋮ en haut à droite → "Ajouter à l'écran d'accueil"';
+  } else if (isFirefox) {
+    icon = '📲';
+    sub = 'Appuie sur ⋮ en haut à droite → "Installer"';
+  } else {
+    sub = 'Ajoute l'appli sur ton écran d'accueil pour un accès rapide !';
+  }
+
+  var banner = document.getElementById('install-banner');
+  var subEl = document.getElementById('ib-sub');
+  var iconEl = document.getElementById('ib-icon');
+  if (banner && subEl) {
+    iconEl.textContent = icon;
+    subEl.textContent = sub;
+    banner.style.display = 'flex';
+  }
+}
+
+function dismissInstall() {
+  try { localStorage.setItem('ib-dismissed', '1'); } catch(e) {}
+  var banner = document.getElementById('install-banner');
+  if (banner) banner.style.display = 'none';
+}
+
 function openResa() {
   window.open('https://laswitch.pages.dev/resa', '_blank');
 }
@@ -1069,8 +1122,19 @@ fetch('/api')
       setTimeout(function() { loader.style.display = 'none'; }, 400);
     }
     document.querySelector('.bnav').classList.remove('nav-disabled');
+    // Afficher bandeau installation apres 2s
+    setTimeout(showInstallBanner, 2000);
   });
 </script>
+<div id="install-banner">
+  <div class="ib-icon" id="ib-icon">📲</div>
+  <div class="ib-text">
+    <div class="ib-title">Installer La SWiTCH</div>
+    <div class="ib-sub" id="ib-sub">Chargement...</div>
+  </div>
+  <button class="ib-close" onclick="dismissInstall()">✕</button>
+</div>
+
 <div id="app-loader">
   <div class="loader-title">SWiTCH 💫</div>
   <div class="loader-spin"></div>
