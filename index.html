@@ -1035,11 +1035,9 @@ function secretTap() {
 }
 
 function openLink(url, modalId) {
-  // Fermer la modale d'abord, puis ouvrir le lien apres un court delai
-  // Ca evite le flash blanc car l'appli est deja en fond sombre
   if (modalId) closeM(modalId);
   setTimeout(function() {
-    window.open(url, '_blank');
+    window.location.href = url;
   }, 150);
 }
 
