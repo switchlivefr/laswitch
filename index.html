@@ -360,6 +360,17 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
   </div>
 </div>
 
+<div class="coverlay" id="c-marco-fb">
+  <div class="cbox">
+    <h3>Marco Kiff Ton SWiTCH</h3>
+    <p>Aller sur la page Facebook Marco Kiff Ton SWiTCH ?</p>
+    <div class="cbtns">
+      <button class="cno" onclick="document.getElementById('c-marco-fb').classList.remove('open')">Annuler</button>
+      <button class="cyes" onclick="window.open('https://www.facebook.com/marco.onlyformusic','_blank');document.getElementById('c-marco-fb').classList.remove('open')">Valider</button>
+    </div>
+  </div>
+</div>
+
 <div class="coverlay" id="c-quit">
   <div class="cbox">
     <h3>Quitter ?</h3>
@@ -900,8 +911,7 @@ function renderRules() {
       aM.textContent = 'Marco Kiff Ton SWiTCH';
       aM.onclick = function(e) {
         e.preventDefault();
-        quitUrl = 'https://www.facebook.com/marco.onlyformusic';
-        document.getElementById('c-quit').classList.add('open');
+        document.getElementById('c-marco-fb').classList.add('open');
       };
       p.appendChild(aM);
       card.appendChild(p);
