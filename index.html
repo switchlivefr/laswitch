@@ -354,7 +354,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
     </div>
     <div class="mfoot">
       <button class="mbtn sec" onclick="closeM('m-resa')">Annuler</button>
-      <button class="mbtn pri" onclick="window.open('https://www.google.com/maps/reserve/v/dine/c/pM-d3FI8_go?source=pa&hl=fr-FR','_blank');closeM('m-resa')">Reserver</button>
+      <button class="mbtn pri" onclick="openResa();closeM('m-resa')">Reserver</button>
     </div>
   </div>
 </div>
@@ -995,6 +995,18 @@ function doQuit() {
     }
   };
 })();
+function openResa() {
+  var url = 'https://www.google.com/maps/reserve/v/dine/c/pM-d3FI8_go?source=pa&hl=fr-FR';
+  var isAndroid = /android/i.test(navigator.userAgent);
+  if (isAndroid) {
+    // Forcer ouverture dans l'app Maps native Android
+    var intent = 'intent://www.google.com/maps/reserve/v/dine/c/pM-d3FI8_go?source=pa&hl=fr-FR#Intent;scheme=https;package=com.google.android.apps.maps;S.browser_fallback_url=' + encodeURIComponent(url) + ';end';
+    window.location.href = intent;
+  } else {
+    window.open(url, '_blank');
+  }
+}
+
 // Bloquer la nav pendant le chargement
 document.querySelector('.bnav').classList.add('nav-disabled');
 
