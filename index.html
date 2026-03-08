@@ -994,11 +994,11 @@ fetch('/api')
   .then(function(nd) {
     RAW = nd;
     renderHome();
-    setInterval(silentRefresh, 300000);
+    setInterval(silentRefresh, 30000);
   })
   .catch(function() {
     renderHome();
-    setInterval(silentRefresh, 300000);
+    setInterval(silentRefresh, 30000);
   });
 </script>
 </body>
