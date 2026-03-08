@@ -33,9 +33,10 @@
   --gold:#f2c94c;--gdim:rgba(242,201,76,.14);--gglo:rgba(242,201,76,.32);
   --amber:#e8943a;--cyan:#34d1c0;--cdim:rgba(52,209,192,.12);
   --pink:#e8407a;--white:#ece9e0;--muted:#5a5a78;--muted2:#7a7a95;
-  --r:14px;--rs:8px;--nh:64px;
+  --r:14px;--rs:8px;--nh:72px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
 body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;padding-bottom:calc(var(--nh) + env(safe-area-inset-bottom));-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none}
 @keyframes pIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -122,8 +123,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 @keyframes spin{to{transform:rotate(360deg)}}
 .nav-disabled{pointer-events:none;opacity:.4}
 .bnav{position:fixed;bottom:0;left:0;right:0;height:calc(var(--nh) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:rgba(8,8,16,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;z-index:200}
-.bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:7.5px;font-weight:600;text-transform:uppercase;cursor:pointer;transition:color .18s;padding:0 2px;position:relative;-webkit-appearance:none;line-height:1.2;text-align:center}
-.bn .ico{font-size:20px;line-height:1}
+.bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;text-transform:uppercase;cursor:pointer;transition:color .18s;padding:0 2px;position:relative;-webkit-appearance:none;line-height:1.2;text-align:center}
+.bn .ico{font-size:26px;line-height:1}
 .bn-resa-off{opacity:.35;pointer-events:none}
 .bn.active{color:var(--gold)}
 .bn.active::before{content:'';position:absolute;top:0;left:15%;right:15%;height:2px;background:var(--gold);border-radius:0 0 2px 2px}
