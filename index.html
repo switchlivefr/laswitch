@@ -50,8 +50,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 /* Pages - affichage/masquage par nav() */
 .page{display:none;position:absolute;top:0;left:0;right:0;bottom:0;z-index:1;transition:transform .3s cubic-bezier(.4,0,.2,1);will-change:transform}
 .page.active{display:block;position:relative;transform:translateX(0);z-index:2}
-.page.slide-in-left{display:block;position:fixed;top:0;left:0;right:0;bottom:calc(var(--nh) + env(safe-area-inset-bottom));z-index:10;animation:slideInLeft .3s cubic-bezier(.4,0,.2,1) forwards;background:var(--bg);overflow-y:auto}
-.page.slide-in-right{display:block;position:fixed;top:0;left:0;right:0;bottom:calc(var(--nh) + env(safe-area-inset-bottom));z-index:10;animation:slideInRight .3s cubic-bezier(.4,0,.2,1) forwards;background:var(--bg);overflow-y:auto}
+.page.slide-in-left{display:block;position:fixed;top:0;left:0;right:0;bottom:calc(var(--nh) + env(safe-area-inset-bottom));z-index:10;animation:slideInRight .3s cubic-bezier(.4,0,.2,1) forwards;background:var(--bg);overflow-y:auto}
+.page.slide-in-right{display:block;position:fixed;top:0;left:0;right:0;bottom:calc(var(--nh) + env(safe-area-inset-bottom));z-index:10;animation:slideInLeft .3s cubic-bezier(.4,0,.2,1) forwards;background:var(--bg);overflow-y:auto}
 .page.slide-out-left{display:none}
 .page.slide-out-right{display:none}
 .page.active{display:block;animation:pIn .25s ease}
@@ -453,6 +453,14 @@ function nav(id, direction) {
   if (id === 'bn-resa')  { openM('m-resa'); return; }
 }
 
+
+// Bloquer menu contextuel (appui long) sur liens des modales
+document.addEventListener('contextmenu', function(e) {
+  if (e.target.closest('.mbox')) {
+    e.preventDefault();
+    return false;
+  }
+}, true);
 
 function openM(id)  { document.getElementById(id).classList.add('open'); }
 function closeM(id) { document.getElementById(id).classList.remove('open'); }
