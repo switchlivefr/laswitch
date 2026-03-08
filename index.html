@@ -115,6 +115,12 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .clt{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;margin-bottom:6px;color:var(--cyan)}
 .callout p{font-size:13px;line-height:1.7;color:#aaa9bc}
 /* ── NAVIGATION BAS D'ECRAN ── */
+/* ── LOADER ── */
+#app-loader{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
+#app-loader .loader-title{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--gold);letter-spacing:4px}
+#app-loader .loader-spin{width:40px;height:40px;border:3px solid rgba(255,200,50,.2);border-top:3px solid var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.nav-disabled{pointer-events:none;opacity:.4}
 .bnav{position:fixed;bottom:0;left:0;right:0;height:calc(var(--nh) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:rgba(8,8,16,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;z-index:200}
 .bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:7.5px;font-weight:600;text-transform:uppercase;cursor:pointer;transition:color .18s;padding:0 2px;position:relative;-webkit-appearance:none;line-height:1.2;text-align:center}
 .bn .ico{font-size:20px;line-height:1}
@@ -989,6 +995,9 @@ function doQuit() {
     }
   };
 })();
+// Bloquer la nav pendant le chargement
+document.querySelector('.bnav').classList.add('nav-disabled');
+
 fetch('/api')
   .then(function(r){ return r.json(); })
   .then(function(nd) {
@@ -999,8 +1008,23 @@ fetch('/api')
   .catch(function() {
     renderHome();
     setInterval(silentRefresh, 30000);
+  })
+  .finally(function() {
+    // Cacher le loader et debloquer la nav
+    var loader = document.getElementById('app-loader');
+    if (loader) {
+      loader.style.transition = 'opacity .4s';
+      loader.style.opacity = '0';
+      setTimeout(function() { loader.style.display = 'none'; }, 400);
+    }
+    document.querySelector('.bnav').classList.remove('nav-disabled');
   });
 </script>
+<div id="app-loader">
+  <div class="loader-title">SWiTCH 💫</div>
+  <div class="loader-spin"></div>
+</div>
+
 </body>
 </html>
 
