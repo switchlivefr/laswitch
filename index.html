@@ -455,7 +455,8 @@ function nav(id, direction) {
 
   if (id === 'p-switch') { renderSwitch(); showHint(); }
   if (id === 'p-osl')    { renderOSL(); showHint(); }
-  if (id === 'p-rules')  renderRules();
+  if (id === 'p-rules')  { renderRules(); hideHint(); }
+  if (id === 'p-home')   hideHint();
   if (id === 'bn-resa')  { openM('m-resa'); return; }
 }
 
@@ -963,6 +964,12 @@ function showHint() {
     el.classList.remove('pulsing');
     el.removeEventListener('animationend', handler);
   });
+}
+
+function hideHint() {
+  var el = document.getElementById('hint-bar');
+  if (!el) return;
+  el.classList.remove('pulsing');
 }
 
 // Opens Marco contact modal with song title
