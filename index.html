@@ -124,6 +124,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .bnav{position:fixed;bottom:0;left:0;right:0;height:calc(var(--nh) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:rgba(8,8,16,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;z-index:200}
 .bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:7.5px;font-weight:600;text-transform:uppercase;cursor:pointer;transition:color .18s;padding:0 2px;position:relative;-webkit-appearance:none;line-height:1.2;text-align:center}
 .bn .ico{font-size:20px;line-height:1}
+.bn-resa-off{opacity:.35;pointer-events:none}
 .bn.active{color:var(--gold)}
 .bn.active::before{content:'';position:absolute;top:0;left:15%;right:15%;height:2px;background:var(--gold);border-radius:0 0 2px 2px}
 /* ── MODALES (surimpression) ── */
@@ -183,7 +184,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 <div class="page active" id="p-home">
   <div class="home-hero">
     <div class="eyebrow">Spectacle Musical Participatif</div>
-    <div class="htitle">SWITCH<span class="hemoji">💫</span></div>
+    <div class="htitle" id="home-title-tap" onclick="secretTap()">SWITCH<span class="hemoji">💫</span></div>
     <div class="hmeta">
       <div class="hedition" id="home-edition">—</div>
 
@@ -995,6 +996,27 @@ function doQuit() {
     }
   };
 })();
+// ── SECRET : 5 taps rapides sur le titre pour activer/desactiver reservation ──
+var _tapCount = 0;
+var _tapTimer = null;
+function secretTap() {
+  _tapCount++;
+  clearTimeout(_tapTimer);
+  _tapTimer = setTimeout(function() { _tapCount = 0; }, 1500);
+  if (_tapCount >= 5) {
+    _tapCount = 0;
+    var btn = document.getElementById('bn-resa');
+    var isOff = btn.classList.toggle('bn-resa-off');
+    // Feedback visuel discret
+    var msg = isOff ? 'Reservation desactivee' : 'Reservation activee';
+    var toast = document.createElement('div');
+    toast.textContent = msg;
+    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:var(--gold);font-family:Bebas Neue,sans-serif;font-size:16px;padding:8px 20px;border-radius:20px;z-index:999;pointer-events:none';
+    document.body.appendChild(toast);
+    setTimeout(function() { toast.remove(); }, 2000);
+  }
+}
+
 function openResa() {
   window.open('https://laswitch.pages.dev/resa', '_blank');
 }
