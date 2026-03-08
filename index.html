@@ -996,18 +996,7 @@ function doQuit() {
   };
 })();
 function openResa() {
-  var url = 'https://www.google.com/maps/reserve/v/dine/c/pM-d3FI8_go?source=pa&hl=fr-FR';
-  var isAndroid = /android/i.test(navigator.userAgent);
-  if (isAndroid) {
-    // Essai ouverture app Maps via comgooglemaps://
-    var t = setTimeout(function() {
-      window.open(url, '_blank');
-    }, 1500);
-    window.location.href = 'comgooglemaps://?q=Pro+Race+Cafe&action=reserve';
-    window.addEventListener('blur', function() { clearTimeout(t); }, { once: true });
-  } else {
-    window.open(url, '_blank');
-  }
+  window.open('https://www.google.com/maps/reserve/v/dine/c/pM-d3FI8_go?source=pa&hl=fr-FR', '_blank');
 }
 
 // Bloquer la nav pendant le chargement
