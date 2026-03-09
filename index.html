@@ -995,6 +995,9 @@ function openMarco(title) {
   window._marcoMsg = msg;
   var msgEl = document.getElementById('m-marco-msg');
   if (msgEl) msgEl.textContent = msg;
+  // Remettre le bouton copier a son etat initial
+  var btn = document.getElementById('m-marco-copy');
+  if (btn) btn.textContent = '📋 COPIER LE MESSAGE';
   openM('m-marco');
 }
 
@@ -1004,7 +1007,6 @@ function copyMarcoMsg() {
     var btn = document.getElementById('m-marco-copy');
     if (btn) {
       btn.textContent = '✅ MESSAGE COPIE !';
-      setTimeout(function() { btn.innerHTML = '📋 COPIER LE MESSAGE'; }, 2000);
     }
   }).catch(function() {
     // Fallback si clipboard non dispo
@@ -1017,7 +1019,6 @@ function copyMarcoMsg() {
     var btn = document.getElementById('m-marco-copy');
     if (btn) {
       btn.textContent = '✅ MESSAGE COPIE !';
-      setTimeout(function() { btn.innerHTML = '📋 COPIER LE MESSAGE'; }, 2000);
     }
   });
 }
