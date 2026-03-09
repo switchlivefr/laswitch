@@ -1,6 +1,5 @@
 const SHEET_ID = '1Z8GftsfaAgwDNuXLMTNrQwCV6V5W-hpHlI893INosSw';
 const API_KEY  = 'AIzaSyCTADjNIhq3jXSJiI_WO_jPsp63pTklT_A';
-
 const SHEETS = {
   'switch':   'SWiTCH',
   'osl':      'OSLSWiTCH',
@@ -8,7 +7,6 @@ const SHEETS = {
   'regles':   'REGLES',
   'pitchOsl': 'PITCH ONE SHOT LIVE'
 };
-
 async function getHiddenRows(sheetTitle) {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?key=${API_KEY}&fields=sheets(properties(title),data(rowMetadata(hiddenByUser)))&includeGridData=false`;
   const r = await fetch(url);
@@ -18,7 +16,6 @@ async function getHiddenRows(sheetTitle) {
   if (!sheet || !sheet.data || !sheet.data[0] || !sheet.data[0].rowMetadata) return [];
   return sheet.data[0].rowMetadata.map(m => m.hiddenByUser === true);
 }
-
 async function readSheet(name) {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(name)}?key=${API_KEY}`;
   const r = await fetch(url);
@@ -28,14 +25,31 @@ async function readSheet(name) {
   const hiddenRows = await getHiddenRows(name);
   return { rows: allRows.filter((_, i) => !hiddenRows[i]), sheetName: name };
 }
-
 export async function onRequest(context) {
+  const { request, env } = context;
+  const url = new URL(request.url);
+
+  if (request.method === 'POST' && url.searchParams.get('action') === 'setMode') {
+    try {
+      const body = await request.json();
+      const mode = body.mode === 'gif' ? 'gif' : 'video';
+      await env.LASWITCH_KV.put('home_mode', mode);
+      return new Response(JSON.stringify({ ok: true, mode }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    } catch(e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    }
+  }
+
   try {
     const result = {};
     for (const [key, name] of Object.entries(SHEETS)) {
       try { result[key] = await readSheet(name); }
       catch(e) { result[key] = { error: e.message }; }
     }
+    const mode = await env.LASWITCH_KV.get('home_mode');
+    result.homeMode = mode || 'video';
     return new Response(JSON.stringify(result), {
       headers: {
         'Content-Type': 'application/json',
