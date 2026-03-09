@@ -588,8 +588,6 @@ function renderHome() {
   var rows = RAW.switch.rows;
   var ed = g(rows, 0, 0);
   if (ed) document.getElementById('home-edition').textContent = ed;
-  var gifUrl = g(rows, 0, 1);
-  if (gifUrl) window._homeGifSrc = gifUrl;
 
   var ct = g(rows, 0, 2);
   var swSub = document.getElementById('sw-count-sub');
@@ -1103,7 +1101,16 @@ function secretTap2() {
       if (modeVideo) modeVideo.style.display = 'none';
       if (modeGif) modeGif.style.display = 'block';
       var img = document.getElementById('home-gif');
-      if (img && window._homeGifSrc) img.src = window._homeGifSrc;
+      if (img && !img.src) {
+        img.src = 'https://lh3.googleusercontent.com/d/1pqFUrUScxuNj6qM6Em0Nf6X3iuaDMN4O';
+        img.onerror = function() {
+          if (img.src.indexOf('lh3') > -1) {
+            img.src = 'https://drive.google.com/uc?export=view&id=1pqFUrUScxuNj6qM6Em0Nf6X3iuaDMN4O';
+          } else {
+            img.style.display = 'none';
+          }
+        };
+      }
     } else {
       if (modeVideo) modeVideo.style.display = 'block';
       if (modeGif) modeGif.style.display = 'none';
