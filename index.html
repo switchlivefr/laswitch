@@ -998,6 +998,7 @@ function silentRefresh() {
       if (!nd) return;
       RAW = nd;
       renderHome();
+      if (nd.homeMode) applyHomeMode(nd.homeMode);
       var sy = window.scrollY;
       if (currentPage === 'p-switch') { renderSwitch(); window.scrollTo(0,sy); }
       if (currentPage === 'p-osl')    renderOSL();
@@ -1088,33 +1089,42 @@ function toggleVideoSound() {
 var _tap2Count = 0;
 var _tap2Timer = null;
 var _homeGifMode = false;
+function applyHomeMode(mode) {
+  _homeGifMode = (mode === 'gif');
+  var modeVideo = document.getElementById('home-mode-video');
+  var modeGif = document.getElementById('home-mode-gif');
+  if (_homeGifMode) {
+    if (modeVideo) modeVideo.style.display = 'none';
+    if (modeGif) modeGif.style.display = 'block';
+    var img = document.getElementById('home-gif');
+    if (img && !img.src) {
+      img.src = 'https://lh3.googleusercontent.com/d/1pqFUrUScxuNj6qM6Em0Nf6X3iuaDMN4O';
+      img.onerror = function() {
+        if (img.src.indexOf('lh3') > -1) {
+          img.src = 'https://drive.google.com/uc?export=view&id=1pqFUrUScxuNj6qM6Em0Nf6X3iuaDMN4O';
+        } else {
+          img.style.display = 'none';
+        }
+      };
+    }
+  } else {
+    if (modeVideo) modeVideo.style.display = 'block';
+    if (modeGif) modeGif.style.display = 'none';
+  }
+}
 function secretTap2() {
   _tap2Count++;
   clearTimeout(_tap2Timer);
   _tap2Timer = setTimeout(function() { _tap2Count = 0; }, 1500);
   if (_tap2Count >= 5) {
     _tap2Count = 0;
-    _homeGifMode = !_homeGifMode;
-    var modeVideo = document.getElementById('home-mode-video');
-    var modeGif = document.getElementById('home-mode-gif');
-    if (_homeGifMode) {
-      if (modeVideo) modeVideo.style.display = 'none';
-      if (modeGif) modeGif.style.display = 'block';
-      var img = document.getElementById('home-gif');
-      if (img && !img.src) {
-        img.src = 'https://lh3.googleusercontent.com/d/1pqFUrUScxuNj6qM6Em0Nf6X3iuaDMN4O';
-        img.onerror = function() {
-          if (img.src.indexOf('lh3') > -1) {
-            img.src = 'https://drive.google.com/uc?export=view&id=1pqFUrUScxuNj6qM6Em0Nf6X3iuaDMN4O';
-          } else {
-            img.style.display = 'none';
-          }
-        };
-      }
-    } else {
-      if (modeVideo) modeVideo.style.display = 'block';
-      if (modeGif) modeGif.style.display = 'none';
-    }
+    var newMode = _homeGifMode ? 'video' : 'gif';
+    applyHomeMode(newMode);
+    fetch('/api?action=setMode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: newMode })
+    });
   }
 }
 
