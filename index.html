@@ -703,7 +703,7 @@ function paintSongs(list) {
     // Long press 2s to open Marco contact modal
     (function(r, t) {
       var timer;
-      r.addEventListener('touchstart', function() { timer = setTimeout(function(){ openMarco(t); }, 1000); }, {passive:true});
+      r.addEventListener('touchstart', function() { timer = setTimeout(function(){ openMarco(t, 'switch'); }, 1000); }, {passive:true});
       r.addEventListener('touchend', function() { clearTimeout(timer); }, {passive:true});
       r.addEventListener('touchmove', function() { clearTimeout(timer); }, {passive:true});
     })(row, s.title);
