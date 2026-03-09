@@ -28,6 +28,7 @@
    --white     texte principal
    --muted2    texte gris secondaire
    ═══════════════════════════════════════ */
+@font-face{font-family:'Alaska';src:url('/alaskaextrabold.ttf') format('truetype');font-weight:800;font-style:normal;font-display:swap}
 :root{
   --bg:#080810;--card:#13131f;--border:#1e1e30;--border2:#2a2a40;
   --gold:#f2c94c;--gdim:rgba(242,201,76,.14);--gglo:rgba(242,201,76,.32);
@@ -55,7 +56,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .home-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent)}
 .eyebrow{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--cyan);border:1px solid rgba(52,209,192,.25);border-radius:20px;padding:5px 14px;margin-bottom:28px}
 .eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:blink 1.8s ease infinite}
-.htitle{font-family:'Bebas Neue',sans-serif;font-size:clamp(78px,25vw,120px);letter-spacing:6px;line-height:.95;color:var(--gold);text-shadow:0 0 60px var(--gglo)}
+.htitle{font-family:'Alaska','Bebas Neue',sans-serif;font-size:clamp(78px,25vw,120px);letter-spacing:6px;line-height:.95;color:var(--gold);text-shadow:0 0 60px var(--gglo)}
 .hemoji{display:block;font-size:clamp(44px,14vw,72px);margin-top:8px;filter:drop-shadow(0 0 14px rgba(242,201,76,.5))}
 .hmeta{margin-top:12px;display:flex;flex-direction:column;align-items:center;gap:5px}
 /* Pastille "RDV le 19 Mars" sous l'étoile */
