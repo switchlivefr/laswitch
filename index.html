@@ -193,6 +193,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 </style>
 </head>
 <body>
+<div id="fb-browser-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(30,20,0,.92);color:#f2c94c;font-family:'DM Sans',sans-serif;font-size:12px;padding:7px 14px;text-align:center;letter-spacing:0.3px">
+  Pour une meilleure expérience → <b>trois points en haut</b> → <b>Ouvrir dans le navigateur</b>
+  <span onclick="document.getElementById('fb-browser-banner').style.display='none'" style="margin-left:10px;opacity:0.6;cursor:pointer;font-size:14px">✕</span>
+</div>
 
 <div class="page active" id="p-home">
   <div class="home-hero">
@@ -438,6 +442,13 @@ var RAW = {};
 var T   = document.createElement('div'); // helper DOM
 
 var currentPage = 'p-home';
+(function() {
+  var ua = navigator.userAgent || '';
+  if (ua.indexOf('FBAN') > -1 || ua.indexOf('FBAV') > -1 || ua.indexOf('FB_IAB') > -1 || ua.indexOf('MessengerForiOS') > -1 || ua.indexOf('Instagram') > -1) {
+    var b = document.getElementById('fb-browser-banner');
+    if (b) b.style.display = 'block';
+  }
+})();
 var searchQuery = '';
 var allSongs    = [];
 
