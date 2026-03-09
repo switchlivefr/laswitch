@@ -209,19 +209,16 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
       </div>
     </div>
 
-    <div class="fb-card-video">
-      <video autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;display:block">
+    <div class="fb-card-video" style="position:relative">
+      <video id="fb-video" autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;display:block">
         <source src="https://raw.githubusercontent.com/switchlivefr/laswitch/main/assets/switch.mp4" type="video/mp4">
       </video>
+      <button id="fb-mute-btn" onclick="toggleVideoSound()" style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.6);border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">🔇</button>
     </div>
     <div class="fb-card-actions">
-      <button class="fb-card-btn" onclick="window.location.href='https://www.facebook.com/events/708104872292532/'">
+      <button class="fb-card-btn" style="justify-content:center" onclick="window.location.href='https://www.facebook.com/events/708104872292532/'">
         <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-        Voir l&#39;événement
-      </button>
-      <button class="fb-card-btn interested" id="fb-interested-btn" onclick="toggleInterested()">
-        <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-        Int&#233;ress&#233;
+        Voir l&#39;\u00e9v\u00e9nement
       </button>
     </div>
   </div>
@@ -1069,18 +1066,12 @@ function doQuit() {
 
 // ── SECRET : 5 taps rapides sur le titre pour activer/desactiver reservation ──
 var _fbInterested = false;
-function toggleInterested() {
-  _fbInterested = !_fbInterested;
-  var btn = document.getElementById('fb-interested-btn');
-  if (!btn) return;
-  if (_fbInterested) {
-    btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/><\/svg> Int\u00e9ress\u00e9 \u2714';
-    btn.style.color = '#f2c94c';
-    window.location.href = 'https://www.facebook.com/events/708104872292532/';
-  } else {
-    btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/><\/svg> Int\u00e9ress\u00e9';
-    btn.style.color = '';
-  }
+function toggleVideoSound() {
+  var v = document.getElementById('fb-video');
+  var btn = document.getElementById('fb-mute-btn');
+  if (!v) return;
+  v.muted = !v.muted;
+  btn.textContent = v.muted ? '🔇' : '🔊';
 }
 
 var _tapCount = 0;
