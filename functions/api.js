@@ -28,12 +28,26 @@ async function readSheet(name) {
 export async function onRequest(context) {
   const { request, env } = context;
   const url = new URL(request.url);
+  const action = url.searchParams.get('action');
 
-  if (request.method === 'POST' && url.searchParams.get('action') === 'setMode') {
+  if (request.method === 'POST' && action === 'setMode') {
     try {
       const body = await request.json();
       const mode = body.mode === 'gif' ? 'gif' : 'video';
       await env.LASWITCH_KV.put('home_mode', mode);
+      return new Response(JSON.stringify({ ok: true, mode }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    } catch(e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    }
+  }
+
+  if (request.method === 'POST' && action === 'setResa') {
+    try {
+      const body = await request.json();
+      const mode = body.mode === 'off' ? 'off' : 'on';
+      await env.LASWITCH_KV.put('resa_mode', mode);
       return new Response(JSON.stringify({ ok: true, mode }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
@@ -48,8 +62,10 @@ export async function onRequest(context) {
       try { result[key] = await readSheet(name); }
       catch(e) { result[key] = { error: e.message }; }
     }
-    const mode = await env.LASWITCH_KV.get('home_mode');
-    result.homeMode = mode || 'video';
+    const homeMode = await env.LASWITCH_KV.get('home_mode');
+    const resaMode = await env.LASWITCH_KV.get('resa_mode');
+    result.homeMode = homeMode || 'video';
+    result.resaMode = resaMode || 'on';
     return new Response(JSON.stringify(result), {
       headers: {
         'Content-Type': 'application/json',
