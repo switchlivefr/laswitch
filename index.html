@@ -999,6 +999,7 @@ function silentRefresh() {
       RAW = nd;
       renderHome();
       if (nd.homeMode) applyHomeMode(nd.homeMode);
+      if (nd.resaMode) applyResaMode(nd.resaMode);
       var sy = window.scrollY;
       if (currentPage === 'p-switch') { renderSwitch(); window.scrollTo(0,sy); }
       if (currentPage === 'p-osl')    renderOSL();
@@ -1130,21 +1131,38 @@ function secretTap2() {
 
 var _tapCount = 0;
 var _tapTimer = null;
+var _resaOff = false;
+
+function applyResaMode(mode) {
+  _resaOff = (mode === 'off');
+  var btn = document.getElementById('bn-resa');
+  if (!btn) return;
+  if (_resaOff) {
+    btn.classList.add('bn-resa-off');
+  } else {
+    btn.classList.remove('bn-resa-off');
+  }
+}
+
 function secretTap() {
   _tapCount++;
   clearTimeout(_tapTimer);
   _tapTimer = setTimeout(function() { _tapCount = 0; }, 1500);
   if (_tapCount >= 5) {
     _tapCount = 0;
-    var btn = document.getElementById('bn-resa');
-    var isOff = btn.classList.toggle('bn-resa-off');
-    // Feedback visuel discret
-    var msg = isOff ? 'Reservation desactivee' : 'Reservation activee';
+    var newMode = _resaOff ? 'on' : 'off';
+    applyResaMode(newMode);
+    var msg = newMode === 'off' ? 'Reservation desactivee' : 'Reservation activee';
     var toast = document.createElement('div');
     toast.textContent = msg;
     toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:var(--gold);font-family:Bebas Neue,sans-serif;font-size:16px;padding:8px 20px;border-radius:20px;z-index:999;pointer-events:none';
     document.body.appendChild(toast);
     setTimeout(function() { toast.remove(); }, 2000);
+    fetch('/api?action=setResa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: newMode })
+    }).catch(function(){});
   }
 }
 
