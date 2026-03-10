@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="La SWiTCH">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-512.png">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="La SWiTCH">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#080810">
+<meta name="application-name" content="La SWiTCH">
+<meta name="description" content="La SWiTCH - Spectacle Musical Participatif">
+<title>La SWiTCH 💫</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════
+   VARIABLES GLOBALES
+   --bg        fond principal
+   --card      fond des cartes
+   --gold      jaune/or  (titres, nav active)
+   --cyan      vert/cyan (repertoire, OSL info)
+   --amber     orange    (titres inscription)
+   --pink      rose/rouge (DISPO, slogans rouge)
+   --white     texte principal
+   --muted2    texte gris secondaire
+   ═══════════════════════════════════════ */
+
+:root{
+  --bg:#080810;--card:#13131f;--border:#1e1e30;--border2:#2a2a40;
+  --gold:#f2c94c;--gdim:rgba(242,201,76,.14);--gglo:rgba(242,201,76,.32);
+  --amber:#e8943a;--cyan:#34d1c0;--cdim:rgba(52,209,192,.12);
+  --pink:#e8407a;--white:#ece9e0;--muted:#5a5a78;--muted2:#7a7a95;
+  --r:14px;--rs:8px;--nh:72px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{font-size:22px}
+body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;padding-bottom:calc(var(--nh) + env(safe-area-inset-bottom));-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none}
+@keyframes pIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideFromRight{0%{transform:translateX(100%)}100%{transform:translateX(0)}}
+@keyframes slideFromLeft{0%{transform:translateX(-100%)}100%{transform:translateX(0)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes titlepulse{0%,100%{opacity:.1}50%{opacity:1}}
+@keyframes hintpulse{0%,100%{color:var(--gold);opacity:.1}50%{color:var(--gold);opacity:1}}
+@keyframes rainbow{0%{color:#f2c94c}14%{color:#e8943a}28%{color:#e8407a}42%{color:#c471ed}57%{color:#5b9cf6}71%{color:#34d1c0}85%{color:#a8e063}100%{color:#f2c94c}}
+/* Pages - affichage/masquage par nav() */
+.page{display:none}
+.page.active{display:block}
+.page.sliding{display:block;position:fixed;top:0;left:0;width:100%;height:calc(100% - var(--nh));z-index:20;background:var(--bg);overflow-y:auto}
+/* ── ACCUEIL : zone titre principale ── */
+.home-hero{position:relative;padding:48px 20px 24px;text-align:center;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(242,201,76,.14) 0%,transparent 70%),linear-gradient(180deg,#0d0d1c 0%,var(--bg) 100%)}
+.home-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent)}
+.eyebrow{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--cyan);border:1px solid rgba(52,209,192,.25);border-radius:20px;padding:5px 14px;margin-bottom:28px}
+.eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:blink 1.8s ease infinite}
+.htitle{font-family:'Bebas Neue',sans-serif;font-size:clamp(78px,25vw,120px);letter-spacing:6px;line-height:.95;color:var(--gold);text-shadow:0 0 60px var(--gglo)}
+.hemoji{display:block;font-size:clamp(44px,14vw,72px);margin-top:8px;filter:drop-shadow(0 0 14px rgba(242,201,76,.5))}
+.hmeta{margin-top:12px;display:flex;flex-direction:column;align-items:center;gap:5px}
+/* Pastille "RDV le 19 Mars" sous l'étoile */
+.hedition{background:var(--card);border:1px solid var(--border2);border-radius:var(--rs);padding:8px 18px;font-size:21px;font-weight:600;animation:rainbow .6s linear infinite}
+.hcount{font-family:'DM Mono',monospace;font-size:11px;color:var(--cyan)}
+.home-pitch{padding:16px 16px 4px}
+.home-pitch p{font-size:15px;line-height:1.8;color:#b0adc4;margin-bottom:10px}
+.sub-hero{position:relative;padding:34px 20px 22px;text-align:center;overflow:hidden}
+.sub-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent)}
+.sh-gold{background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(242,201,76,.1) 0%,transparent 70%),linear-gradient(180deg,#0d0d14 0%,var(--bg) 100%)}
+.sh-cyan{background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(52,209,192,.1) 0%,transparent 70%),linear-gradient(180deg,#080d10 0%,var(--bg) 100%)}
+.sh-amber{background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(232,148,58,.1) 0%,transparent 70%),linear-gradient(180deg,#10090a 0%,var(--bg) 100%)}
+.sht{font-family:'Bebas Neue',sans-serif;font-size:clamp(34px,11vw,62px);letter-spacing:3px;line-height:1}
+.sht-gold{color:var(--gold);text-shadow:0 0 40px var(--gglo)}
+.sht-cyan{color:var(--cyan);text-shadow:0 0 40px rgba(52,209,192,.35)}
+.sht-amber{color:var(--amber);text-shadow:0 0 40px rgba(232,148,58,.35)}
+.shsub{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2);margin-top:6px}
+/* ── REPERTOIRE : barre de recherche + lettres FIXE en haut ── */
+.sw-sticky{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--border);padding:10px 16px 8px}
+.sw-wrap{position:relative}
+.sw-input{width:100%;background:var(--card);border:1px solid var(--border2);border-radius:var(--r);padding:11px 40px 11px 14px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:16px;outline:none;-webkit-appearance:none;transition:border-color .2s}
+.sw-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gdim)}
+.sw-input::placeholder{color:var(--muted)}
+.sw-ico{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:19px;pointer-events:none}
+/* Grille de lettres A-L / M-Z (12 colonnes) */
+.abar{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:7px}
+.ab{font-family:'DM Mono',monospace;font-size:12px;background:var(--card);border:1px solid var(--border);border-radius:5px;padding:3px 0;color:var(--muted2);cursor:pointer;-webkit-appearance:none;font-weight:500;transition:all .15s;text-align:center}
+.ab:hover{color:var(--gold);border-color:rgba(242,201,76,.4);background:var(--gdim)}
+/* ── REPERTOIRE : lettre de section (A, B, C...) ── */
+.sll{padding:12px 16px 3px;font-family:'Bebas Neue',sans-serif;font-size:21px;color:var(--gold);opacity:.4;letter-spacing:2px}
+.slist{padding:0 16px}
+/* Ligne d'une chanson */
+.sr{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.sr:last-child{border-bottom:none}
+.scol-a{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);width:28px;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.osl-col-a{font-family:'DM Mono',monospace;font-size:12px;color:var(--gold);width:28px;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sbody{flex:1;min-width:0}
+/* Titre de la chanson (blanc, gras) */
+.stitle{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--white);display:flex;align-items:center;gap:5px;padding-left:8px;margin-top:2px}
+.stag{font-size:11px;color:var(--cyan);background:var(--cdim);border:1px solid rgba(52,209,192,.2);border-radius:4px;padding:1px 4px;white-space:nowrap;flex-shrink:0}
+/* Nom de l'artiste (jaune, petit) */
+.sart{font-size:11px;color:var(--gold);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Colonne I du sheet OSL : DISPO ou horaire (rouge) */
+.scol-i{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1px;font-weight:400;color:var(--pink);flex-shrink:0;text-align:right;min-width:38px;max-width:64px}
+.stitle-grey{color:var(--muted2) !important}
+.sdot{width:4px;height:4px;border-radius:50%;background:var(--border2);flex-shrink:0}
+.cc-wrap{padding:0 16px;margin-bottom:10px}
+.cc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px}
+.cc p{font-size:16px;line-height:1.85;color:#b0adc4;margin-bottom:10px}
+.cc p:last-child{margin-bottom:0}
+.sbanner{margin:10px 16px;display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border2);border-radius:var(--r);padding:12px 14px;font-size:15px;color:var(--muted2);font-style:italic}
+.bdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--muted)}
+.sbanner.live .bdot{background:var(--cyan);animation:blink 1.4s ease infinite}
+.sbanner.closed .bdot{background:var(--pink)}
+/* ── ONE SHOT LIVE : bouton "C'est quoi ?" ── */
+.osl-info-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 16px 12px;background:rgba(52,209,192,.07);border:1px solid rgba(52,209,192,.22);border-radius:var(--r);padding:12px 16px;cursor:pointer;font-size:15px;font-weight:600;color:var(--cyan)}
+.callout{border-radius:var(--r);padding:15px;margin:0 16px 10px;background:linear-gradient(135deg,rgba(52,209,192,.06),rgba(52,209,192,.02));border:1px solid rgba(52,209,192,.16)}
+.clt{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:1px;margin-bottom:6px;color:var(--cyan)}
+.callout p{font-size:15px;line-height:1.7;color:#aaa9bc}
+/* ── NAVIGATION BAS D'ECRAN ── */
+/* ── LOADER ── */
+#app-loader{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
+#app-loader .loader-title{font-family:'Bebas Neue',sans-serif;font-size:56px;color:var(--gold);letter-spacing:4px}
+#app-loader .loader-spin{width:40px;height:40px;border:3px solid rgba(255,200,50,.2);border-top:3px solid var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.nav-disabled{pointer-events:none;opacity:.4}
+.bnav{position:fixed;bottom:0;left:0;right:0;height:calc(var(--nh) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:rgba(8,8,16,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;z-index:200}
+.bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;text-transform:uppercase;cursor:pointer;transition:color .18s;padding:0 2px;position:relative;-webkit-appearance:none;line-height:1.2;text-align:center}
+.bn .ico{font-size:26px;line-height:1}
+#m-inscription-btn:not([disabled]) { opacity: 0.9 !important; }
+#m-inscription-btn[disabled] { opacity: 0.35 !important; cursor: not-allowed !important; }
+.bn-resa-off{opacity:.35;pointer-events:none}
+.bn.active{color:var(--gold)}
+.bn.active::before{content:'';position:absolute;top:0;left:15%;right:15%;height:2px;background:var(--gold);border-radius:0 0 2px 2px}
+/* ── MODALES (surimpression) ── */
+.moverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:500;align-items:center;justify-content:center;padding:14px}
+.moverlay.open{display:flex}
+/* Prevent long-press context menu on links */
+.mbody a,.mbody a *{-webkit-touch-callout:none !important;-webkit-user-select:none !important;user-select:none !important}
+.mbody a{display:block}
+.mbox{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);width:100%;max-width:460px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden}
+.mhead{padding:16px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.mhead h3{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--cyan)}
+.mhead h3.amber{color:var(--amber)}
+.mbody{padding:16px 18px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.mbody p{font-size:15px;line-height:1.8;color:#b0adc4;margin-bottom:10px}
+.mbody p:last-child{margin-bottom:0}
+.mbody .sec{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--cyan);margin:14px 0 3px}
+.mbody a.marco{color:#5b9cf6;font-weight:700;text-decoration:none}
+.mfoot{padding:12px 18px;border-top:1px solid var(--border);flex-shrink:0;display:flex;gap:8px}
+.mbtn{flex:1;padding:12px;border-radius:var(--rs);border:none;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;-webkit-appearance:none}
+.mbtn.pri{background:var(--cyan);color:#000}
+.mbtn.sec{background:var(--card);border:1px solid var(--border2);color:var(--muted2)}
+/* ── BOITE CONFIRMATION QUITTER ── */
+.coverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:600;align-items:center;justify-content:center;padding:24px}
+.coverlay.open{display:flex}
+.cbox{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);width:100%;max-width:300px;padding:24px;text-align:center}
+.cbox h3{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--white);margin-bottom:8px}
+.cbox p{font-size:15px;color:var(--muted2);margin-bottom:18px;line-height:1.6}
+.cbtns{display:flex;gap:10px}
+.cbtns button{flex:1;padding:12px;border-radius:var(--rs);border:none;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer}
+.cbtns .cyes{background:var(--pink);color:#fff}
+.cbtns .cno{background:var(--card);border:1px solid var(--border2);color:var(--muted2)}
+.htitle-la{font-size:0.3em;display:block;letter-spacing:6px;font-family:'DM Sans',sans-serif;font-weight:700;text-transform:none;margin-bottom:0.04em}
+.htitle-sw{display:block;margin-bottom:0.04em}
+.htitle-i{font-family:'DM Sans',sans-serif;font-size:0.82em;font-weight:700;vertical-align:0.05em}
+.home-gif-wrap{padding:16px 16px 4px;text-align:center}
+.home-gif-label{font-family:'Bebas Neue',sans-serif;font-size:clamp(30px,9.2vw,51px);letter-spacing:3px;background:linear-gradient(90deg,#f2c94c,#e8407a,#34d1c0,#f2c94c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;width:100%;text-align:center;white-space:nowrap}
+.home-gif{width:100%;max-width:420px;border-radius:var(--r);display:block;margin:0 auto}
+.fb-card{background:#242526;border-radius:12px;overflow:hidden;margin:16px;box-shadow:0 2px 12px rgba(0,0,0,.5)}
+.fb-card-header{display:flex;align-items:center;gap:10px;padding:12px 14px}
+.fb-card-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid var(--gold)}
+.fb-card-name{font-weight:700;font-size:14px;color:#e4e6eb}
+.fb-card-date{font-size:11px;color:#b0b3b8;margin-top:2px}
+.fb-card-text{padding:0 14px 12px;font-size:13px;color:#e4e6eb;line-height:1.5}
+.fb-card-video{position:relative;width:100%;background:#000;aspect-ratio:16/9}
+.fb-card-video iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;display:block}
+.fb-card-actions{display:flex;border-top:1px solid #3a3b3c}
+.fb-card-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 0;background:none;border:none;color:#b0b3b8;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s}
+.fb-card-btn:active{background:#3a3b3c}
+.fb-card-btn.interested{color:#f2c94c}
+.fb-card-btn svg{width:18px;height:18px;fill:currentColor}
+.osl-edition{color:var(--white);font-size:14px;letter-spacing:1px}
+/* Slogan rouge "CHOISIS UN TITRE..." */
+.osl-slogan{text-align:center;padding:8px 16px 4px;font-size:clamp(13px,3.8vw,18px);font-weight:700;color:#e8407a;letter-spacing:.3px;font-family:'Bebas Neue',sans-serif;line-height:1.2;white-space:nowrap}
+/* Slogan blanc "Lance-toi un défi..." */
+.osl-lancetoi{text-align:center;padding:4px 16px 12px;font-size:clamp(16px,4.5vw,22px);font-weight:700;color:var(--white);letter-spacing:.3px;font-family:'Bebas Neue',sans-serif;line-height:1.2}
+.cc .sec{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--amber);font-weight:700;margin:14px 0 4px;display:block}
+.cc .sec.sub{font-size:15px;color:var(--white);font-family:'DM Sans',sans-serif;font-weight:700;margin:6px 0 2px}
+.hint-bar{position:fixed;bottom:calc(var(--nh) + env(safe-area-inset-bottom));left:0;right:0;z-index:150;text-align:center;padding:8px 12px;background:var(--bg);border-top:1px solid var(--border);font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;color:var(--gold);opacity:0;pointer-events:none}
+.hint-bar.pulsing{animation:hintpulse 3s ease-in-out 3;pointer-events:auto}
+.spacer{height:20px}
+.empty{text-align:center;padding:40px 20px;font-family:'DM Mono',monospace;font-size:14px;color:var(--muted)}
+@media(max-width:380px){.htitle{font-size:66px}}
+@media(min-width:600px){body{max-width:480px;margin:0 auto}.bnav{max-width:480px;left:50%;transform:translateX(-50%)}}
+</style>
+</head>
+<body>
+<div id="fb-browser-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(30,20,0,.92);color:#f2c94c;font-family:'DM Sans',sans-serif;font-size:11px;padding:6px 14px;text-align:center;letter-spacing:0.3px">
+  Pour une meilleure expérience → <b>trois points en haut</b> → <b>Ouvrir dans le navigateur</b>
+  <span onclick="document.getElementById('fb-browser-banner').style.display='none'" style="margin-left:10px;opacity:0.6;cursor:pointer;font-size:14px">✕</span>
+</div>
+
+<div class="page active" id="p-home">
+  <div class="home-hero">
+    <div class="eyebrow">Spectacle Musical Participatif</div>
+    <div class="htitle" id="home-title-tap" onclick="secretTap()">SWITCH<span class="hemoji">💫</span></div>
+    <div class="hmeta">
+      <div class="hedition" id="home-edition" onclick="secretTap2()" style="cursor:pointer">—</div>
+
+    </div>
+  </div>
+  <div id="home-mode-video">
+  <div class="fb-card">
+    <div class="fb-card-header" style="display:none">
+      <img class="fb-card-avatar" src="data:image/jpeg;base64,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" alt="SWiTCH Officiel">
+      <div>
+        <div class="fb-card-name">SWiTCH / Officiel</div>
+        <div class="fb-card-date">&#127775; La prochaine SWiTCH arrive...</div>
+      </div>
+    </div>
+
+    <div class="fb-card-video" style="position:relative">
+      <video id="fb-video" autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;display:block">
+        <source src="https://raw.githubusercontent.com/switchlivefr/laswitch/main/assets/switch.mp4" type="video/mp4">
+      </video>
+      <button id="fb-mute-btn" onclick="toggleVideoSound()" style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.6);border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">🔇</button>
+    </div>
+    <div class="fb-card-actions">
+      <button class="fb-card-btn" style="justify-content:center" onclick="window.location.href='https://www.facebook.com/events/708104872292532/'">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+        Voir l'événement
+      </button>
+    </div>
+  </div>
+  </div>
+  <div id="home-mode-gif" style="display:none">
+    <div class="home-gif-wrap">
+      <div class="home-gif-label">PRENDS LEUR PLACE !</div>
+      <img class="home-gif" id="home-gif" alt="Prends leur place sur scene">
+    </div>
+  </div>
+  <div class="osl-info-btn" onclick="openM('m-home-pitch')" style="margin-top:20px">
+    <span>💫</span><span>C'est quoi la SWiTCH ?</span>
+  </div>
+  <div class="osl-info-btn" onclick="openM('m-renseignements')" style="margin-top:10px">
+    <span style="display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;text-align:center"><span>📩 Envie de vous offrir votre propre SWiTCH ?</span><span style="font-size:0.7em;opacity:0.75;font-family:'DM Sans',sans-serif;font-weight:400;letter-spacing:0.3px;white-space:nowrap">Événement d'entreprise · Mariage · Fête communale · Soirée privée</span></span>
+  </div>
+  <div class="home-pitch" id="home-pitch" style="display:none"></div>
+  <div class="spacer"></div>
+</div>
+
+<div class="page" id="p-switch">
+  <div class="sub-hero sh-gold">
+    <div class="sht sht-gold">REPERTOIRE</div>
+    <div class="shsub"><span id="sw-count-sub" style="color:var(--cyan);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px">— titres</span></div>
+  </div>
+  <div class="sw-sticky">
+    <div class="sw-wrap">
+      <input class="sw-input" type="search" id="sw-search" placeholder="Chercher artiste ou titre…" oninput="filterSongs(this.value)">
+      <span class="sw-ico">🔍</span>
+    </div>
+    <div class="abar" id="sw-alpha"></div>
+  </div>
+  <div id="sw-list"><div class="empty">Chargement…</div></div>
+  <div class="spacer"></div>
+</div>
+
+<div class="page" id="p-osl">
+  <div class="sub-hero sh-cyan">
+    <div class="sht sht-cyan"><span style="font-size:0.7em">✨</span> ONE SHOT LIVE <span style="font-size:0.7em">✨</span></div>
+  </div>
+  <div id="osl-status-wrap" style="padding:10px 16px 4px;text-align:center"><span id="osl-status" style="font-weight:700;font-size:19px;animation:rainbow 3s linear infinite">—</span></div>
+  <div class="osl-info-btn" onclick="openM('m-osl')">
+    <span id="osl-info-lbl">C'est quoi le One Shot LIVE ?</span>
+  </div>
+  <div id="osl-edition-wrap" style="padding:6px 16px 2px;text-align:center"><span id="osl-shsub" style="font-weight:700;color:var(--gold);font-size:16px">—</span></div>
+  <div id="osl-content"><div class="empty">Chargement…</div></div>
+  <div class="spacer"></div>
+</div>
+
+<div class="page" id="p-rules">
+  <div class="sub-hero sh-amber">
+    <div class="sht sht-amber">INSCRIPTION</div>
+  </div>
+  <div id="rules-content"><div class="empty">Chargement…</div></div>
+  <div class="spacer"></div>
+</div>
+
+<div class="page" id="p-resa"></div>
+
+<div class="hint-bar" id="hint-bar">Appui long sur un titre pour réserver</div>
+
+<nav class="bnav">
+  <button class="bn active" id="bn-home" onclick="nav('p-home')"><span class="ico">🏠</span><span>Accueil</span></button>
+  <button class="bn" id="bn-switch" onclick="nav('p-switch')"><span class="ico" style="filter:hue-rotate(140deg) saturate(3) brightness(1.2)">🎵</span><span>Répertoire</span></button>
+  <button class="bn" id="bn-osl" onclick="nav('p-osl')"><span class="ico">✨</span><span>One Shot Live</span></button>
+  <button class="bn" id="bn-rules" onclick="nav('p-rules')"><span class="ico">📋</span><span>Inscription</span></button>
+  <button class="bn" id="bn-resa" onclick="openM('m-resa')"><span class="ico">🍽️</span><span>Réservation</span></button>
+</nav>
+
+<div class="moverlay" id="m-home-pitch" onclick="if(event.target===this)closeM('m-home-pitch')">
+  <div class="mbox">
+    <div class="mhead"><h3>💫 C'EST QUOI LA SWiTCH ?</h3></div>
+    <div class="mbody" id="m-home-pitch-body"></div>
+    <div class="mfoot">
+      <button class="mbtn sec" onclick="closeM('m-home-pitch')">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MODALE : Contacter Marco pour réserver
+     Ouverture par appui long (2s) sur un titre
+     ═══════════════════════════════════════ -->
+<div class="moverlay" id="m-marco" onclick="if(event.target===this)closeM('m-marco')">
+  <div class="mbox">
+    <div class="mhead" style="text-align:center"><h3 style="color:var(--gold)">CONTACTER MARCO POUR RESERVER</h3></div>
+    <div class="mbody" style="text-align:center">
+      <p id="m-marco-title" style="font-size:18px;font-weight:700;color:var(--white);margin-bottom:10px;animation:titlepulse 3s ease-in-out infinite">—</p>
+
+      <!-- MODE NORMAL (resa on) -->
+      <div id="m-marco-normal">
+        <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;margin-bottom:12px;text-align:left">
+          <div id="m-marco-msg" style="font-size:13px;color:var(--white);line-height:1.5;font-style:italic;margin-bottom:8px">—</div>
+          <button onclick="copyMarcoMsg()" id="m-marco-copy" style="width:100%;background:var(--gold);color:#000;border:none;border-radius:8px;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">📋 COPIER LE MESSAGE</button>
+        </div>
+        <div style="display:flex;gap:12px;justify-content:center;margin-bottom:4px">
+          <button id="m-marco-fb" onclick="openLink('https://m.me/marco.onlyformusic?ref=' + encodeURIComponent(window._marcoTitle||''),'m-marco')" style="display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;border:none;cursor:pointer;border-radius:12px;padding:14px 18px;flex:1;background:#1877f2">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
+            <span style="color:white;font-size:12px;font-weight:700;font-family:DM Sans,sans-serif">Facebook</span>
+          </button>
+          <button id="m-marco-ig" onclick="openLink('https://ig.me/m/marco.el.grande','m-marco')" style="display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;border:none;cursor:pointer;border-radius:12px;padding:14px 18px;flex:1;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            <span style="color:white;font-size:12px;font-weight:700;font-family:DM Sans,sans-serif">Instagram</span>
+          </button>
+          <button id="m-marco-wa" onclick="openLink('https://wa.me/33613634346?text=' + encodeURIComponent(window._marcoMsg||''),'m-marco')" style="display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;border:none;cursor:pointer;border-radius:12px;padding:14px 18px;flex:1;background:#25d366">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            <span style="color:white;font-size:12px;font-weight:700;font-family:DM Sans,sans-serif">WhatsApp</span>
+          </button>
+        </div>
+        <div style="padding:10px 0 4px;text-align:center">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--gold);line-height:1.6">INSCRIPTION VALABLE JUSQU'A 18H JOUR DE SWiTCH</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--gold);line-height:1.6">PUIS INSCRIPTION EN SALLE A PARTIR DE 19H30</div>
+        </div>
+      </div>
+
+      <!-- MODE INSCRIPTION (resa off) -->
+      <div id="m-marco-inscription" style="display:none">
+        <!-- Champ nom/prénom + bouton valider -->
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+          <input id="m-inscription-nom" type="text" placeholder="Inscrire nom et prénom"
+            oninput="var b=document.getElementById('m-inscription-btn');b.style.opacity=this.value.trim()?'1':'0.35';b.setAttribute('data-ok',this.value.trim()?'1':'');"
+            style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#fff;color:#555;font-size:15px;font-family:'DM Sans',sans-serif;outline:none"/>
+          <button id="m-inscription-btn" 
+            onclick="if(this.getAttribute('data-ok'))soumettreinscription()"
+            ontouchend="if(this.getAttribute('data-ok')){event.preventDefault();soumettreinscription();}"
+            style="padding:10px 14px;border-radius:8px;border:none;background:var(--gold);color:#000;font-size:20px;cursor:pointer;transition:opacity .2s;opacity:0.35">✓</button>
+        </div>
+      </div>
+
+    </div>
+    <!-- Infos J1-J4 depuis sheets, toujours visibles en mode inscription -->
+    <div id="m-inscription-infos" style="display:none;padding:10px 18px;text-align:left;border-top:1px solid rgba(255,255,255,0.1)"></div>
+    <div class="mfoot">
+      <button class="mbtn sec" onclick="closeM('m-marco')">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE INSCRIPTIONS CLOSES -->
+<div class="moverlay" id="m-closes" onclick="if(event.target===this)closeM('m-closes')">
+  <div class="mbox">
+    <div class="mhead" style="text-align:center"><h3 style="color:var(--gold)">INSCRIPTIONS CLOSES</h3></div>
+    <div class="mfoot">
+      <button class="mbtn sec" onclick="closeM('m-closes')">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div class="moverlay" id="m-renseignements" onclick="if(event.target===this)closeM('m-renseignements')">
+  <div class="mbox">
+    <div class="mhead" style="text-align:center"><h3 style="color:var(--gold)">CONTACTER MARCO</h3></div>
+    <div class="mbody" style="text-align:center">
+      <div style="display:flex;gap:12px;justify-content:center;margin-bottom:4px">
+        <button onclick="openLink('https://www.linkedin.com/in/marco-switch-295ab93b1','m-renseignements')" style="display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;border:none;cursor:pointer;border-radius:12px;padding:14px 18px;flex:1;background:#0077b5">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          <span style="color:white;font-size:12px;font-weight:700;font-family:DM Sans,sans-serif">LinkedIn</span>
+        </button>
+        <button onclick="openLink('https://wa.me/33613634346','m-renseignements')" style="display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;border:none;cursor:pointer;border-radius:12px;padding:14px 18px;flex:1;background:#25d366">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          <span style="color:white;font-size:12px;font-weight:700;font-family:DM Sans,sans-serif">WhatsApp</span>
+        </button>
+        <button onclick="openLink('https://m.me/marco.onlyformusic','m-marco')" style="display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;border:none;cursor:pointer;border-radius:12px;padding:14px 18px;flex:1;background:#1877f2">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
+          <span style="color:white;font-size:12px;font-weight:700;font-family:DM Sans,sans-serif">Facebook</span>
+        </button>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="mbtn sec" onclick="closeM('m-renseignements')">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div class="moverlay" id="m-osl" onclick="if(event.target===this)closeM('m-osl')">
+  <div class="mbox">
+    <div class="mhead"><h3>     C'EST QUOI LE ✨ONE SHOT LIVE ✨</h3></div>
+    <div class="mbody">
+      <p>Le One Shot LIVE est un mini concert destiné à ambiancer la SWiTCH à un moment stratégique de la soirée. Il est organisé autour de la shortlist de titres extraits du répertoire du spectacle que tu peux consulter sous cette bulle d'info</p>
+      <p>En choisissant l'une des chansons DISPO de cette shortlist, tu intègres le plateau chant du prochain One Shot LIVE avec les autres inscrit.e.s au lieu de faire ta prestation habituelle à la SWiTCH</p>
+      <div class="sec">TA PRESTATION EN LIVE</div>
+      <div class="sec" style="font-size:15px;margin-top:8px">Préparation</div>
+      <p>Lorsque la SWiTCH débute, cette shortlist sur ton téléphone se transforme en filage de concert t'indiquant l'ordre et le timing de chacun des titres du One Shot LIVE. Tu connais donc dès le début du spectacle la chanson qui précède la tienne ainsi que ton heure de ton passage</p>
+      <div class="sec" style="font-size:15px">Prestation</div>
+      <p>Le One Shot LIVE débute par un jingle reconnaissable et le timing sur ton téléphone se recale en cas de léger changement d'horaire. Si ta chanson est la première de la shorlist, rejoins les musiciens durant ce jingle. Si tu interprètes une des chansons suivantes, tiens toi prêt.e à monter sur scène de toi même dès que le titre précédent le tien se termine. Aucun appel n'est fait au micro donc ne te rate pas, le Gig n'attend pas : The SHOW MUST GO ON</p>
+      <div class="sec" style="font-size:15px">Final</div>
+      <p>Lorsque vient la dernière prestation du One Shot LIVE, le plateau chant doit se rassembler au complet et se tenir prêt à monter sur scène pour saluer ensemble son public à la fin du concert.</p>
+      <p>Alors si tu souhaites vivre des sensations de concert 100% realistes à la SWiTCH, lance toi un défi en participant au One Shot LIVE !</p>
+      <div class="sec">LES SATURDAY LIVE</div>
+      <p>Les Saturday LIVE sont des concerts one shot composés d'un plateau chant de trois interprètes différents certains samedi de juin et juillet dans le Patio du Pro Race Cafe.</p>
+      <p>En te familiarisant avec les contraintes d'un concert grâce au One Shot LIVE, tu pourras prétendre à y participer si ton niveau de chant le permet.</p>
+
+    </div>
+    <div class="mfoot">
+      <button class="mbtn sec" onclick="closeM('m-osl')">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<div class="moverlay" id="m-resa" onclick="if(event.target===this)closeM('m-resa')">
+  <div class="mbox">
+    <div class="mhead"><h3 class="amber" style="text-align:center">🍽️ Reserver au Pro Race Cafe</h3></div>
+    <div class="mbody" style="text-align:center">
+      <p>Réserve ta table pour la soirée SWiTCH</p>
+    </div>
+    <div class="mfoot">
+      <button class="mbtn sec" onclick="closeM('m-resa')">Annuler</button>
+      <button class="mbtn pri" onclick="openResa();closeM('m-resa')">Reserver</button>
+    </div>
+    <div style="text-align:center;margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1)">
+      <a href="https://www.google.com/maps/dir/?api=1&destination=4+Chemin+de+Doscares+34920+Le+Cr%C3%A8s" target="_blank" style="color:#ffffff;text-decoration:none;font-size:0.9em;display:inline-flex;align-items:center;gap:6px;justify-content:center">
+        <span style="font-size:1.2em">📍</span>
+        <span style="text-align:center">4 Chemin de Doscares<br>34920 Le Crès</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="coverlay" id="c-marco-fb">
+  <div class="cbox">
+    <h3>Marco Kiff Ton SWiTCH</h3>
+    <p>Aller sur la page Facebook Marco Kiff Ton SWiTCH ?</p>
+    <div class="cbtns">
+      <button class="cno" onclick="document.getElementById('c-marco-fb').classList.remove('open')">Annuler</button>
+      <button class="cyes" onclick="openLink('https://www.facebook.com/marco.onlyformusic','c-marco-fb');document.getElementById('c-marco-fb').classList.remove('open')">Valider</button>
+    </div>
+  </div>
+</div>
+
+<div class="coverlay" id="c-quit">
+  <div class="cbox">
+    <h3>Quitter ?</h3>
+    <p>Quitter l'application SWiTCH ?</p>
+    <div class="cbtns">
+      <button class="cno" onclick="document.getElementById('c-quit').classList.remove('open')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// 
+// DONNEES INJECTEES PAR APPS SCRIPT AU CHARGEMENT
+// RAW.switch   = sheet SWiTCH
+// RAW.osl      = sheet OSLSWiTCH
+// RAW.pitchSw  = sheet PITCH SWiTCH
+// RAW.regles   = sheet REGLES
+// RAW.pitchOsl = sheet PITCH ONE SHOT LIVE
+// Chaque sheet : { rows: [[...],[...]], sheetName: "..." }
+// 
+var RAW = {};
+var T   = document.createElement('div'); // helper DOM
+
+var currentPage = 'p-home';
+(function() {
+  var ua = navigator.userAgent || '';
+  if (ua.indexOf('FBAN') > -1 || ua.indexOf('FBAV') > -1 || ua.indexOf('FB_IAB') > -1 || ua.indexOf('MessengerForiOS') > -1 || ua.indexOf('Instagram') > -1) {
+    var b = document.getElementById('fb-browser-banner');
+    if (b) b.style.display = 'block';
+  }
+})();
+var searchQuery = '';
+var allSongs    = [];
+
+//    Utilitaires   
+function g(rows, r, col) {
+  return (rows && rows[r] && rows[r][col] != null) ? String(rows[r][col]).trim() : '';
+}
+function esc(s) {
+  if (!s) return '';
+  T.textContent = s;
+  return T.innerHTML;
+}
+function el(tag, attrs, content) {
+  // Construit un element HTML sans ecrire de closing tags dans les strings
+  var d = document.createElement(tag);
+  if (attrs) {
+    var keys = Object.keys(attrs);
+    for (var i = 0; i < keys.length; i++) d.setAttribute(keys[i], attrs[i]);
+  }
+  if (content !== undefined) d.innerHTML = content;
+  return d.outerHTML;
+}
+
+//    Navigation   
+var BNM = {'p-home':'bn-home','p-switch':'bn-switch','p-osl':'bn-osl','p-rules':'bn-rules','p-resa':'bn-resa'};
+function nav(id, direction) {
+  // direction: 'left' = new page comes from right, 'right' = new page comes from left
+  var pages = ['p-home','p-switch','p-osl','p-rules'];
+  var oldId = currentPage;
+
+  // Hide old page with slide out
+  if (oldId && oldId !== id) {
+    var oldEl = document.getElementById(oldId);
+    if (oldEl) {
+      oldEl.style.display = 'none';
+      oldEl.classList.remove('slide-out-left','slide-out-right','active');
+    }
+  }
+
+  currentPage = id;
+
+  // Update nav buttons
+  Object.keys(BNM).forEach(function(k) {
+    var b = document.getElementById(BNM[k]);
+    if (b) b.classList.toggle('active', k === id);
+  });
+
+  // Show new page with slide in
+  var newEl = document.getElementById(id);
+  if (newEl) {
+    newEl.style.display = 'block';
+    if (direction) {
+      newEl.classList.add('sliding');
+      newEl.style.transform = direction === 'left' ? 'translateX(100%)' : 'translateX(-100%)';
+      newEl.style.transition = 'none';
+      void newEl.offsetWidth;
+      newEl.style.transition = 'transform .32s cubic-bezier(.4,0,.2,1)';
+      newEl.style.transform = 'translateX(0)';
+      setTimeout(function() {
+        newEl.style.transition = '';
+        newEl.style.transform = '';
+        newEl.classList.remove('sliding');
+        newEl.classList.add('active');
+      }, 330);
+    } else {
+      newEl.classList.add('active');
+    }
+  }
+
+  if (id === 'p-switch') { renderSwitch(); showHint(); }
+  if (id === 'p-osl')    { renderOSL(); showHint(); }
+  if (id === 'p-rules')  { renderRules(); hideHint(); }
+  if (id === 'p-home')   hideHint();
+  if (id === 'bn-resa')  { openM('m-resa'); return; }
+}
+
+
+// Bloquer menu contextuel (appui long) sur liens des modales
+document.addEventListener('contextmenu', function(e) {
+  if (e.target.closest('.mbox')) {
+    e.preventDefault();
+    return false;
+  }
+}, true);
+
+function openM(id)  { document.getElementById(id).classList.add('open'); }
+function closeM(id) { document.getElementById(id).classList.remove('open'); }
+
+//    Quitter (bouton back mobile)   
+var quitting = false;
+var quitUrl = null;
+history.pushState(null, '', window.location.href);
+// ── SWIPE GAUCHE/DROITE POUR CHANGER DE PAGE ──
+(function() {
+  var pages = ['p-home', 'p-switch', 'p-osl', 'p-rules'];
+  var startX = 0;
+  var startY = 0;
+  var threshold = 60; // pixels minimum pour valider le swipe
+
+  document.addEventListener('touchstart', function(e) {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+
+  document.addEventListener('touchend', function(e) {
+    // Ne pas swiper si une modale est ouverte
+    if (document.querySelector('.moverlay.open') || document.querySelector('.coverlay.open')) return;
+
+    var dx = e.changedTouches[0].clientX - startX;
+    var dy = e.changedTouches[0].clientY - startY;
+
+    // Ignorer si le mouvement est plus vertical qu'horizontal
+    if (Math.abs(dy) > Math.abs(dx)) return;
+    if (Math.abs(dx) < threshold) return;
+
+    var idx = pages.indexOf(currentPage);
+    if (idx === -1) return;
+
+    if (dx < 0 && idx < pages.length - 1) {
+      // Swipe gauche -> page suivante
+      nav(pages[idx + 1], 'left');
+    } else if (dx > 0 && idx > 0) {
+      // Swipe droite -> page precedente
+      nav(pages[idx - 1], 'right');
+    }
+  }, { passive: true });
+})();
+
+window.addEventListener('load', function() {
+  history.pushState(null, '', window.location.href);
+});
+
+window.addEventListener('popstate', function() {
+  if (quitting) { quitting = false; return; }
+  document.getElementById('c-quit').classList.add('open');
+  history.pushState(null, '', window.location.href);
+});
+
+//    HOME   
+// 
+// RENDU PAGE ACCUEIL
+// - Titre dition depuis SWiTCH A1
+// - Compteur depuis SWiTCH C1  affich aussi dans Rpertoire
+// - Texte pitch depuis PITCH SWiTCH col B  inject dans la modale
+// 
+function renderHome() {
+  if (!RAW.switch || RAW.switch.error) return;
+  var rows = RAW.switch.rows;
+  var ed = g(rows, 0, 0);
+  if (ed) document.getElementById('home-edition').textContent = ed;
+
+  var ct = g(rows, 0, 2);
+  var swSub = document.getElementById('sw-count-sub');
+  if (swSub && ct) swSub.textContent = ct;
+
+  var pd = RAW.pitchSw;
+  if (!pd || pd.error) return;
+  var prows   = pd.rows;
+  var modalEl = document.getElementById('m-home-pitch-body');
+  if (!modalEl) return;
+  modalEl.innerHTML = '';
+  var skipped = false;
+  for (var i = 0; i < prows.length; i++) {
+    var txt = g(prows, i, 1);
+    if (!txt || txt.length < 4) continue;
+    if (txt.charCodeAt(0) === 9658) continue;
+    if (txt.indexOf('SWiTCH/Officiel') > -1) continue;
+    if (!skipped && txt.length < 35) { skipped = true; continue; }
+    var p = document.createElement('p');
+    p.textContent = txt;
+    modalEl.appendChild(p);
+  }
+}
+
+//    REPERTOIRE   
+// 
+// RENDU PAGE REPERTOIRE
+// - Lit sheet SWiTCH colonnes A(artiste) C(titre)
+// - Ignore lignes i<4 (en-ttes)
+// - Arrt ds que A ou C contient "zzz"
+// - Tags entre [] ou () extraits et affichs en badge cyan
+// 
+function renderSwitch() {
+  var listEl = document.getElementById('sw-list');
+  if (!RAW.switch || RAW.switch.error) {
+    listEl.textContent = 'Donnees indisponibles';
+    return;
+  }
+  var rows = RAW.switch.rows;
+  allSongs = [];
+  for (var i = 0; i < rows.length; i++) {
+    var a = g(rows, i, 0);
+    var t = g(rows, i, 2);
+    if (t.toLowerCase() === 'zzz' || a.toLowerCase() === 'zzz') break;
+    if (i < 4 || !a || !t || a === 'FIN' || t === 'fin') continue;
+    var tag = null;
+    var m1 = t.match(/\[([^\]]+)\]/);
+    var m2 = t.match(/\(([^)]+)\)/);
+    if (m1) tag = m1[1];
+    else if (m2) tag = m2[1];
+    var clean = t.replace(/\s*\[[^\]]*\]\s*/g, '').replace(/\s*\([^)]*\)\s*/g, '').trim();
+    allSongs.push({artist: a, title: clean, tag: tag});
+  }
+  var swEl = document.getElementById('sw-count-sub');
+  if (swEl) {
+    var c1 = g(RAW.switch.rows, 0, 2);
+    swEl.textContent = c1 || (allSongs.length + ' titres');
+  }
+  buildAlpha();
+  var q = searchQuery.toLowerCase();
+  if (q) {
+    paintSongs(allSongs.filter(function(s) {
+      return s.artist.toLowerCase().indexOf(q) > -1 || s.title.toLowerCase().indexOf(q) > -1;
+    }));
+  } else {
+    paintSongs(allSongs);
+  }
+}
+
+// Construit la barre de lettres A-L / M-Z
+function buildAlpha() {
+  var seen = {};
+  for (var i = 0; i < allSongs.length; i++) {
+    var l = allSongs[i].artist.toUpperCase().charAt(0);
+    seen[(/[A-Z]/.test(l)) ? l : '#'] = 1;
+  }
+  var letters = Object.keys(seen).sort();
+  var alphaEl = document.getElementById('sw-alpha');
+  alphaEl.innerHTML = '';
+  for (var i = 0; i < letters.length; i++) {
+    var btn = document.createElement('button');
+    btn.className = 'ab';
+    btn.textContent = letters[i];
+    btn.setAttribute('data-l', letters[i]);
+    btn.onclick = function() { jumpL(this.getAttribute('data-l')); };
+    alphaEl.appendChild(btn);
+  }
+}
+
+// Affiche la liste de chansons filtre dans le DOM
+function paintSongs(list) {
+  var listEl = document.getElementById('sw-list');
+  listEl.innerHTML = '';
+  if (!list.length) {
+    listEl.textContent = 'Aucun resultat';
+    return;
+  }
+  var lastL = null;
+  var num   = 0;
+  var curDiv = null;
+  for (var i = 0; i < list.length; i++) {
+    var s = list[i];
+    var l = s.artist.toUpperCase().charAt(0);
+    var letter = /[A-Z]/.test(l) ? l : '#';
+    if (letter !== lastL) {
+      var lbl = document.createElement('div');
+      lbl.className = 'sll';
+      lbl.id = 'sl-' + letter;
+      lbl.textContent = letter;
+      listEl.appendChild(lbl);
+      curDiv = document.createElement('div');
+      curDiv.className = 'slist';
+      listEl.appendChild(curDiv);
+      lastL = letter;
+    }
+    num++;
+    var row = document.createElement('div');
+    row.className = 'sr';
+
+    var colA = document.createElement('div');
+    colA.className = 'scol-a';
+    colA.textContent = num;
+
+    var body = document.createElement('div');
+    body.className = 'sbody';
+
+    var title = document.createElement('div');
+    title.className = 'stitle';
+    title.textContent = s.title;
+    if (s.tag) {
+      var tagEl = document.createElement('span');
+      tagEl.className = 'stag';
+      tagEl.textContent = s.tag;
+      title.appendChild(tagEl);
+    }
+
+    var artist = document.createElement('div');
+    artist.className = 'sart';
+    artist.textContent = s.artist;
+
+    body.appendChild(artist);
+    body.appendChild(title);
+
+    var dot = document.createElement('div');
+    dot.className = 'sdot';
+
+    row.appendChild(colA);
+    row.appendChild(body);
+    row.appendChild(dot);
+    // Long press 2s to open Marco contact modal
+    (function(r, t) {
+      var timer;
+      r.addEventListener('touchstart', function() { timer = setTimeout(function(){ openMarco(t, 'switch'); }, 1000); }, {passive:true});
+      r.addEventListener('touchend', function() { clearTimeout(timer); }, {passive:true});
+      r.addEventListener('touchmove', function() { clearTimeout(timer); }, {passive:true});
+      r.addEventListener('mousedown', function() { timer = setTimeout(function(){ openMarco(t, 'switch'); }, 1000); });
+      r.addEventListener('mouseup', function() { clearTimeout(timer); });
+    })(row, s.title);
+    curDiv.appendChild(row);
+  }
+}
+
+// Appele  chaque frappe dans la barre de recherche
+function filterSongs(q) {
+  searchQuery = q.trim();
+  var ql = searchQuery.toLowerCase();
+  if (!ql) { paintSongs(allSongs); return; }
+  paintSongs(allSongs.filter(function(s) {
+    return s.artist.toLowerCase().indexOf(ql) > -1 || s.title.toLowerCase().indexOf(ql) > -1;
+  }));
+}
+
+// Vide la recherche et scrolle vers la lettre choisie
+// Compense le dcalage d  la barre sticky
+function jumpL(l) {
+  // Clear search first so all songs of this letter are visible
+  var inp = document.getElementById('sw-search');
+  if (inp && inp.value) {
+    inp.value = '';
+    searchQuery = '';
+    paintSongs(allSongs);
+  }
+  // Scroll with offset to account for sticky header
+  var el2 = document.getElementById('sl-' + l);
+  if (!el2) return;
+  var sticky = document.querySelector('.sw-sticky');
+  var offset = sticky ? sticky.offsetHeight + 8 : 80;
+  var top = el2.getBoundingClientRect().top + window.scrollY - offset;
+  window.scrollTo({top: top, behavior: 'smooth'});
+}
+
+//    ONE SHOT LIVE   
+// 
+// RENDU PAGE ONE SHOT LIVE
+// - Edition depuis OSLSWiTCH A1
+// - Statut/Lance-toi depuis C3
+// - Libell bouton depuis C4
+// - Chansons : A=numro, C=titre, I=DISPO ou horaire
+// - Si I1=VRAI dans le sheet  tri croissant par horaire colonne I
+// - Titre gris si colonne I vide, rouge si DISPO/horaire
+// 
+function renderOSL() {
+  var contentEl = document.getElementById('osl-content');
+  if (!RAW.osl || RAW.osl.error) {
+    contentEl.textContent = 'Donnees indisponibles';
+    return;
+  }
+  var rows      = RAW.osl.rows;
+  var edition   = g(rows, 0, 2);
+  var statusTxt = g(rows, 2, 2);
+  var i1val     = g(rows, 0, 8); // colonne I ligne 1 = tri par timing si "vrai"
+  var isTimed   = i1val.toLowerCase() === 'vrai' || i1val.toLowerCase() === 'true';
+  var noChoice  = "Aucun choix possible pour l'instant";
+  var isOpen    = statusTxt.length > 5
+    && statusTxt.toLowerCase().indexOf('aucun') === -1
+    && statusTxt.toLowerCase().indexOf('impossible') === -1;
+
+  // Edition dans le sous-titre
+  var shsub = document.getElementById('osl-shsub');
+  if (shsub && edition) shsub.textContent = edition;
+
+  // statut affiche en texte blanc gras
+  document.getElementById('osl-status').textContent = statusTxt || noChoice;
+  var infoLbl = g(rows, 3, 2);
+  if (infoLbl) document.getElementById('osl-info-lbl').textContent = infoLbl;
+
+  var songs = [];
+  for (var i = 0; i < rows.length; i++) {
+    var a    = g(rows, i, 0);
+    var t    = g(rows, i, 2);
+    var colI = g(rows, i, 8);
+    if (a === 'FIN' || t === 'fin' || t.toLowerCase() === 'zzz') break;
+    if (i < 4 || !a || !t) continue;
+    songs.push({colA: a, title: t, colI: colI});
+  }
+
+  // Tri par timing si isTimed
+  if (isTimed) {
+    songs.sort(function(a, b) {
+      if (!a.colI) return 1;
+      if (!b.colI) return -1;
+      return a.colI < b.colI ? -1 : a.colI > b.colI ? 1 : 0;
+    });
+  }
+
+  contentEl.innerHTML = '';
+
+  
+
+  if (songs.length) {
+    var slistDiv = document.createElement('div');
+    slistDiv.className = 'slist';
+    slistDiv.style.padding = '0 16px';
+    for (var i = 0; i < songs.length; i++) {
+      var s   = songs[i];
+      var row = document.createElement('div');
+      row.className = 'sr';
+
+      var ca = document.createElement('div');
+      ca.className = 'osl-col-a';
+      ca.textContent = s.colA;
+
+      var bd = document.createElement('div');
+      bd.className = 'sbody';
+      var ttl = document.createElement('div');
+      ttl.className = s.colI ? 'stitle' : 'stitle stitle-grey';
+      ttl.textContent = s.title;
+      bd.appendChild(ttl);
+
+      row.appendChild(ca);
+      row.appendChild(bd);
+
+      if (s.colI) {
+        var ci = document.createElement('div');
+        ci.className = 'scol-i';
+        var b = document.createElement('b');
+        b.textContent = s.colI;
+        ci.appendChild(b);
+        row.appendChild(ci);
+      }
+      // Long press 2s to open Marco contact modal
+      (function(r, t) {
+        var timer;
+        r.addEventListener('touchstart', function() { timer = setTimeout(function(){ openMarco(t, 'osl'); }, 1000); }, {passive:true});
+        r.addEventListener('touchend', function() { clearTimeout(timer); }, {passive:true});
+        r.addEventListener('touchmove', function() { clearTimeout(timer); }, {passive:true});
+        r.addEventListener('mousedown', function() { timer = setTimeout(function(){ openMarco(t, 'osl'); }, 1000); });
+        r.addEventListener('mouseup', function() { clearTimeout(timer); });
+      })(row, s.title);
+      slistDiv.appendChild(row);
+    }
+    contentEl.appendChild(slistDiv);
+  } else {
+    var callout2 = document.createElement('div');
+    callout2.className = 'callout';
+    var clt2 = document.createElement('div');
+    clt2.className = 'clt';
+    clt2.textContent = 'One Shot LIVE';
+    var cp2 = document.createElement('p');
+    cp2.textContent = statusTxt || noChoice;
+    callout2.appendChild(clt2);
+    callout2.appendChild(cp2);
+    contentEl.appendChild(callout2);
+  }
+}
+
+//    REGLES   
+// Section headers a mettre en valeur
+var RULE_HEADERS = ["DEUX MANIERES", "NOMBRE D'INSCRIPTIONS", "HEURE DE PASSAGE", "ACCES AUX VIDEOS"];
+var RULE_SUBHEADERS = ['En MP les jours', 'En salle le soir', 'Sur place le jour du LIVE'];
+var RULE_SKIP = ["REGLES D'INSCRIPTION", "SWiTCH/Officiel", "N.B. Plus aucune inscription"];
+
+function isRH(t) { var tu=t.toUpperCase().trim(); for(var i=0;i<RULE_HEADERS.length;i++){if(tu===RULE_HEADERS[i].toUpperCase()||tu.indexOf(RULE_HEADERS[i].toUpperCase())>-1&&tu.length<RULE_HEADERS[i].length+15)return true;} return false; }
+function isRS(t) { for(var i=0;i<RULE_SUBHEADERS.length;i++){if(t.indexOf(RULE_SUBHEADERS[i])>-1)return true;} return false; }
+function isRK(t) { for(var i=0;i<RULE_SKIP.length;i++){if(t.indexOf(RULE_SKIP[i])>-1)return true;} return false; }
+
+// 
+// RENDU PAGE INSCRIPTION
+// Dtection automatique des types de lignes :
+// - RULE_HEADERS   titre orange Bebas Neue (ex: DEUX MANIERES)
+// - RULE_SUBHEADERS  sous-titre blanc DM Sans (ex: En MP les jours...)
+// - RULE_SKIP      lignes supprimes (ex: SWiTCH/Officiel)
+// - Texte "After du Spectacle"  ajoute lien Marco Facebook inline
+// 
+function renderRules() {
+  var rulesEl = document.getElementById('rules-content');
+  var d = RAW.regles;
+  if (!d || d.error) { rulesEl.textContent = 'Donnees indisponibles'; return; }
+  var rows = d.rows;
+  rulesEl.innerHTML = '';
+
+  var wrap = document.createElement('div');
+  wrap.className = 'cc-wrap';
+  var card = document.createElement('div');
+  card.className = 'cc';
+
+  // Si resa off : colonnes E(4) et F(5), sinon colonnes B(1) et C(2)
+  var colStart = _resaOff ? 4 : 1;
+  var colEnd = _resaOff ? 6 : 3;
+
+  for (var i = 0; i < rows.length; i++) {
+    var txt = '';
+    for (var col = colStart; col < colEnd; col++) {
+      var v = g(rows, i, col);
+      if (v && v.length > 3 && v.charCodeAt(0) !== 9658) { txt = v; break; }
+    }
+    if (!txt || isRK(txt)) continue;
+
+    if (isRH(txt)) {
+      var sec = document.createElement('div');
+      sec.className = 'sec';
+      sec.textContent = txt;
+      card.appendChild(sec);
+    } else if (isRS(txt)) {
+      var sub = document.createElement('div');
+      sub.className = 'sec sub';
+      sub.textContent = txt;
+      card.appendChild(sub);
+    } else if (txt.indexOf('After du Spectacle') > -1) {
+      var p = document.createElement('p');
+      var colon = txt.indexOf(':');
+      if (colon > -1) {
+        p.textContent = txt.slice(0, colon + 1) + ' ';
+      } else {
+        p.textContent = txt + ' ';
+      }
+      var aM = document.createElement('a');
+      aM.href = '#';
+      aM.style.color = '#1877f2';
+      aM.style.fontWeight = '700';
+      aM.style.textDecoration = 'none';
+      aM.textContent = 'Marco Kiff Ton SWiTCH';
+      aM.onclick = function(e) {
+        e.preventDefault();
+        document.getElementById('c-marco-fb').classList.add('open');
+      };
+      p.appendChild(aM);
+      card.appendChild(p);
+    } else {
+      // Forcer rendu paragraphe - split sur newline si plusieurs lignes dans la cellule
+      var lines = txt.split(/[\n\r]+/);
+      for (var li = 0; li < lines.length; li++) {
+        var line = lines[li].trim();
+        if (!line) continue;
+        if (isRH(line) && li > 0) {
+          var secX = document.createElement('div');
+          secX.className = 'sec';
+          secX.textContent = line;
+          card.appendChild(secX);
+        } else {
+          var p2 = document.createElement('p');
+          p2.textContent = line;
+          card.appendChild(p2);
+        }
+      }
+    }
+  }
+  wrap.appendChild(card);
+  rulesEl.appendChild(wrap);
+}
+
+//    REFRESH SILENCIEUX 30s   
+// 
+// RAFRAICHISSEMENT SILENCIEUX
+// Appel toutes les 30 secondes via setInterval
+// Utilise google.script.run.getDataJson() (Apps Script)
+// Ne recharge pas si l'onglet est en arrire-plan
+// 
+// Chargement des donnees via proxy allorigins (contourne le blocage script.google.com)
+
+function silentRefresh() {
+  if (document.hidden) return;
+  fetch('/api')
+    .then(function(r){ return r.json(); })
+    .then(function(nd) {
+      if (!nd) return;
+      RAW = nd;
+      renderHome();
+      if (nd.homeMode) applyHomeMode(nd.homeMode);
+      if (nd.resaMode) applyResaMode(nd.resaMode);
+      var sy = window.scrollY;
+      if (currentPage === 'p-switch') { renderSwitch(); window.scrollTo(0,sy); }
+      if (currentPage === 'p-osl')    renderOSL();
+      if (currentPage === 'p-rules')  renderRules();
+    })
+    .catch(function(){});
+}
+
+
+function showHint() {
+  var el = document.getElementById('hint-bar');
+  if (!el) return;
+  el.classList.remove('pulsing');
+  void el.offsetWidth;
+  el.classList.add('pulsing');
+  el.addEventListener('animationend', function handler() {
+    el.classList.remove('pulsing');
+    el.removeEventListener('animationend', handler);
+  });
+}
+
+function hideHint() {
+  var el = document.getElementById('hint-bar');
+  if (!el) return;
+  el.classList.remove('pulsing');
+}
+
+// Opens Marco contact modal with song title
+function openMarco(title, ctx) {
+  document.getElementById('m-marco-title').textContent = title;
+  window._marcoTitle = title;
+  window._marcoCtx = ctx;
+
+  if (_resaOff) {
+    var count = 0;
+    if (RAW.inscriptions && RAW.inscriptions.rows) {
+      var rows = RAW.inscriptions.rows;
+      for (var i = 0; i < rows.length; i++) {
+        if (rows[i] && rows[i][5] && rows[i][5].trim()) count++;
+      }
+    }
+    if (count >= 40) { openM('m-closes'); return; }
+    document.getElementById('m-marco-normal').style.display = 'none';
+    document.getElementById('m-marco-inscription').style.display = 'block';
+    var inp = document.getElementById('m-inscription-nom');
+    inp.value = '';
+    document.getElementById('m-inscription-btn').disabled = true;
+    var infosEl = document.getElementById('m-inscription-infos');
+    infosEl.innerHTML = '';
+    infosEl.style.display = 'none';
+    if (RAW.inscriptions && RAW.inscriptions.rows) {
+      var irows = RAW.inscriptions.rows;
+      var hasInfo = false;
+      for (var j = 0; j < Math.min(4, irows.length); j++) {
+        var val = irows[j] && irows[j][9] ? irows[j][9].trim() : '';
+        if (val) {
+          var p = document.createElement('p');
+          p.style.cssText = 'color:#fff;font-size:13px;margin:3px 0;';
+          p.textContent = val;
+          infosEl.appendChild(p);
+          hasInfo = true;
+        }
+      }
+      if (hasInfo) infosEl.style.display = 'block';
+    }
+  } else {
+    document.getElementById('m-marco-normal').style.display = 'block';
+    document.getElementById('m-marco-inscription').style.display = 'none';
+    document.getElementById('m-inscription-infos').style.display = 'none';
+    var msg = (ctx === 'osl')
+      ? "Hello Marco !\nJe pr\u00e9f\u00e8re int\u00e9grer le One Shot LIVE en r\u00e9servant '" + title + "'"
+      : "Hello Marco !\nJ'aimerais r\u00e9server '" + title + "' pour la prochaine SWiTCH";
+    window._marcoMsg = msg;
+    var msgEl = document.getElementById('m-marco-msg');
+    if (msgEl) msgEl.textContent = msg;
+    var btn = document.getElementById('m-marco-copy');
+    if (btn) btn.textContent = '\uD83D\uDCCB COPIER LE MESSAGE';
+  }
+  openM('m-marco');
+}
+
+function soumettreinscription() {
+  var nom = document.getElementById('m-inscription-nom').value.trim();
+  if (!nom) return;
+  var titre = window._marcoTitle || 'TITRE_VIDE';
+  alert('Envoi: ' + titre + ' / ' + nom);
+  var btn = document.getElementById('m-inscription-btn');
+  btn.disabled = true;
+  btn.textContent = '…';
+  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_fc7cnc-3Sk9RiGuvZkr9eqHmz4ZVR5M68_ZhqpprYH47hN8KPEFJ2bkByOGYRrYZ/exec'
+    + '?titre=' + encodeURIComponent(titre)
+    + '&nom=' + encodeURIComponent(nom);
+  var img = new Image();
+  img.onload = img.onerror = function() {
+    btn.textContent = '✅';
+    setTimeout(function() { closeM('m-marco'); }, 1000);
+  };
+  img.src = SCRIPT_URL;
+}
+
+
+function copyMarcoMsg() {
+  if (!window._marcoMsg) return;
+  navigator.clipboard.writeText(window._marcoMsg).then(function() {
+    var btn = document.getElementById('m-marco-copy');
+    if (btn) {
+      btn.textContent = '✅ MESSAGE COPIE !';
+    }
+  }).catch(function() {
+    // Fallback si clipboard non dispo
+    var ta = document.createElement('textarea');
+    ta.value = window._marcoMsg;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    var btn = document.getElementById('m-marco-copy');
+    if (btn) {
+      btn.textContent = '✅ MESSAGE COPIE !';
+    }
+  });
+}
+
+function doQuit() {
+  document.getElementById('c-quit').classList.remove('open');
+  if (quitUrl) {
+    window.open(quitUrl, '_blank');
+    quitUrl = null;
+  } else {
+    quitting = true;
+    history.go(-2);
+  }
+}
+
+
+// ── SECRET : 5 taps rapides sur le titre pour activer/desactiver reservation ──
+var _fbInterested = false;
+function toggleVideoSound() {
+  var v = document.getElementById('fb-video');
+  var btn = document.getElementById('fb-mute-btn');
+  if (!v) return;
+  v.muted = !v.muted;
+  btn.textContent = v.muted ? '🔇' : '🔊';
+}
+
+var _tap2Count = 0;
+var _tap2Timer = null;
+var _homeGifMode = false;
+function applyHomeMode(mode) {
+  _homeGifMode = (mode === 'gif');
+  var modeVideo = document.getElementById('home-mode-video');
+  var modeGif = document.getElementById('home-mode-gif');
+  if (_homeGifMode) {
+    if (modeVideo) modeVideo.style.display = 'none';
+    if (modeGif) modeGif.style.display = 'block';
+    var img = document.getElementById('home-gif');
+    if (img && !img.src) {
+      img.src = 'https://lh3.googleusercontent.com/d/1pqFUrUScxuNj6qM6Em0Nf6X3iuaDMN4O';
+      img.onerror = function() {
+        if (img.src.indexOf('lh3') > -1) {
+          img.src = 'https://drive.google.com/uc?export=view&id=1pqFUrUScxuNj6qM6Em0Nf6X3iuaDMN4O';
+        } else {
+          img.style.display = 'none';
+        }
+      };
+    }
+  } else {
+    if (modeVideo) modeVideo.style.display = 'block';
+    if (modeGif) modeGif.style.display = 'none';
+  }
+}
+function secretTap2() {
+  _tap2Count++;
+  clearTimeout(_tap2Timer);
+  _tap2Timer = setTimeout(function() { _tap2Count = 0; }, 1500);
+  if (_tap2Count >= 5) {
+    _tap2Count = 0;
+    var newMode = _homeGifMode ? 'video' : 'gif';
+    applyHomeMode(newMode);
+    fetch('/api?action=setMode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: newMode })
+    });
+  }
+}
+
+var _tapCount = 0;
+var _tapTimer = null;
+var _resaOff = false;
+
+function applyResaMode(mode) {
+  _resaOff = (mode === 'off');
+  var btn = document.getElementById('bn-resa');
+  if (!btn) return;
+  if (_resaOff) {
+    btn.classList.add('bn-resa-off');
+  } else {
+    btn.classList.remove('bn-resa-off');
+  }
+  // Mettre à jour l'onglet Inscription si déjà affiché
+  if (document.getElementById('rules-content')) renderRules();
+}
+
+function secretTap() {
+  _tapCount++;
+  clearTimeout(_tapTimer);
+  _tapTimer = setTimeout(function() { _tapCount = 0; }, 1500);
+  if (_tapCount >= 5) {
+    _tapCount = 0;
+    var newMode = _resaOff ? 'on' : 'off';
+    applyResaMode(newMode);
+    var msg = newMode === 'off' ? 'Reservation desactivee' : 'Reservation activee';
+    var toast = document.createElement('div');
+    toast.textContent = msg;
+    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:var(--gold);font-family:Bebas Neue,sans-serif;font-size:16px;padding:8px 20px;border-radius:20px;z-index:999;pointer-events:none';
+    document.body.appendChild(toast);
+    setTimeout(function() { toast.remove(); }, 2000);
+    fetch('/api?action=setResa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: newMode })
+    }).catch(function(){});
+  }
+}
+
+function openLink(url, modalId) {
+  if (modalId) closeM(modalId);
+  setTimeout(function() {
+    window.location.href = url;
+  }, 150);
+}
+
+function openResa() {
+  window.open('https://laswitch.pages.dev/resa', '_blank');
+}
+
+// Bloquer la nav pendant le chargement
+document.querySelector('.bnav').classList.add('nav-disabled');
+
+fetch('/api')
+  .then(function(r){ return r.json(); })
+  .then(function(nd) {
+    RAW = nd;
+    renderHome();
+    if (nd.homeMode) applyHomeMode(nd.homeMode);
+    if (nd.resaMode) applyResaMode(nd.resaMode);
+    setInterval(silentRefresh, 30000);
+  })
+  .catch(function() {
+    renderHome();
+    setInterval(silentRefresh, 30000);
+  })
+  .finally(function() {
+    // Cacher le loader et debloquer la nav
+    var loader = document.getElementById('app-loader');
+    if (loader) {
+      loader.style.transition = 'opacity .4s';
+      loader.style.opacity = '0';
+      setTimeout(function() { loader.style.display = 'none'; }, 400);
+    }
+    document.querySelector('.bnav').classList.remove('nav-disabled');
+  });
+</script>
+<div id="app-loader">
+  <div class="loader-title">SWiTCH 💫</div>
+  <div class="loader-spin"></div>
+</div>
+
+</body>
+</html>
+
+
