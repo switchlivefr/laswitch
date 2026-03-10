@@ -1143,15 +1143,12 @@ function soumettreinscription() {
   var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_fc7cnc-3Sk9RiGuvZkr9eqHmz4ZVR5M68_ZhqpprYH47hN8KPEFJ2bkByOGYRrYZ/exec'
     + '?titre=' + encodeURIComponent(titre)
     + '&nom=' + encodeURIComponent(nom);
-  fetch(SCRIPT_URL, { method: 'GET', mode: 'no-cors' })
-  .then(function() {
+  var img = new Image();
+  img.onload = img.onerror = function() {
     btn.textContent = '✅';
     setTimeout(function() { closeM('m-marco'); }, 1000);
-  })
-  .catch(function() {
-    btn.textContent = '✓';
-    btn.disabled = false;
-  });
+  };
+  img.src = SCRIPT_URL;
 }
 
 
