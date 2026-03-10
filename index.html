@@ -352,15 +352,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
             oninput="document.getElementById('m-inscription-btn').disabled=!this.value.trim()"
             style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#fff;color:#555;font-size:15px;font-family:'DM Sans',sans-serif;outline:none"/>
           <button id="m-inscription-btn" onclick="soumettreinscription()" disabled
-            style="padding:10px 14px;border-radius:8px;border:none;background:var(--gold);color:#000;font-size:20px;cursor:pointer;opacity:0.4;transition:opacity .2s"
-            onmouseenter="if(!this.disabled)this.style.opacity=1"
-            onmouseleave="if(!this.disabled)this.style.opacity=0.9">✓</button>
+            style="padding:10px 14px;border-radius:8px;border:none;background:var(--gold);color:#000;font-size:20px;cursor:pointer;transition:opacity .2s">✓</button>
         </div>
-        <!-- Infos J1-J4 depuis sheets -->
-        <div id="m-inscription-infos" style="text-align:left;margin-bottom:6px"></div>
       </div>
 
     </div>
+    <!-- Infos J1-J4 depuis sheets, toujours visibles en mode inscription -->
+    <div id="m-inscription-infos" style="display:none;padding:10px 18px;text-align:left;border-top:1px solid rgba(255,255,255,0.1)"></div>
     <div class="mfoot">
       <button class="mbtn sec" onclick="closeM('m-marco')">Fermer</button>
     </div>
@@ -1103,8 +1101,10 @@ function openMarco(title, ctx) {
     document.getElementById('m-inscription-btn').disabled = true;
     var infosEl = document.getElementById('m-inscription-infos');
     infosEl.innerHTML = '';
+    infosEl.style.display = 'none';
     if (RAW.inscriptions && RAW.inscriptions.rows) {
       var irows = RAW.inscriptions.rows;
+      var hasInfo = false;
       for (var j = 0; j < Math.min(4, irows.length); j++) {
         var val = irows[j] && irows[j][9] ? irows[j][9].trim() : '';
         if (val) {
@@ -1112,12 +1112,15 @@ function openMarco(title, ctx) {
           p.style.cssText = 'color:#fff;font-size:13px;margin:3px 0;';
           p.textContent = val;
           infosEl.appendChild(p);
+          hasInfo = true;
         }
       }
+      if (hasInfo) infosEl.style.display = 'block';
     }
   } else {
     document.getElementById('m-marco-normal').style.display = 'block';
     document.getElementById('m-marco-inscription').style.display = 'none';
+    document.getElementById('m-inscription-infos').style.display = 'none';
     var msg = (ctx === 'osl')
       ? "Hello Marco !\nJe pr\u00e9f\u00e8re int\u00e9grer le One Shot LIVE en r\u00e9servant '" + title + "'"
       : "Hello Marco !\nJ'aimerais r\u00e9server '" + title + "' pour la prochaine SWiTCH";
