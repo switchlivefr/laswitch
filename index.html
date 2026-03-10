@@ -243,7 +243,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 <!-- MODALE : Contacter Marco (appui long sur un titre) -->
 <div class="moverlay" id="m-marco" onclick="if(event.target===this)closeM('m-marco')">
   <div class="mbox">
-    <div class="mhead" style="text-align:center"><h3 style="color:var(--gold)">CONTACTER MARCO POUR RESERVER</h3></div>
+    <div class="mhead" style="text-align:center"><h3 id="m-marco-head" style="color:var(--gold)">CONTACTER MARCO POUR RESERVER</h3></div>
     <div class="mbody" style="text-align:center">
       <p id="m-marco-title" style="font-size:18px;font-weight:700;color:var(--white);margin-bottom:10px;animation:titlepulse 3s ease-in-out infinite">—</p>
 
@@ -275,18 +275,19 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 
       <!-- MODE INSCRIPTION (resa off) -->
       <div id="m-marco-inscription" style="display:none">
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+        <div id="m-inscription-form" style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
           <input id="m-inscription-nom" type="text" placeholder="Inscrire nom et prénom"
             oninput="var b=document.getElementById('m-inscription-btn');b.style.opacity=this.value.trim()?'1':'0.35';b._ok=!!this.value.trim();"
             style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#fff;color:#555;font-size:15px;font-family:'DM Sans',sans-serif;outline:none"/>
           <button id="m-inscription-btn" onclick="if(this._ok)soumettreinscription()"
             style="padding:10px 14px;border-radius:8px;border:none;background:var(--gold);color:#000;font-size:20px;cursor:pointer;transition:opacity .2s;opacity:0.35">✓</button>
         </div>
+        <div id="m-inscription-ok" style="display:none;font-family:'Bebas Neue',sans-serif;font-size:22px;font-weight:700;color:#fff;letter-spacing:2px;padding:10px 0 14px">RESERVATION VALIDEE</div>
       </div>
 
     </div>
     <!-- Infos J1-J4 depuis sheets, affichées entre le formulaire et Fermer -->
-    <div id="m-inscription-infos" style="display:none;padding:10px 18px;text-align:left;border-top:1px solid rgba(255,255,255,0.1)"></div>
+    <div id="m-inscription-infos" style="display:none;padding:10px 18px;text-align:left;border-top:1px solid rgba(255,255,255,0.1);font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.4;letter-spacing:-0.2px"></div>
     <div class="mfoot">
       <button class="mbtn sec" onclick="closeM('m-marco')">Fermer</button>
     </div>
@@ -662,6 +663,7 @@ function openMarco(title, ctx) {
 
     document.getElementById('m-marco-normal').style.display = 'none';
     document.getElementById('m-marco-inscription').style.display = 'block';
+    document.getElementById('m-marco-head').textContent = 'RESERVER UN TITRE';
 
     var inp = document.getElementById('m-inscription-nom');
     inp.value = '';
@@ -669,6 +671,8 @@ function openMarco(title, ctx) {
     btn.style.opacity = '0.35';
     btn._ok = false;
     btn.textContent = '\u2713';
+    document.getElementById('m-inscription-form').style.display = 'flex';
+    document.getElementById('m-inscription-ok').style.display = 'none';
 
     // Infos J1-J4 (colonne J = index 9)
     var infosEl = document.getElementById('m-inscription-infos');
@@ -692,6 +696,7 @@ function openMarco(title, ctx) {
     document.getElementById('m-marco-normal').style.display = 'block';
     document.getElementById('m-marco-inscription').style.display = 'none';
     document.getElementById('m-inscription-infos').style.display = 'none';
+    document.getElementById('m-marco-head').textContent = 'CONTACTER MARCO POUR RESERVER';
     var msg = (ctx === 'osl')
       ? "Hello Marco !\nJe pr\u00e9f\u00e8re int\u00e9grer le One Shot LIVE en r\u00e9servant '" + title + "'"
       : "Hello Marco !\nJ'aimerais r\u00e9server '" + title + "' pour la prochaine SWiTCH";
@@ -717,8 +722,9 @@ function soumettreinscription() {
     + '&nom=' + encodeURIComponent(nom);
   var img = new Image();
   img.onload = img.onerror = function() {
-    btn.textContent = '\u2705';
-    setTimeout(function() { closeM('m-marco'); }, 1200);
+    document.getElementById('m-inscription-form').style.display = 'none';
+    document.getElementById('m-inscription-ok').style.display = 'block';
+    setTimeout(function() { closeM('m-marco'); }, 2000);
   };
   img.src = url;
 }
