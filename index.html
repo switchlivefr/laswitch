@@ -791,6 +791,8 @@ function paintSongs(list) {
       r.addEventListener('touchstart', function() { timer = setTimeout(function(){ openMarco(t, 'switch'); }, 1000); }, {passive:true});
       r.addEventListener('touchend', function() { clearTimeout(timer); }, {passive:true});
       r.addEventListener('touchmove', function() { clearTimeout(timer); }, {passive:true});
+      r.addEventListener('mousedown', function() { timer = setTimeout(function(){ openMarco(t, 'switch'); }, 1000); });
+      r.addEventListener('mouseup', function() { clearTimeout(timer); });
     })(row, s.title);
     curDiv.appendChild(row);
   }
@@ -920,6 +922,8 @@ function renderOSL() {
         r.addEventListener('touchstart', function() { timer = setTimeout(function(){ openMarco(t, 'osl'); }, 1000); }, {passive:true});
         r.addEventListener('touchend', function() { clearTimeout(timer); }, {passive:true});
         r.addEventListener('touchmove', function() { clearTimeout(timer); }, {passive:true});
+        r.addEventListener('mousedown', function() { timer = setTimeout(function(){ openMarco(t, 'osl'); }, 1000); });
+        r.addEventListener('mouseup', function() { clearTimeout(timer); });
       })(row, s.title);
       slistDiv.appendChild(row);
     }
