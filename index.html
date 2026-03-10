@@ -660,6 +660,8 @@ function renderOslPitch(){
     var colC=(rows[i][2]||'').trim();
     var txt=colB||colC;
     if(!txt)continue;
+    if(code==='X')continue;
+    if(txt.charCodeAt(0)===9658)continue; // ignorer les ► liens
     if(code==='T'){
       var t=document.createElement('div');
       t.className='sec-osl-t';
