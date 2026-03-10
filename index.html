@@ -278,7 +278,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
         <div id="m-inscription-form" style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
           <input id="m-inscription-nom" type="text" placeholder="Inscrire nom et prénom"
             oninput="var b=document.getElementById('m-inscription-btn');b.style.opacity=this.value.trim()?'1':'0.35';b._ok=!!this.value.trim();"
-            style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#fff;color:#555;font-size:15px;font-family:'DM Sans',sans-serif;outline:none"/>
+            style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#fff;color:#000;font-size:15px;font-family:'DM Sans',sans-serif;outline:none"/>
           <button id="m-inscription-btn" onclick="if(this._ok)soumettreinscription()"
             style="padding:10px 14px;border-radius:8px;border:none;background:var(--gold);color:#000;font-size:20px;cursor:pointer;transition:opacity .2s;opacity:0.35">✓</button>
         </div>
@@ -652,14 +652,17 @@ function openMarco(title, ctx) {
   window._marcoCtx = ctx;
 
   if (_resaOff) {
-    // Vérifier limite 40
+    // Vérifier limite depuis B1 de la feuille INSCRIPTIONS
     var count = 0;
+    var limite = 40;
     if (RAW.inscriptions && RAW.inscriptions.rows) {
-      for (var i = 0; i < RAW.inscriptions.rows.length; i++) {
-        if (RAW.inscriptions.rows[i] && RAW.inscriptions.rows[i][5] && RAW.inscriptions.rows[i][5].trim()) count++;
+      var irows = RAW.inscriptions.rows;
+      if (irows[0] && irows[0][1]) limite = parseInt(irows[0][1]) || 40;
+      for (var i = 0; i < irows.length; i++) {
+        if (irows[i] && irows[i][5] && irows[i][5].trim()) count++;
       }
     }
-    if (count >= 40) { openM('m-closes'); return; }
+    if (count >= limite) { openM('m-closes'); return; }
 
     document.getElementById('m-marco-normal').style.display = 'none';
     document.getElementById('m-marco-inscription').style.display = 'block';
@@ -724,7 +727,6 @@ function soumettreinscription() {
   img.onload = img.onerror = function() {
     document.getElementById('m-inscription-form').style.display = 'none';
     document.getElementById('m-inscription-ok').style.display = 'block';
-    setTimeout(function() { closeM('m-marco'); }, 2000);
   };
   img.src = url;
 }
