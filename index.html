@@ -1140,13 +1140,10 @@ function soumettreinscription() {
   var btn = document.getElementById('m-inscription-btn');
   btn.disabled = true;
   btn.textContent = '…';
-  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRxLRh2URcPDRhMKC9mQwDsToEBTGCkrRrULgAFqYSvaldTh2wWRZGP7vbZa9eMYWP/exec';
-  fetch(SCRIPT_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ titre: titre, nom: nom })
-  })
+  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_fc7cnc-3Sk9RiGuvZkr9eqHmz4ZVR5M68_ZhqpprYH47hN8KPEFJ2bkByOGYRrYZ/exec'
+    + '?titre=' + encodeURIComponent(titre)
+    + '&nom=' + encodeURIComponent(nom);
+  fetch(SCRIPT_URL, { method: 'GET', mode: 'no-cors' })
   .then(function() {
     btn.textContent = '✅';
     setTimeout(function() { closeM('m-marco'); }, 1000);
