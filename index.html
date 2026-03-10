@@ -106,6 +106,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .mbody .sec{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--cyan);margin:14px 0 3px}
 .mbody .sec-osl-h{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--cyan);font-weight:700;margin:14px 0 4px;display:block}
 .mbody .sec-osl-s{font-family:'DM Sans',sans-serif;font-size:15px;color:var(--white);font-weight:700;margin:6px 0 2px;display:block}
+.mbody .sec-osl-t{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--cyan);font-weight:700;margin:18px 0 6px;display:block;text-align:center}
 .mbody a.marco{color:#5b9cf6;font-weight:700;text-decoration:none}
 .mfoot{padding:12px 18px;border-top:1px solid var(--border);flex-shrink:0;display:flex;gap:8px}
 .mbtn{flex:1;padding:12px;border-radius:var(--rs);border:none;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;-webkit-appearance:none}
@@ -359,8 +360,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 <!-- MODALE : One Shot LIVE info -->
 <div class="moverlay" id="m-osl" onclick="if(event.target===this)closeM('m-osl')">
   <div class="mbox">
-    <div class="mhead"><h3>C'EST QUOI LE ✨ONE SHOT LIVE ✨</h3></div>
-    <div class="mbody" id="m-osl-body"><div class="empty">Chargement…</div></div>
+    <div class="mbody" id="m-osl-body" style="padding-top:18px"><div class="empty">Chargement…</div></div>
     <div class="mfoot"><button class="mbtn sec" onclick="closeM('m-osl')">Fermer</button></div>
   </div>
 </div>
@@ -660,7 +660,12 @@ function renderOslPitch(){
     var colC=(rows[i][2]||'').trim();
     var txt=colB||colC;
     if(!txt)continue;
-    if(code==='H'){
+    if(code==='T'){
+      var t=document.createElement('div');
+      t.className='sec-osl-t';
+      t.textContent=txt;
+      el.appendChild(t);
+    }else if(code==='H'){
       var h=document.createElement('div');
       h.className='sec-osl-h';
       h.textContent=txt;
