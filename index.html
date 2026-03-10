@@ -1140,7 +1140,8 @@ function openMarco(title, ctx) {
 function soumettreinscription() {
   var nom = document.getElementById('m-inscription-nom').value.trim();
   if (!nom) return;
-  var titre = window._marcoTitle || '';
+  var titre = window._marcoTitle || 'TITRE_VIDE';
+  alert('Envoi: ' + titre + ' / ' + nom);
   var btn = document.getElementById('m-inscription-btn');
   btn.disabled = true;
   btn.textContent = '…';
