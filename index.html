@@ -351,7 +351,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
           <input id="m-inscription-nom" type="text" placeholder="Inscrire nom et prénom"
             oninput="var b=document.getElementById('m-inscription-btn');b.style.opacity=this.value.trim()?'1':'0.35';b.setAttribute('data-ok',this.value.trim()?'1':'');"
             style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#fff;color:#555;font-size:15px;font-family:'DM Sans',sans-serif;outline:none"/>
-          <button id="m-inscription-btn" onclick="if(this.getAttribute('data-ok'))soumettreinscription()"
+          <button id="m-inscription-btn" 
+            onclick="if(this.getAttribute('data-ok'))soumettreinscription()"
+            ontouchend="if(this.getAttribute('data-ok')){event.preventDefault();soumettreinscription();}"
             style="padding:10px 14px;border-radius:8px;border:none;background:var(--gold);color:#000;font-size:20px;cursor:pointer;transition:opacity .2s;opacity:0.35">✓</button>
         </div>
       </div>
