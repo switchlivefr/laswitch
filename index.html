@@ -349,10 +349,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
         <!-- Champ nom/prénom + bouton valider -->
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
           <input id="m-inscription-nom" type="text" placeholder="Inscrire nom et prénom"
-            oninput="document.getElementById('m-inscription-btn').disabled=!this.value.trim()"
+            oninput="var b=document.getElementById('m-inscription-btn');b.style.opacity=this.value.trim()?'1':'0.35';b.setAttribute('data-ok',this.value.trim()?'1':'');"
             style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#fff;color:#555;font-size:15px;font-family:'DM Sans',sans-serif;outline:none"/>
-          <button id="m-inscription-btn" onclick="soumettreinscription()" disabled
-            style="padding:10px 14px;border-radius:8px;border:none;background:var(--gold);color:#000;font-size:20px;cursor:pointer;transition:opacity .2s">✓</button>
+          <button id="m-inscription-btn" onclick="if(this.getAttribute('data-ok'))soumettreinscription()"
+            style="padding:10px 14px;border-radius:8px;border:none;background:var(--gold);color:#000;font-size:20px;cursor:pointer;transition:opacity .2s;opacity:0.35">✓</button>
         </div>
       </div>
 
