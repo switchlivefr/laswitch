@@ -8,7 +8,7 @@ const SHEETS = {
   'pitchOsl':     'PITCH ONE SHOT LIVE',
   'inscriptions': 'INSCRIPTIONS'
 };
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbLWupFVZ6PPyPx305fXBTldk2w1hx9KxbECovGO2-Tjt3pdaojZIvR1cOlip1PDY1/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRxLRh2URcPDRhMKC9mQwDsToEBTGCkrRrULgAFqYSvaldTh2wWRZGP7vbZa9eMYWP/exec';
 async function getHiddenRows(sheetTitle) {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?key=${API_KEY}&fields=sheets(properties(title),data(rowMetadata(hiddenByUser)))&includeGridData=false`;
   const r = await fetch(url);
