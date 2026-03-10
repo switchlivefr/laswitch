@@ -76,6 +76,9 @@ export async function onRequest(context) {
   }
 
 
+  // GET : lecture des sheets
+  try {
+    const result = {};
     for (const [key, name] of Object.entries(SHEETS)) {
       try { result[key] = await readSheet(name); }
       catch(e) { result[key] = { error: e.message }; }
