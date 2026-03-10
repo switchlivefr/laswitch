@@ -1,12 +1,14 @@
 const SHEET_ID = '1Z8GftsfaAgwDNuXLMTNrQwCV6V5W-hpHlI893INosSw';
 const API_KEY  = 'AIzaSyCTADjNIhq3jXSJiI_WO_jPsp63pTklT_A';
 const SHEETS = {
-  'switch':   'SWiTCH',
-  'osl':      'OSLSWiTCH',
-  'pitchSw':  'PITCH SWiTCH',
-  'regles':   'REGLES',
-  'pitchOsl': 'PITCH ONE SHOT LIVE'
+  'switch':       'SWiTCH',
+  'osl':          'OSLSWiTCH',
+  'pitchSw':      'PITCH SWiTCH',
+  'regles':       'REGLES',
+  'pitchOsl':     'PITCH ONE SHOT LIVE',
+  'inscriptions': 'INSCRIPTIONS'
 };
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbLWupFVZ6PPyPx305fXBTldk2w1hx9KxbECovGO2-Tjt3pdaojZIvR1cOlip1PDY1/exec';
 async function getHiddenRows(sheetTitle) {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?key=${API_KEY}&fields=sheets(properties(title),data(rowMetadata(hiddenByUser)))&includeGridData=false`;
   const r = await fetch(url);
@@ -56,8 +58,24 @@ export async function onRequest(context) {
     }
   }
 
-  try {
-    const result = {};
+  if (request.method === 'POST' && action === 'inscrire') {
+    try {
+      const body = await request.json();
+      const r = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ titre: body.titre, nom: body.nom })
+      });
+      const data = await r.json();
+      return new Response(JSON.stringify(data), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    } catch(e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    }
+  }
+
+
     for (const [key, name] of Object.entries(SHEETS)) {
       try { result[key] = await readSheet(name); }
       catch(e) { result[key] = { error: e.message }; }
