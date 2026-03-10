@@ -688,7 +688,7 @@ function renderOslPitch(){
   }
 }
 
-
+function silentRefresh(){
   if(document.hidden)return;
   fetch('/api')
     .then(function(r){return r.json();})
