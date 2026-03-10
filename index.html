@@ -910,7 +910,7 @@ function renderOSL() {
 //    REGLES   
 // Section headers a mettre en valeur
 var RULE_HEADERS = ["DEUX MANIERES", "NOMBRE D'INSCRIPTIONS", "HEURE DE PASSAGE", "ACCES AUX VIDEOS"];
-var RULE_SUBHEADERS = ['En MP les jours', 'En salle le soir', 'Sur place le jour du live'];
+var RULE_SUBHEADERS = ['En MP les jours', 'En salle le soir', 'Sur place le jour du LIVE'];
 var RULE_SKIP = ["REGLES D'INSCRIPTION", "SWiTCH/Officiel", "N.B. Plus aucune inscription"];
 
 function isRH(t) { var tu=t.toUpperCase().trim(); for(var i=0;i<RULE_HEADERS.length;i++){if(tu===RULE_HEADERS[i].toUpperCase()||tu.indexOf(RULE_HEADERS[i].toUpperCase())>-1&&tu.length<RULE_HEADERS[i].length+15)return true;} return false; }
@@ -1208,6 +1208,8 @@ fetch('/api')
   .then(function(nd) {
     RAW = nd;
     renderHome();
+    if (nd.homeMode) applyHomeMode(nd.homeMode);
+    if (nd.resaMode) applyResaMode(nd.resaMode);
     setInterval(silentRefresh, 30000);
   })
   .catch(function() {
