@@ -937,9 +937,13 @@ function renderRules() {
   var card = document.createElement('div');
   card.className = 'cc';
 
+  // Si resa off : colonnes E(4) et F(5), sinon colonnes B(1) et C(2)
+  var colStart = _resaOff ? 4 : 1;
+  var colEnd = _resaOff ? 6 : 3;
+
   for (var i = 0; i < rows.length; i++) {
     var txt = '';
-    for (var col = 0; col < (rows[i] || []).length; col++) {
+    for (var col = colStart; col < colEnd; col++) {
       var v = g(rows, i, col);
       if (v && v.length > 3 && v.charCodeAt(0) !== 9658) { txt = v; break; }
     }
@@ -1159,6 +1163,8 @@ function applyResaMode(mode) {
   } else {
     btn.classList.remove('bn-resa-off');
   }
+  // Mettre à jour l'onglet Inscription si déjà affiché
+  if (document.getElementById('rules-content')) renderRules();
 }
 
 function secretTap() {
