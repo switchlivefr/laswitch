@@ -106,7 +106,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .mbody .sec{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--cyan);margin:14px 0 3px}
 .mbody .sec-osl-h{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--cyan);font-weight:700;margin:14px 0 4px;display:block}
 .mbody .sec-osl-s{font-family:'DM Sans',sans-serif;font-size:15px;color:var(--white);font-weight:700;margin:6px 0 2px;display:block}
-.mbody .sec-osl-t{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--cyan);font-weight:700;margin:18px 0 6px;display:block;text-align:center}
+.mbody .sec-osl-t{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--cyan);font-weight:700;margin:18px 0 6px;display:block}
 .mbody a.marco{color:#5b9cf6;font-weight:700;text-decoration:none}
 .mfoot{padding:12px 18px;border-top:1px solid var(--border);flex-shrink:0;display:flex;gap:8px}
 .mbtn{flex:1;padding:12px;border-radius:var(--rs);border:none;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;-webkit-appearance:none}
@@ -625,10 +625,13 @@ function renderRules(){
   var card=document.createElement('div');card.className='cc';
   var cs=_resaOff?4:1,ce2=_resaOff?6:3;
   for(var i=0;i<rows.length;i++){
+    var codeA=(rows[i][0]||'').trim().toUpperCase();
+    if(codeA==='X')continue;
     var txt='';
     for(var col=cs;col<ce2;col++){var v=g(rows,i,col);if(v&&v.length>3&&v.charCodeAt(0)!==9658){txt=v;break;}}
     if(!txt||isRK(txt))continue;
-    if(isRH(txt)){var sec=document.createElement('div');sec.className='sec';sec.textContent=txt;card.appendChild(sec);}
+    if(codeA==='T'){var ti=document.createElement('div');ti.className='sec';ti.textContent=txt;card.appendChild(ti);}
+    else if(isRH(txt)){var sec=document.createElement('div');sec.className='sec';sec.textContent=txt;card.appendChild(sec);}
     else if(isRS(txt)){var sub=document.createElement('div');sub.className='sec sub';sub.textContent=txt;card.appendChild(sub);}
     else if(txt.indexOf('After du Spectacle')>-1){
       var p=document.createElement('p');var colon=txt.indexOf(':');
