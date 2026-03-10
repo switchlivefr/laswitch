@@ -36,10 +36,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .page.sliding{display:block;position:fixed;top:0;left:0;width:100%;height:calc(100% - var(--nh));z-index:20;background:var(--bg);overflow-y:auto}
 .home-hero{position:relative;padding:48px 20px 24px;text-align:center;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(242,201,76,.14) 0%,transparent 70%),linear-gradient(180deg,#0d0d1c 0%,var(--bg) 100%)}
 .home-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent)}
-.eyebrow{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--cyan);border:1px solid rgba(52,209,192,.25);border-radius:20px;padding:5px 14px;margin-bottom:28px}
+.eyebrow{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--cyan);border:1px solid rgba(52,209,192,.25);border-radius:20px;padding:5px 14px;margin-bottom:18px}
 .eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:blink 1.8s ease infinite}
 .htitle{font-family:'Bebas Neue',sans-serif;font-size:clamp(78px,25vw,120px);letter-spacing:6px;line-height:.95;color:var(--gold);text-shadow:0 0 60px var(--gglo)}
-.hemoji{display:block;font-size:clamp(44px,14vw,72px);margin-top:8px;filter:drop-shadow(0 0 14px rgba(242,201,76,.5))}
+.hemoji{display:block;font-size:clamp(38px,11vw,60px);margin-top:6px;filter:drop-shadow(0 0 14px rgba(242,201,76,.5))}
 .hmeta{margin-top:12px;display:flex;flex-direction:column;align-items:center;gap:5px}
 .hedition{background:var(--card);border:1px solid var(--border2);border-radius:var(--rs);padding:8px 18px;font-size:21px;font-weight:600;animation:rainbow .6s linear infinite}
 .sub-hero{position:relative;padding:34px 20px 22px;text-align:center;overflow:hidden}
@@ -149,6 +149,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
     <div class="htitle" id="home-title-tap" onclick="secretTap()">SWITCH<span class="hemoji">💫</span></div>
     <div class="hmeta">
       <div class="hedition" id="home-edition" onclick="secretTap2()" style="cursor:pointer">—</div>
+      <div id="home-prc-link" style="display:none;margin-top:8px">
+        <span onclick="openM('m-prc')" style="font-family:'Bebas Neue',sans-serif;font-size:20px;font-weight:600;color:#fff;letter-spacing:2px;cursor:pointer">PRO RACE CAFE</span>
+      </div>
     </div>
   </div>
   <div id="home-mode-video">
@@ -230,6 +233,20 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
   <button class="bn" id="bn-rules" onclick="nav('p-rules')"><span class="ico">📋</span><span>Inscription</span></button>
   <button class="bn" id="bn-resa" onclick="openM('m-resa')"><span class="ico">🍽️</span><span>Réservation</span></button>
 </nav>
+
+<!-- MODALE : Pro Race Cafe -->
+<div class="moverlay" id="m-prc" onclick="if(event.target===this)closeM('m-prc')">
+  <div class="mbox">
+    <div class="mhead" style="text-align:center"><h3 style="color:var(--gold)">PRO RACE CAFE</h3></div>
+    <div class="mbody" style="text-align:center;padding:16px 20px">
+      <p style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:#fff">ALLER SUR LE SITE DU PRO RACE CAFE</p>
+    </div>
+    <div class="mfoot" style="gap:8px">
+      <button class="mbtn sec" onclick="closeM('m-prc')">Annuler</button>
+      <button class="mbtn" onclick="window.open('https://www.proracecafe.com/','_blank');closeM('m-prc')" style="background:var(--gold);color:#000">Continuer</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODALE : C'est quoi la SWiTCH -->
 <div class="moverlay" id="m-home-pitch" onclick="if(event.target===this)closeM('m-home-pitch')">
@@ -790,6 +807,8 @@ function applyResaMode(mode){
   _resaOff=(mode==='off');
   var btn=document.getElementById('bn-resa');if(!btn)return;
   if(_resaOff)btn.classList.add('bn-resa-off');else btn.classList.remove('bn-resa-off');
+  var prc=document.getElementById('home-prc-link');
+  if(prc)prc.style.display=_resaOff?'none':'block';
   if(document.getElementById('rules-content'))renderRules();
 }
 function secretTap(){
