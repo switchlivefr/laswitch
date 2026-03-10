@@ -298,7 +298,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 <div class="moverlay" id="m-closes" onclick="if(event.target===this)closeM('m-closes')">
   <div class="mbox">
     <div class="mhead" style="text-align:center"><h3 style="color:var(--gold)">INSCRIPTIONS CLOSES</h3></div>
-    <div class="mfoot"><button class="mbtn sec" onclick="closeM('m-closes')">Fermer</button></div>
+    <div class="mfoot" style="flex-direction:column;gap:8px">
+      <button onclick="openLink('https://m.me/marco.onlyformusic','m-closes')" style="width:100%;padding:12px;border-radius:var(--rs);border:none;background:var(--card);border:1px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877f2"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
+        <span style="font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;color:var(--gold)">Une Question ? Contacter Marco</span>
+      </button>
+      <button class="mbtn sec" onclick="closeM('m-closes')">Fermer</button>
+    </div>
   </div>
 </div>
 
@@ -783,7 +789,7 @@ function secretTap(){
   _tapCount++;clearTimeout(_tapTimer);_tapTimer=setTimeout(function(){_tapCount=0;},1500);
   if(_tapCount>=5){
     _tapCount=0;var nm=_resaOff?'on':'off';applyResaMode(nm);
-    var msg=nm==='off'?'Reservation desactivee':'Reservation activee';
+    var msg=nm==='off'?'PRO RACE CAFE DESACTIVE':'PRO RACE CAFE ACTIVE';
     var toast=document.createElement('div');toast.textContent=msg;
     toast.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:var(--gold);font-family:Bebas Neue,sans-serif;font-size:16px;padding:8px 20px;border-radius:20px;z-index:999;pointer-events:none';
     document.body.appendChild(toast);setTimeout(function(){toast.remove();},2000);
