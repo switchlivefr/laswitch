@@ -34,13 +34,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 @keyframes spin{to{transform:rotate(360deg)}}
 .page{display:none}.page.active{display:block}
 .page.sliding{display:block;position:fixed;top:0;left:0;width:100%;height:calc(100% - var(--nh));z-index:20;background:var(--bg);overflow-y:auto}
-.home-hero{position:relative;padding:48px 20px 14px;text-align:center;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(242,201,76,.14) 0%,transparent 70%),linear-gradient(180deg,#0d0d1c 0%,var(--bg) 100%)}
+.home-hero{position:relative;padding:48px 20px 8px;text-align:center;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(242,201,76,.14) 0%,transparent 70%),linear-gradient(180deg,#0d0d1c 0%,var(--bg) 100%)}
 .home-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent)}
 .eyebrow{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--cyan);border:1px solid rgba(52,209,192,.25);border-radius:20px;padding:5px 14px;margin-bottom:18px}
 .eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:blink 1.8s ease infinite}
 .htitle{font-family:'Bebas Neue',sans-serif;font-size:clamp(78px,25vw,120px);letter-spacing:6px;line-height:.95;color:var(--gold);text-shadow:0 0 60px var(--gglo)}
 .hemoji{display:block;font-size:clamp(38px,11vw,60px);margin-top:6px;filter:drop-shadow(0 0 14px rgba(242,201,76,.5))}
-.hmeta{margin-top:12px;display:flex;flex-direction:column;align-items:center;gap:5px}
+.hmeta{margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:3px}
 .hedition{background:var(--card);border:1px solid var(--border2);border-radius:var(--rs);padding:8px 18px;font-size:21px;font-weight:600;animation:rainbow .6s linear infinite}
 .sub-hero{position:relative;padding:34px 20px 22px;text-align:center;overflow:hidden}
 .sub-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent)}
@@ -121,7 +121,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .home-gif-wrap{padding:16px 16px 4px;text-align:center}
 .home-gif-label{font-family:'Bebas Neue',sans-serif;font-size:clamp(30px,9.2vw,51px);letter-spacing:3px;background:linear-gradient(90deg,#f2c94c,#e8407a,#34d1c0,#f2c94c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;width:100%;text-align:center;white-space:nowrap}
 .home-gif{width:100%;max-width:420px;border-radius:var(--r);display:block;margin:0 auto}
-.fb-card{background:#242526;border-radius:12px;overflow:hidden;margin:8px 16px 16px;box-shadow:0 2px 12px rgba(0,0,0,.5)}
+.fb-card{background:#242526;border-radius:12px;overflow:hidden;margin:4px 16px 16px;box-shadow:0 2px 12px rgba(0,0,0,.5)}
 .fb-card-video{position:relative;width:100%;background:#000;aspect-ratio:16/9}
 .fb-card-actions{display:flex;border-top:1px solid #3a3b3c}
 .fb-card-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 0;background:none;border:none;color:#b0b3b8;font-size:13px;font-weight:600;cursor:pointer}
@@ -150,7 +150,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
     <div class="hmeta">
       <div class="hedition" id="home-edition" onclick="secretTap2()" style="cursor:pointer">—</div>
       <div id="home-prc-link" style="display:none">
-        <div onclick="openM('m-prc')" style="background:var(--card);border:1px solid var(--border2);border-radius:var(--rs);padding:8px 18px;font-size:21px;font-weight:600;color:#fff;cursor:pointer">PRO RACE CAFE</div>
+        <div onclick="openM('m-prc')" style="background:var(--card);border:1px solid var(--border2);border-radius:var(--rs);padding:6px 18px;font-size:21px;font-weight:600;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:8px">🔗 PRO RACE CAFE</div>
       </div>
     </div>
   </div>
