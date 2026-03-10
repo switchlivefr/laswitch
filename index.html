@@ -36,7 +36,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .page.sliding{display:block;position:fixed;top:0;left:0;width:100%;height:calc(100% - var(--nh));z-index:20;background:var(--bg);overflow-y:auto}
 .home-hero{position:relative;padding:48px 20px 8px;text-align:center;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(242,201,76,.14) 0%,transparent 70%),linear-gradient(180deg,#0d0d1c 0%,var(--bg) 100%)}
 .home-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent)}
-.eyebrow{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--cyan);border:1px solid rgba(52,209,192,.25);border-radius:20px;padding:5px 14px;margin-bottom:18px}
+.eyebrow{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--cyan);border:1px solid rgba(52,209,192,.25);border-radius:20px;padding:5px 14px;margin-bottom:24px}
 .eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:blink 1.8s ease infinite}
 .htitle{font-family:'Bebas Neue',sans-serif;font-size:clamp(78px,25vw,120px);letter-spacing:6px;line-height:.95;color:var(--gold);text-shadow:0 0 60px var(--gglo)}
 .hemoji{display:block;font-size:clamp(38px,11vw,60px);margin-top:6px;filter:drop-shadow(0 0 14px rgba(242,201,76,.5))}
@@ -150,7 +150,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
     <div class="hmeta">
       <div class="hedition" id="home-edition" onclick="secretTap2()" style="cursor:pointer">—</div>
       <div id="home-prc-link" style="display:none">
-        <div onclick="openM('m-prc')" style="background:var(--card);border:1px solid var(--border2);border-radius:var(--rs);padding:6px 18px;font-size:21px;font-weight:600;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:8px">🔗 PRO RACE CAFE</div>
+        <div onclick="openM('m-prc')" style="background:var(--card);border:1px solid var(--border2);border-radius:var(--rs);padding:6px 18px;font-size:21px;font-weight:600;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:8px;position:relative">
+          <span style="visibility:hidden;font-size:16px">🔗</span>
+          PRO RACE CAFE
+          <span style="font-size:16px">🔗</span>
+        </div>
       </div>
     </div>
   </div>
