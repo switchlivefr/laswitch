@@ -427,7 +427,7 @@ var BNM={'p-home':'bn-home','p-switch':'bn-switch','p-osl':'bn-osl','p-rules':'b
 function nav(id,direction){
   var oldId=currentPage;
   if(oldId&&oldId!==id){var o=document.getElementById(oldId);if(o){o.style.display='none';o.classList.remove('active');}}
-  if(id!=='p-home')muteVideo();
+  if(id!=='p-home'){muteVideo();_videoMuted=true;}
   if(id==='p-home')applyVideoSound();
   currentPage=id;
   Object.keys(BNM).forEach(function(k){var b=document.getElementById(BNM[k]);if(b)b.classList.toggle('active',k===id);});
