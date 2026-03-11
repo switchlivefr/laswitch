@@ -254,6 +254,19 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
   </div>
 </div>
 
+<!-- MODALE : Consulte OSL en priorité -->
+<div class="moverlay" id="m-reper-osl" style="pointer-events:all">
+  <div class="mbox" style="text-align:center">
+    <div class="mbody" style="padding:28px 24px 20px">
+      <p style="font-family:'DM Sans',sans-serif;font-size:15px;color:var(--cyan);line-height:1.4;margin:0 0 12px">Consulte en priorité les titres du</p>
+      <p style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;color:var(--cyan);margin:0">✨ ONE SHOT LIVE ✨</p>
+    </div>
+    <div class="mfoot">
+      <button class="mbtn" style="width:100%;background:var(--cyan);color:#000" onclick="closeM('m-reper-osl');nav('p-osl')">Valider</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODALE : C'est quoi la SWiTCH -->
 <div class="moverlay" id="m-home-pitch" onclick="if(event.target===this)closeM('m-home-pitch')">
   <div class="mbox">
@@ -412,6 +425,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 var RAW = {};
 var T = document.createElement('div');
 var currentPage = 'p-home';
+var _reperShown = false;
 var _resaOff = false;
 var searchQuery = '';
 var allSongs = [];
@@ -444,7 +458,7 @@ function nav(id,direction){
       setTimeout(function(){ne.style.transition='';ne.style.transform='';ne.classList.remove('sliding');ne.classList.add('active');},330);
     }else{ne.classList.add('active');}
   }
-  if(id==='p-switch'){renderSwitch();showHint();}
+  if(id==='p-switch'){renderSwitch();showHint();if(!_reperShown){_reperShown=true;setTimeout(function(){openM('m-reper-osl');},200);}}
   if(id==='p-osl'){renderOSL();showHint();}
   if(id==='p-rules'){renderRules();hideHint();}
   if(id==='p-home')hideHint();
