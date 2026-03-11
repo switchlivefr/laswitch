@@ -258,7 +258,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 <div class="moverlay" id="m-reper-osl" style="pointer-events:all">
   <div class="mbox" style="text-align:center">
     <div class="mbody" style="padding:28px 24px 20px;font-family:'Bebas Neue',sans-serif;color:var(--cyan);text-align:center">
-      <div style="font-size:16px;letter-spacing:1px;line-height:1;margin-bottom:10px">Consulte en priorité les titres du</div>
+      <div style="font-size:20px;letter-spacing:1px;line-height:1;margin-bottom:10px">Consulte en priorité les titres du</div>
       <div style="font-size:34px;letter-spacing:2px;line-height:1">✨ ONE SHOT LIVE ✨</div>
     </div>
     <div class="mfoot">
@@ -459,7 +459,7 @@ function nav(id,direction){
     }else{ne.classList.add('active');}
   }
   if(id==='p-switch'){renderSwitch();showHint();if(!_reperShown){_reperShown=true;setTimeout(function(){openM('m-reper-osl');},200);}}
-  if(id==='p-osl'){renderOSL();showHint();}
+  if(id==='p-osl'){renderOSL();showHint();_reperShown=true;}
   if(id==='p-rules'){renderRules();hideHint();}
   if(id==='p-home')hideHint();
 }
