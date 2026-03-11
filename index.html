@@ -157,10 +157,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
     <div class="hmeta">
       <div class="hedition" id="home-edition" onclick="secretTap2()" style="cursor:pointer">—</div>
       <div id="home-prc-link" style="display:none">
-        <div onclick="openM('m-prc')" style="background:var(--card);border:1px solid var(--border2);border-radius:var(--rs);padding:6px 18px;font-size:21px;font-weight:600;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:8px;position:relative">
-          <span style="visibility:hidden;font-size:16px">🔗</span>
+        <div onclick="openM('m-prc')" style="background:var(--card);border:1px solid var(--border2);border-radius:var(--rs);padding:6px 18px;font-size:24px;font-weight:600;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:8px;animation:btnpulse 3s ease-in-out infinite">
+          <span style="font-size:18px">🔗</span>
           PRO RACE CAFE
-          <span style="font-size:16px">🔗</span>
         </div>
       </div>
     </div>
@@ -394,9 +393,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
       <button class="mbtn pri" onclick="openResa();closeM('m-resa')">Reserver</button>
     </div>
     <div style="text-align:center;margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1)">
-      <a href="https://www.google.com/maps/dir/?api=1&destination=4+Chemin+de+Doscares+34920+Le+Cr%C3%A8s" target="_blank" style="color:#ffffff;text-decoration:none;font-size:0.9em;display:inline-flex;align-items:center;gap:6px;justify-content:center">
-        <span style="font-size:1.2em">📍</span>
-        <span style="text-align:center">4 Chemin de Doscares<br>34920 Le Crès</span>
+      <a href="https://www.google.com/maps/dir/?api=1&destination=4+Chemin+de+Doscares+34920+Le+Cr%C3%A8s" target="_blank" class="pulse-btn" style="text-decoration:none;display:flex;align-items:center;justify-content:center;border:1px solid rgba(52,209,192,.22);border-radius:10px;padding:10px 18px;width:100%;box-sizing:border-box">
+        <span style="display:inline-flex;align-items:center;gap:8px">
+          <span style="font-size:1.2em;flex-shrink:0">📍</span>
+          <span style="color:var(--cyan);font-size:16px;line-height:1.5;text-align:left">4 Chemin de Doscares<br>34920 Le Crès</span>
+        </span>
       </a>
     </div>
   </div>
