@@ -163,7 +163,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
   </div>
   <div id="home-mode-video">
     <div class="fb-card">
-      <div class="fb-card-video" style="position:relative">
+      <div class="fb-card-video" style="position:relative" onclick="secretTap3()">
         <video id="fb-video" autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;display:block">
           <source src="https://raw.githubusercontent.com/switchlivefr/laswitch/main/assets/switch.mp4" type="video/mp4">
         </video>
@@ -822,6 +822,38 @@ function toggleVideoSound(){
   if(!v)return;v.muted=!v.muted;b.textContent=v.muted?'\uD83D\uDD07':'\uD83D\uDD0A';
 }
 
+var _videoFiles=[],_videoIndex=0,_videoTapCount=0,_videoTapTimer=null;
+function loadVideoList(){
+  fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets')
+    .then(function(r){return r.json();})
+    .then(function(files){
+      _videoFiles=files.filter(function(f){return f.name.match(/\.mp4$/i);}).map(function(f){return f.download_url;});
+      var cur=document.querySelector('#fb-video source');
+      if(cur&&_videoFiles.length){
+        var idx=_videoFiles.findIndex(function(u){return u.indexOf('switch.mp4')>-1;});
+        _videoIndex=idx>=0?idx:0;
+      }
+    }).catch(function(){});
+}
+function secretTap3(){
+  if(_homeGifMode)return;
+  _videoTapCount++;clearTimeout(_videoTapTimer);
+  _videoTapTimer=setTimeout(function(){_videoTapCount=0;},1500);
+  if(_videoTapCount>=5){
+    _videoTapCount=0;
+    if(!_videoFiles.length)return;
+    _videoIndex=(_videoIndex+1)%_videoFiles.length;
+    var v=document.getElementById('fb-video');
+    var src=v.querySelector('source');
+    if(src)src.src=_videoFiles[_videoIndex];
+    v.load();v.play();
+    var name=_videoFiles[_videoIndex].split('/').pop().replace('.mp4','').replace(/[-_]/g,' ').toUpperCase();
+    var toast=document.createElement('div');toast.textContent='▶ '+name;
+    toast.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:var(--gold);font-family:Bebas Neue,sans-serif;font-size:16px;padding:8px 20px;border-radius:20px;z-index:999;pointer-events:none';
+    document.body.appendChild(toast);setTimeout(function(){toast.remove();},2000);
+  }
+}
+
 var _tap2Count=0,_tap2Timer=null,_homeGifMode=false;
 function applyHomeMode(mode){
   _homeGifMode=(mode==='gif');
@@ -875,6 +907,7 @@ fetch('/api')
     RAW=nd;renderHome();
     if(nd.homeMode)applyHomeMode(nd.homeMode);
     if(nd.resaMode)applyResaMode(nd.resaMode);
+    loadVideoList();
     setInterval(silentRefresh,30000);
   })
   .catch(function(){renderHome();setInterval(silentRefresh,30000);})
