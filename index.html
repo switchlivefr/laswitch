@@ -220,7 +220,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
     <div class="sht sht-cyan"><span style="font-size:0.7em">✨</span> ONE SHOT LIVE <span style="font-size:0.7em">✨</span></div>
   </div>
   <div id="osl-status-wrap" style="padding:10px 16px 4px;text-align:center"><span id="osl-status" style="font-weight:700;font-size:19px;animation:rainbow 3s linear infinite">—</span></div>
-  <div class="osl-info-btn pulse-btn" onclick="openM('m-osl')"><span id="osl-info-lbl">C'est quoi le One Shot LIVE ?</span></div>
+  <div class="osl-info-btn pulse-btn" onclick="openM('m-osl')"><span id="osl-info-lbl">Ta prestation au ✨One Shot LIVE✨</span></div>
   <div id="osl-edition-wrap" style="padding:6px 16px 2px;text-align:center"><span id="osl-shsub" style="font-weight:700;color:var(--gold);font-size:16px">—</span></div>
   <div id="osl-content"><div class="empty">Chargement…</div></div>
   <div class="spacer"></div>
@@ -260,11 +260,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 <div class="moverlay" id="m-reper-osl" style="pointer-events:all;opacity:0">
   <div class="mbox" style="text-align:center">
     <div class="mbody" style="padding:28px 24px 20px;font-family:'Bebas Neue',sans-serif;color:var(--cyan);text-align:center">
-      <div style="font-size:20px;letter-spacing:1px;line-height:1;margin-bottom:10px">Consulte en priorité les titres du</div>
+      <div style="font-size:20px;letter-spacing:1px;line-height:1.3;margin-bottom:6px">Tu as l'habitude de venir à la SWiTCH</div>
+      <div style="font-size:20px;letter-spacing:1px;line-height:1.3;margin-bottom:12px">Consulte d'abord la liste de titres du</div>
       <div style="font-size:34px;letter-spacing:2px;line-height:1">✨ ONE SHOT LIVE ✨</div>
     </div>
-    <div class="mfoot">
-      <button class="mbtn" style="width:100%;background:var(--cyan);color:#000" onclick="closeM('m-reper-osl');nav('p-osl')">Valider</button>
+    <div class="mfoot" style="gap:8px">
+      <button class="mbtn sec" onclick="closeM('m-reper-osl')">Annuler</button>
+      <button class="mbtn" style="background:var(--cyan);color:#000" onclick="closeM('m-reper-osl');nav('p-osl')">Valider</button>
     </div>
   </div>
 </div>
