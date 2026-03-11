@@ -427,6 +427,7 @@ var BNM={'p-home':'bn-home','p-switch':'bn-switch','p-osl':'bn-osl','p-rules':'b
 function nav(id,direction){
   var oldId=currentPage;
   if(oldId&&oldId!==id){var o=document.getElementById(oldId);if(o){o.style.display='none';o.classList.remove('active');}}
+  if(id!=='p-home')muteVideo();
   if(id==='p-home')applyVideoSound();
   currentPage=id;
   Object.keys(BNM).forEach(function(k){var b=document.getElementById(BNM[k]);if(b)b.classList.toggle('active',k===id);});
@@ -448,7 +449,11 @@ function nav(id,direction){
 }
 
 document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')){e.preventDefault();return false;}},true);
-function openM(id){document.getElementById(id).classList.add('open');if(id==='m-osl')renderOslPitch();}
+function openM(id){
+  document.getElementById(id).classList.add('open');
+  if(id==='m-osl')renderOslPitch();
+  if(id==='m-home-pitch'||id==='m-renseignements')muteVideo();
+}
 function closeM(id){document.getElementById(id).classList.remove('open');}
 
 var quitting=false,quitUrl=null;
