@@ -427,6 +427,7 @@ var BNM={'p-home':'bn-home','p-switch':'bn-switch','p-osl':'bn-osl','p-rules':'b
 function nav(id,direction){
   var oldId=currentPage;
   if(oldId&&oldId!==id){var o=document.getElementById(oldId);if(o){o.style.display='none';o.classList.remove('active');}}
+  if(id==='p-home')applyVideoSound();
   currentPage=id;
   Object.keys(BNM).forEach(function(k){var b=document.getElementById(BNM[k]);if(b)b.classList.toggle('active',k===id);});
   var ne=document.getElementById(id);
@@ -817,9 +818,10 @@ function doQuit(){
   if(quitUrl){window.open(quitUrl,'_blank');quitUrl=null;}else{quitting=true;history.go(-2);}
 }
 
+var _videoMuted=true;
 function toggleVideoSound(){
   var v=document.getElementById('fb-video'),b=document.getElementById('fb-mute-btn');
-  if(!v)return;v.muted=!v.muted;b.textContent=v.muted?'\uD83D\uDD07':'\uD83D\uDD0A';
+  if(!v)return;_videoMuted=!_videoMuted;v.muted=_videoMuted;b.textContent=_videoMuted?'\uD83D\uDD07':'\uD83D\uDD0A';
 }
 
 var _videoFiles=[],_videoIndex=0,_videoTapCount=0,_videoTapTimer=null;
@@ -860,12 +862,21 @@ function applyHomeMode(mode){
   var mv=document.getElementById('home-mode-video'),mg=document.getElementById('home-mode-gif');
   if(_homeGifMode){
     if(mv)mv.style.display='none';if(mg)mg.style.display='block';
+    muteVideo();
     var img=document.getElementById('home-gif');
     if(img&&!img.src){
       img.src='https://lh3.googleusercontent.com/d/1pqFUrUScxuNj6qM6Em0Nf6X3iuaDMN4O';
       img.onerror=function(){if(img.src.indexOf('lh3')>-1){img.src='https://drive.google.com/uc?export=view&id=1pqFUrUScxuNj6qM6Em0Nf6X3iuaDMN4O';}else{img.style.display='none';}};
     }
   }else{if(mv)mv.style.display='block';if(mg)mg.style.display='none';}
+}
+function muteVideo(){
+  var v=document.getElementById('fb-video'),b=document.getElementById('fb-mute-btn');
+  if(v&&!v.muted){v.muted=true;if(b)b.textContent='\uD83D\uDD07';}
+}
+function applyVideoSound(){
+  var v=document.getElementById('fb-video'),b=document.getElementById('fb-mute-btn');
+  if(!v)return;v.muted=_videoMuted;if(b)b.textContent=_videoMuted?'\uD83D\uDD07':'\uD83D\uDD0A';
 }
 function secretTap2(){
   _tap2Count++;clearTimeout(_tap2Timer);_tap2Timer=setTimeout(function(){_tap2Count=0;},1500);
