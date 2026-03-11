@@ -76,6 +76,18 @@ export async function onRequest(context) {
   }
 
 
+  if (request.method === 'POST' && action === 'setVideo') {
+    try {
+      const body = await request.json();
+      await env.LASWITCH_KV.put('video_url', body.url || '');
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    } catch(e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    }
+  }
+
   // GET : lecture des sheets
   try {
     const result = {};
@@ -85,8 +97,10 @@ export async function onRequest(context) {
     }
     const homeMode = await env.LASWITCH_KV.get('home_mode');
     const resaMode = await env.LASWITCH_KV.get('resa_mode');
+    const videoUrl = await env.LASWITCH_KV.get('video_url');
     result.homeMode = homeMode || 'video';
     result.resaMode = resaMode || 'on';
+    if (videoUrl) result.videoUrl = videoUrl;
     return new Response(JSON.stringify(result), {
       headers: {
         'Content-Type': 'application/json',
