@@ -170,7 +170,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
         <button id="fb-mute-btn" onclick="event.stopPropagation();toggleVideoSound()" style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.6);border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">🔇</button>
       </div>
       <div class="fb-card-actions">
-        <button class="fb-card-btn" style="justify-content:center" onclick="window.location.href='https://www.facebook.com/events/708104872292532/'">
+        <button class="fb-card-btn" id="fb-event-btn" style="justify-content:center;display:none" onclick="var u=this.dataset.url;if(u)window.location.href=u">
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
           Voir l'événement
         </button>
@@ -452,7 +452,7 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
 function openM(id){
   document.getElementById(id).classList.add('open');
   if(id==='m-osl')renderOslPitch();
-  if(id==='m-home-pitch'||id==='m-renseignements')muteVideo();
+  if(id==='m-home-pitch'||id==='m-renseignements'||id==='m-resa'){muteVideo();_videoMuted=true;}
 }
 function closeM(id){document.getElementById(id).classList.remove('open');}
 
@@ -485,6 +485,8 @@ function renderHome(){
   var rows=RAW.switch.rows;
   var ed=g(rows,0,0);if(ed)document.getElementById('home-edition').textContent=ed;
   var ct=g(rows,0,2);var sw=document.getElementById('sw-count-sub');if(sw&&ct)sw.textContent=ct;
+  var eventUrl=g(rows,0,3);var ebtn=document.getElementById('fb-event-btn');
+  if(ebtn&&eventUrl){ebtn.dataset.url=eventUrl;ebtn.style.display='flex';}else if(ebtn){ebtn.style.display='none';}
   var pd=RAW.pitchSw;if(!pd||pd.error)return;
   var prows=pd.rows;var me=document.getElementById('m-home-pitch-body');if(!me)return;
   me.innerHTML='';var skipped=false;
