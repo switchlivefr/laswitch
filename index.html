@@ -272,7 +272,6 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 <!-- MODALE : C'est quoi la SWiTCH -->
 <div class="moverlay" id="m-home-pitch" onclick="if(event.target===this)closeM('m-home-pitch')">
   <div class="mbox">
-    <div class="mhead"><h3>💫 C'EST QUOI LA SWiTCH ?</h3></div>
     <div class="mbody" id="m-home-pitch-body"></div>
     <div class="mfoot"><button class="mbtn sec" onclick="closeM('m-home-pitch')">Fermer</button></div>
   </div>
@@ -514,9 +513,9 @@ function renderHome(){
   for(var i=0;i<prows.length;i++){
     var code=(prows[i][0]||'').trim().toUpperCase();
     var txt=(prows[i][1]||'').trim();
-    if(!txt)continue;
     if(code==='X')continue;
     if(txt.charCodeAt(0)===9658)continue;
+    if(!txt){var sp=document.createElement('div');sp.style.height='10px';me.appendChild(sp);continue;}
     if(code==='T'){
       var t=document.createElement('div');t.className='sec-osl-t';t.textContent=txt;me.appendChild(t);
     }else if(code==='H'){
