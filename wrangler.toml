@@ -3,6 +3,10 @@ main = "functions/api.js"
 compatibility_date = "2025-09-27"
 compatibility_flags = ["nodejs_compat"]
 
+[assets]
+directory = "."
+binding = "ASSETS"
+
 [[kv_namespaces]]
 binding = "LASWITCH_KV"
 id = "8e8ed92d04b549599b341542123ca15f"
