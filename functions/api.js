@@ -9,6 +9,7 @@ const SHEETS = {
   'inscriptions': 'INSCRIPTIONS'
 };
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRxLRh2URcPDRhMKC9mQwDsToEBTGCkrRrULgAFqYSvaldTh2wWRZGP7vbZa9eMYWP/exec';
+
 async function getHiddenRows(sheetTitle) {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?key=${API_KEY}&fields=sheets(properties(title),data(rowMetadata(hiddenByUser)))&includeGridData=false`;
   const r = await fetch(url);
@@ -18,6 +19,7 @@ async function getHiddenRows(sheetTitle) {
   if (!sheet || !sheet.data || !sheet.data[0] || !sheet.data[0].rowMetadata) return [];
   return sheet.data[0].rowMetadata.map(m => m.hiddenByUser === true);
 }
+
 async function readSheet(name) {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(name)}?key=${API_KEY}`;
   const r = await fetch(url);
@@ -27,8 +29,8 @@ async function readSheet(name) {
   const hiddenRows = await getHiddenRows(name);
   return { rows: allRows.filter((_, i) => !hiddenRows[i]), sheetName: name };
 }
-export async function onRequest(context) {
-  const { request, env } = context;
+
+async function handleRequest(request, env) {
   const url = new URL(request.url);
   const action = url.searchParams.get('action');
 
@@ -75,7 +77,6 @@ export async function onRequest(context) {
     }
   }
 
-
   if (request.method === 'POST' && action === 'setVideo') {
     try {
       const body = await request.json();
@@ -112,3 +113,7 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
 }
+
+export default {
+  fetch: handleRequest
+};
