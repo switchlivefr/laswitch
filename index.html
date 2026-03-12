@@ -370,6 +370,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
           <span style="color:white;font-size:12px;font-weight:700;font-family:DM Sans,sans-serif">Messenger</span>
         </button>
       </div>
+      <div id="m-contact-sw-body" style="margin-top:16px;text-align:left"></div>
     </div>
     <div class="mfoot"><button class="mbtn sec" onclick="closeM('m-renseignements')">Fermer</button></div>
   </div>
@@ -534,7 +535,32 @@ function renderHome(){
   }
 }
 
-function renderSwitch(){
+function renderContactSw(){
+  var me=document.getElementById('m-contact-sw-body');if(!me)return;
+  var pd=RAW.contactSw;if(!pd||pd.error){me.innerHTML='';return;}
+  var prows=pd.rows;me.innerHTML='';
+  for(var i=0;i<prows.length;i++){
+    var code=(prows[i][0]||'').trim().toUpperCase();
+    var txt=(prows[i][1]||'').trim();
+    if(code==='X')continue;
+    if(!txt){var sp=document.createElement('div');sp.style.height='10px';me.appendChild(sp);continue;}
+    if(code==='T'){
+      var t=document.createElement('div');t.className='sec-osl-t';t.textContent=txt;me.appendChild(t);
+    }else if(code==='H'){
+      var h=document.createElement('div');h.className='sec-osl-h';h.textContent=txt;me.appendChild(h);
+    }else if(code==='S'){
+      var s=document.createElement('div');s.className='sec-osl-s';s.textContent=txt;me.appendChild(s);
+    }else if(code==='K'){
+      var lines=txt.split(/[\n\r]+/);
+      for(var li=0;li<lines.length;li++){var line=lines[li].trim();if(!line)continue;var p=document.createElement('p');p.textContent=line;me.appendChild(p);}
+    }else{
+      var lines2=txt.split(/[\n\r]+/);
+      for(var li2=0;li2<lines2.length;li2++){var line2=lines2[li2].trim();if(!line2)continue;var p2=document.createElement('p');p2.textContent=line2;me.appendChild(p2);}
+    }
+  }
+}
+
+
   var listEl=document.getElementById('sw-list');
   if(!RAW.switch||RAW.switch.error){listEl.textContent='Donnees indisponibles';return;}
   var rows=RAW.switch.rows;allSongs=[];
@@ -753,7 +779,7 @@ function silentRefresh(){
   fetch('/api')
     .then(function(r){return r.json();})
     .then(function(nd){
-      if(!nd)return;RAW=nd;renderHome();
+      if(!nd)return;RAW=nd;renderHome();renderContactSw();
       if(nd.homeMode)applyHomeMode(nd.homeMode);if(nd.resaMode)applyResaMode(nd.resaMode);
       var sy=window.scrollY;
       if(currentPage==='p-switch'){renderSwitch();window.scrollTo(0,sy);}
@@ -974,7 +1000,7 @@ document.querySelector('.bnav').classList.add('nav-disabled');
 fetch('/api')
   .then(function(r){return r.json();})
   .then(function(nd){
-    RAW=nd;renderHome();
+    RAW=nd;renderHome();renderContactSw();
     if(nd.homeMode)applyHomeMode(nd.homeMode);
     if(nd.resaMode)applyResaMode(nd.resaMode);
     if(nd.videoUrl)applyVideoUrl(nd.videoUrl);
