@@ -475,11 +475,17 @@ function nav(id,direction){
 document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')){e.preventDefault();return false;}},true);
 function openM(id){
   var el=document.getElementById(id);el.classList.add('open');
+  document.body.style.overflow='hidden';
   if(id==='m-reper-osl'){el.classList.add('fadein');}
   if(id==='m-osl')renderOslPitch();
   if(id==='m-home-pitch'||id==='m-renseignements'||id==='m-resa'){muteVideo();_videoMuted=true;}
 }
-function closeM(id){document.getElementById(id).classList.remove('open');}
+function closeM(id){
+  document.getElementById(id).classList.remove('open');
+  if(!document.querySelector('.moverlay.open')&&!document.querySelector('.coverlay.open')){
+    document.body.style.overflow='';
+  }
+}
 
 var quitting=false,quitUrl=null;
 history.pushState(null,'',window.location.href);
