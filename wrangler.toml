@@ -5,4 +5,4 @@ compatibility_flags = ["nodejs_compat"]
 
 [[kv_namespaces]]
 binding = "LASWITCH_KV"
-id = "65e46617f6d34131b6647315d9d00c7d"
+id = "8e8ed92d04b549599b341542123ca15f"
