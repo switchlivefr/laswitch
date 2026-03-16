@@ -893,10 +893,10 @@ function soumettreinscription() {
 function copyMarcoMsg(){
   if(!window._marcoMsg)return;
   navigator.clipboard.writeText(window._marcoMsg).then(function(){
-    var b=document.getElementById('m-marco-copy');if(b)b.textContent='\u2705 MESSAGE COPIE !';
+    var b=document.getElementById('m-marco-copy');if(b)b.textContent='\u2705 MESSAGE COPIÉ : CONTACTE MARCO !';
   }).catch(function(){
     var ta=document.createElement('textarea');ta.value=window._marcoMsg;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();
-    var b=document.getElementById('m-marco-copy');if(b)b.textContent='\u2705 MESSAGE COPIE !';
+    var b=document.getElementById('m-marco-copy');if(b)b.textContent='\u2705 MESSAGE COPIÉ : CONTACTE MARCO !';
   });
 }
 
