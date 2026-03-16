@@ -282,16 +282,16 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 <!-- MODALE : Contacter Marco (appui long sur un titre) -->
 <div class="moverlay" id="m-marco" onclick="if(event.target===this)closeM('m-marco')">
   <div class="mbox">
-    <div class="mhead" style="text-align:center"><h3 id="m-marco-head" style="color:var(--gold)">CONTACTER MARCO POUR RESERVER</h3></div>
+    <div class="mhead" style="text-align:center">
+      <h3 id="m-marco-head" style="color:var(--gold)">CONTACTER MARCO POUR RESERVER</h3>
+      <div id="m-marco-horaires" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--gold);line-height:1.6">INSCRIPTION VALABLE JUSQU'A 18H JOUR DE SWiTCH</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--gold);line-height:1.6">PUIS INSCRIPTION EN SALLE A PARTIR DE 19H30</div>
+    </div>
     <div class="mbody" style="text-align:center">
       <p id="m-marco-title" style="font-size:18px;font-weight:700;color:var(--white);margin-bottom:10px;animation:titlepulse 3s ease-in-out infinite">—</p>
 
       <!-- MODE NORMAL (resa on) -->
       <div id="m-marco-normal">
-        <div style="padding:4px 0 10px;text-align:center">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--gold);line-height:1.6">INSCRIPTION VALABLE JUSQU'A 18H JOUR DE SWiTCH</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--gold);line-height:1.6">PUIS INSCRIPTION EN SALLE A PARTIR DE 19H30</div>
-        </div>
         <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;margin-bottom:12px;text-align:left">
           <div id="m-marco-msg" style="font-size:13px;color:var(--white);line-height:1.5;font-style:italic;margin-bottom:8px">—</div>
           <button onclick="copyMarcoMsg()" id="m-marco-copy" style="width:100%;background:var(--gold);color:#000;border:none;border-radius:8px;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">📋 COPIER LE MESSAGE</button>
