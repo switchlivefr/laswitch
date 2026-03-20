@@ -26,7 +26,7 @@ async function readSheet(name) {
   const r = await fetch(url);
   const data = await r.json();
   if (data.error) throw new Error(data.error.message);
-  const allRows = (data.values || []).map(row => row.map(cell => String(cell || '').trim()));
+  const allRows = (data.values || []).map(row => row.map(cell => String(cell || '').trim().replace(/[`\u2018\u2019\u201A\u201B]/g, "'")));
   const hiddenRows = await getHiddenRows(name);
   return { rows: allRows.filter((_, i) => !hiddenRows[i]), sheetName: name };
 }
