@@ -284,10 +284,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
   <div class="mbox">
     <div class="mhead" style="text-align:center">
       <h3 id="m-marco-head" style="color:var(--gold)">CONTACTE MARCO POUR T'INSCRIRE</h3>
-      <div id="m-marco-horaires">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--gold);line-height:1.6">ICI JUSQU'À 17H JOUR DE SWiTCH</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--gold);line-height:1.6">PUIS EN SALLE DÈS 19H30</div>
-      </div>
+      <div id="m-marco-horaires" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--gold);line-height:1.6">ICI JUSQU'À 17H JOUR DE SWiTCH</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--gold);line-height:1.6">PUIS EN SALLE DÈS 19H30</div>
     </div>
     <div class="mbody" style="text-align:center">
       <p id="m-marco-title" style="font-size:18px;font-weight:700;color:var(--white);margin-bottom:10px;animation:titlepulse 3s ease-in-out infinite">—</p>
@@ -326,7 +324,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
           <button id="m-inscription-btn" onclick="if(this._ok)soumettreinscription()"
             style="padding:10px 14px;border-radius:8px;border:none;background:var(--gold);color:#000;font-size:20px;cursor:pointer;transition:opacity .2s;opacity:0.35">✓</button>
         </div>
-        <div id="m-inscription-ok" style="display:none;font-family:'Bebas Neue',sans-serif;font-size:22px;font-weight:700;color:#fff;letter-spacing:2px;padding:10px 0 14px">INSCRIPTION VALIDÉE</div>
+        <div id="m-inscription-ok" style="display:none;font-family:'Bebas Neue',sans-serif;font-size:22px;font-weight:700;color:#fff;letter-spacing:2px;padding:10px 0 14px">RESERVATION VALIDEE</div>
       </div>
 
     </div>
@@ -450,7 +448,7 @@ var allSongs = [];
   }
 })();
 
-function g(rows,r,col){return(rows&&rows[r]&&rows[r][col]!=null)?String(rows[r][col]).trim().replace(/‘|’|‚|‛|`/g,"'").replace(/“|”|„|‟/g,'"'):'';}
+function g(rows,r,col){return(rows&&rows[r]&&rows[r][col]!=null)?String(rows[r][col]).trim():'';}
 
 var BNM={'p-home':'bn-home','p-switch':'bn-switch','p-osl':'bn-osl','p-rules':'bn-rules','p-resa':'bn-resa'};
 function nav(id,direction){
@@ -585,8 +583,7 @@ function renderSwitch(){
     var tag=null,m1=t.match(/\[([^\]]+)\]/),m2=t.match(/\(([^)]+)\)/);
     if(m1)tag=m1[1];else if(m2)tag=m2[1];
     var clean=t.replace(/\s*\[[^\]]*\]\s*/g,'').replace(/\s*\([^)]*\)\s*/g,'').trim();
-    var full=t.trim();
-    allSongs.push({artist:a,title:clean,tag:tag,full:full});
+    allSongs.push({artist:a,title:clean,tag:tag});
   }
   var sw=document.getElementById('sw-count-sub');if(sw){var c1=g(RAW.switch.rows,0,2);sw.textContent=c1||(allSongs.length+' titres');}
   buildAlpha();
@@ -626,15 +623,15 @@ function paintSongs(list){
     body.appendChild(artist);body.appendChild(title);
     var dot=document.createElement('div');dot.className='sdot';
     row.appendChild(colA);row.appendChild(body);row.appendChild(dot);
-    (function(r,t,f){
+    (function(r,t){
       var timer;
-      r.addEventListener('touchstart',function(){timer=setTimeout(function(){openMarco(t,'switch',f);},1000);},{passive:true});
+      r.addEventListener('touchstart',function(){timer=setTimeout(function(){openMarco(t,'switch');},1000);},{passive:true});
       r.addEventListener('touchend',function(){clearTimeout(timer);},{passive:true});
       r.addEventListener('touchmove',function(){clearTimeout(timer);},{passive:true});
-      r.addEventListener('mousedown',function(){timer=setTimeout(function(){openMarco(t,'switch',f);},1000);});
+      r.addEventListener('mousedown',function(){timer=setTimeout(function(){openMarco(t,'switch');},1000);});
       r.addEventListener('mouseup',function(){clearTimeout(timer);});
       r.addEventListener('mouseleave',function(){clearTimeout(timer);});
-    })(row,s.title,s.full);
+    })(row,s.title);
     curDiv.appendChild(row);
   }
 }
@@ -667,7 +664,7 @@ function renderOSL(){
     var a=g(rows,i,0),t=g(rows,i,2),colI=g(rows,i,8);
     if(a==='FIN'||t==='fin'||t.toLowerCase()==='zzz')break;
     if(i<4||!a||!t)continue;
-    songs.push({colA:a,title:t,colI:colI,full:t});
+    songs.push({colA:a,title:t,colI:colI});
   }
   if(isTimed)songs.sort(function(a,b){if(!a.colI)return 1;if(!b.colI)return-1;return a.colI<b.colI?-1:a.colI>b.colI?1:0;});
   ce.innerHTML='';
@@ -680,22 +677,24 @@ function renderOSL(){
       var ttl=document.createElement('div');ttl.className=s.colI?'stitle':'stitle stitle-grey';ttl.textContent=s.title;
       bd.appendChild(ttl);row.appendChild(ca);row.appendChild(bd);
       if(s.colI){var ci=document.createElement('div');ci.className='scol-i';var b=document.createElement('b');b.textContent=s.colI;ci.appendChild(b);row.appendChild(ci);}
-      (function(r,t,dispo,timed,f){
+      (function(r,t,dispo,timed){
         if(timed||!dispo)return;
         var timer;
-        r.addEventListener('touchstart',function(){timer=setTimeout(function(){openMarco(t,'osl',f);},1000);},{passive:true});
+        r.addEventListener('touchstart',function(){timer=setTimeout(function(){openMarco(t,'osl');},1000);},{passive:true});
         r.addEventListener('touchend',function(){clearTimeout(timer);},{passive:true});
         r.addEventListener('touchmove',function(){clearTimeout(timer);},{passive:true});
-        r.addEventListener('mousedown',function(){timer=setTimeout(function(){openMarco(t,'osl',f);},1000);});
+        r.addEventListener('mousedown',function(){timer=setTimeout(function(){openMarco(t,'osl');},1000);});
         r.addEventListener('mouseup',function(){clearTimeout(timer);});
         r.addEventListener('mouseleave',function(){clearTimeout(timer);});
-      })(row,s.title,s.colI,isTimed,s.full);
+      })(row,s.title,s.colI,isTimed);
       sd.appendChild(row);
     }
     ce.appendChild(sd);
   }else{
-    // pas de callout : le message est déjà affiché via osl-status en haut
-  }
+    var c2=document.createElement('div');c2.className='callout';
+    var cl=document.createElement('div');cl.className='clt';cl.textContent='One Shot LIVE';
+    var cp=document.createElement('p');cp.textContent=statusTxt||noChoice;
+    c2.appendChild(cl);c2.appendChild(cp);ce.appendChild(c2);
   }
 }
 
@@ -807,9 +806,9 @@ function silentRefresh(){
 function showHint(){var el=document.getElementById('hint-bar');if(!el)return;el.classList.remove('pulsing');void el.offsetWidth;el.classList.add('pulsing');el.addEventListener('animationend',function h(){el.classList.remove('pulsing');el.removeEventListener('animationend',h);});}
 function hideHint(){var el=document.getElementById('hint-bar');if(el)el.classList.remove('pulsing');}
 
-function openMarco(title, ctx, full) {
+function openMarco(title, ctx) {
   document.getElementById('m-marco-title').textContent = title;
-  window._marcoTitle = full || title;
+  window._marcoTitle = title;
   window._marcoCtx = ctx;
 
   if (_resaOff) {
@@ -883,19 +882,17 @@ function soumettreinscription() {
   btn._ok = false;
   btn.style.opacity = '0.35';
   btn.textContent = '\u2026';
-  var url = 'https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec'
+  var url = 'https://script.google.com/macros/s/AKfycbxbbSk0CKR35xLn6PpqsR3-IXM6GFElq6NhL5q8_ti9zKd2MmRdBQm67iisrF38M06K/exec'
     + '?titre=' + encodeURIComponent(titre)
     + '&nom=' + encodeURIComponent(nom);
-  var okEl = document.getElementById('m-inscription-ok');
-  document.getElementById('m-inscription-form').style.display = 'none';
-  okEl.textContent = 'INSCRIPTION EN COURS...';
-  okEl.style.display = 'block';
   fetch(url, {method:'GET', mode:'no-cors'})
     .then(function() {
-      okEl.textContent = 'INSCRIPTION VALIDÉE';
+      document.getElementById('m-inscription-form').style.display = 'none';
+      document.getElementById('m-inscription-ok').style.display = 'block';
     })
     .catch(function() {
-      okEl.textContent = 'INSCRIPTION VALIDÉE';
+      document.getElementById('m-inscription-form').style.display = 'none';
+      document.getElementById('m-inscription-ok').style.display = 'block';
     });
 }
 
@@ -996,7 +993,6 @@ var _tapCount=0,_tapTimer=null;
 function applyResaMode(mode){
   _resaOff=(mode==='off');
   if(_resaOff){_reperShown=true;}else{_reperShown=false;}
-  var horaires=document.getElementById('m-marco-horaires');if(horaires)horaires.style.display=_resaOff?'none':'block';
   var btn=document.getElementById('bn-resa');if(!btn)return;
   if(_resaOff)btn.classList.add('bn-resa-off');else btn.classList.remove('bn-resa-off');
   var prc=document.getElementById('home-prc-link');
