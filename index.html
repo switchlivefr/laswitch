@@ -47,6 +47,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .sh-gold{background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(242,201,76,.1) 0%,transparent 70%),linear-gradient(180deg,#0d0d14 0%,var(--bg) 100%)}
 .sh-cyan{background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(52,209,192,.1) 0%,transparent 70%),linear-gradient(180deg,#080d10 0%,var(--bg) 100%)}
 .sh-amber{background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(232,148,58,.1) 0%,transparent 70%),linear-gradient(180deg,#10090a 0%,var(--bg) 100%)}
+.sh-blue{background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(74,158,255,.1) 0%,transparent 70%),linear-gradient(180deg,#080d14 0%,var(--bg) 100%)}
+.sht-blue{color:#4a9eff;text-shadow:0 0 40px rgba(74,158,255,.35)}
 .sht{font-family:'Bebas Neue',sans-serif;font-size:clamp(34px,11vw,62px);letter-spacing:3px;line-height:1}
 .sht-gold{color:var(--gold);text-shadow:0 0 40px var(--gglo)}
 .sht-cyan{color:var(--cyan);text-shadow:0 0 40px rgba(52,209,192,.35)}
@@ -163,6 +165,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
           <span style="font-size:16px">🔗</span>
         </div>
       </div>
+      <div id="home-lieu-link" style="display:none">
+        <div id="home-lieu-btn" onclick="openM('m-lieu')" style="background:var(--card);border:1px solid var(--border2);border-radius:var(--rs);padding:6px 18px;font-size:21px;font-weight:600;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:8px;position:relative">
+          <span style="visibility:hidden;font-size:16px">🔗</span>
+          <span id="home-lieu-txt">LIEU</span>
+          <span style="font-size:16px">🔗</span>
+        </div>
+      </div>
     </div>
   </div>
   <div id="home-mode-video">
@@ -234,7 +243,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
   <div class="spacer"></div>
 </div>
 
-<div class="page" id="p-resa"></div>
+<div class="page" id="p-resa">
+  <div class="sub-hero sh-blue">
+    <div class="sht sht-blue">INFORMATION</div>
+  </div>
+  <div id="info-content"><div class="empty">Chargement…</div></div>
+  <div id="info-lieu-btn" style="padding:16px 16px 8px"></div>
+</div>
 <div class="hint-bar" id="hint-bar">Appui long sur un titre pour réserver</div>
 
 <nav class="bnav">
@@ -242,7 +257,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
   <button class="bn" id="bn-switch" onclick="nav('p-switch')"><span class="ico" style="filter:hue-rotate(140deg) saturate(3) brightness(1.2)">🎵</span><span>Répertoire</span></button>
   <button class="bn" id="bn-osl" onclick="nav('p-osl')"><span class="ico">✨</span><span>One Shot Live</span></button>
   <button class="bn" id="bn-rules" onclick="nav('p-rules')"><span class="ico">📋</span><span>Inscription</span></button>
-  <button class="bn" id="bn-resa" onclick="openM('m-resa')"><span class="ico">🍽️</span><span>Réservation</span></button>
+  <button class="bn" id="bn-resa" onclick="nav('p-resa')"><span class="ico">ℹ️</span><span>Information</span></button>
 </nav>
 
 <!-- MODALE : Pro Race Cafe -->
@@ -252,6 +267,20 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
     <div class="mfoot" style="gap:8px">
       <button class="mbtn sec" onclick="closeM('m-prc')">Annuler</button>
       <button class="mbtn" onclick="window.open('https://www.proracecafe.com/','_blank');closeM('m-prc')" style="background:var(--gold);color:#000">Continuer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE : Lieu (resa off) -->
+<div class="moverlay" id="m-lieu" onclick="if(event.target===this)closeM('m-lieu')">
+  <div class="mbox">
+    <div class="mhead" style="text-align:center"><h3 id="m-lieu-head" style="color:var(--gold)"></h3></div>
+    <div class="mbody" style="text-align:center">
+      <p id="m-lieu-body" style="color:#b0adc4;font-size:15px;line-height:1.8"></p>
+    </div>
+    <div class="mfoot" style="gap:8px">
+      <button class="mbtn sec" onclick="closeM('m-lieu')">Annuler</button>
+      <button class="mbtn" id="m-lieu-btn-continuer" onclick="closeM('m-lieu')" style="background:var(--gold);color:#000">Continuer</button>
     </div>
   </div>
 </div>
@@ -474,6 +503,7 @@ function nav(id,direction){
   if(id==='p-switch'){renderSwitch();showHint();if(!_reperShown){_reperShown=true;setTimeout(function(){openM('m-reper-osl');},200);}}
   if(id==='p-osl'){renderOSL();_reperShown=true;}
   if(id==='p-rules'){renderRules();hideHint();}
+  if(id==='p-resa'){renderInfo();hideHint();}
   if(id==='p-home')hideHint();
 }
 
@@ -741,6 +771,70 @@ function renderRules(){
   wrap.appendChild(card);re.appendChild(wrap);
 }
 
+function renderLieuHome(){
+  var dl=RAW.informationLieu;
+  if(!dl||dl.error||!dl.rows)return;
+  var lr=dl.rows;
+  var c2=lr[1]&&lr[1][2]?lr[1][2].trim():'LIEU';
+  var c10=lr[9]&&lr[9][2]?lr[9][2].trim():'';
+  var c11=lr[10]&&lr[10][2]?lr[10][2].trim():'';
+  // Bouton accueil
+  var txt=document.getElementById('home-lieu-txt');
+  if(txt)txt.textContent=c2;
+  // Modale
+  var head=document.getElementById('m-lieu-head');
+  if(head)head.textContent='ALLER SUR '+c2.toUpperCase();
+  var body=document.getElementById('m-lieu-body');
+  if(body)body.textContent=c11;
+  var btnC=document.getElementById('m-lieu-btn-continuer');
+  if(btnC&&c10){btnC.onclick=function(){window.open(c10,'_blank');closeM('m-lieu');};}
+}
+
+function renderInfo(){
+  var re=document.getElementById('info-content');
+  var lb=document.getElementById('info-lieu-btn');
+  var d=RAW.information;
+  if(!d||d.error){if(re)re.innerHTML='<div class="empty">Données indisponibles</div>';return;}
+  var rows=d.rows;re.innerHTML='';
+  var wrap=document.createElement('div');wrap.className='cc-wrap';
+  var card=document.createElement('div');card.className='cc';
+  for(var i=0;i<rows.length;i++){
+    var codeA=(rows[i][0]||'').trim().toUpperCase();
+    if(codeA==='X')continue;
+    var txt='';
+    var colB=(rows[i][1]||'').trim();
+    var colC=(rows[i][2]||'').trim();
+    txt=colB||colC;
+    if(!txt)continue;
+    if(codeA==='T'){var ti=document.createElement('div');ti.className='sec';ti.textContent=txt;card.appendChild(ti);}
+    else if(codeA==='H'){var sh=document.createElement('div');sh.className='sec';sh.textContent=txt;card.appendChild(sh);}
+    else if(codeA==='S'){var ss=document.createElement('div');ss.className='sec sub';ss.textContent=txt;card.appendChild(ss);}
+    else if(codeA==='K'){var lk=txt.split(/[\n\r]+/);for(var lki=0;lki<lk.length;lki++){var lkl=lk[lki].trim();if(!lkl)continue;var lkp=document.createElement('p');lkp.textContent=lkl;card.appendChild(lkp);}}
+    else{var lines=txt.split(/[\n\r]+/);for(var li=0;li<lines.length;li++){var line=lines[li].trim();if(!line)continue;var p=document.createElement('p');p.textContent=line;card.appendChild(p);}}
+  }
+  wrap.appendChild(card);re.appendChild(wrap);
+
+  // Bouton lieu
+  if(lb)lb.innerHTML='';
+  var dl=RAW.informationLieu;
+  if(dl&&!dl.error&&dl.rows){
+    var lr=dl.rows;
+    var c4=lr[3]&&lr[3][2]?lr[3][2].trim():'';
+    var c5=lr[4]&&lr[4][2]?lr[4][2].trim():'';
+    var c6=lr[5]&&lr[5][2]?lr[5][2].trim():'';
+    var c8=lr[7]&&lr[7][2]?lr[7][2].trim():'';
+    var addrLines=[c4,c5,c6].filter(function(x){return x;});
+    if(addrLines.length&&c8&&lb){
+      var mapsUrl='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(c8);
+      var a=document.createElement('a');
+      a.href=mapsUrl;
+      a.style.cssText='text-decoration:none;display:flex;align-items:center;border:1px solid rgba(52,209,192,.22);border-radius:10px;padding:10px 18px;width:100%;box-sizing:border-box';
+      a.innerHTML='<span style="display:inline-flex;align-items:center;gap:8px"><span style="font-size:1.2em;flex-shrink:0">📍</span><span style="color:var(--cyan);font-size:16px;line-height:1.5;text-align:left">'+addrLines.join('<br>')+'</span></span>';
+      lb.appendChild(a);
+    }
+  }
+}
+
 function renderOslPitch(){
   var el=document.getElementById('m-osl-body');
   if(!el)return;
@@ -799,6 +893,7 @@ function silentRefresh(){
       if(currentPage==='p-switch'){renderSwitch();window.scrollTo(0,sy);}
       if(currentPage==='p-osl')renderOSL();
       if(currentPage==='p-rules')renderRules();
+      if(currentPage==='p-resa')renderInfo();
     }).catch(function(){});
 }
 
@@ -1000,9 +1095,12 @@ function applyResaMode(mode){
   if(_resaOff){_reperShown=true;}else{_reperShown=false;}
   var horaires=document.getElementById('m-marco-horaires');if(horaires)horaires.style.display=_resaOff?'none':'block';
   var btn=document.getElementById('bn-resa');if(!btn)return;
-  if(_resaOff)btn.classList.add('bn-resa-off');else btn.classList.remove('bn-resa-off');
+  // onglet information toujours accessible
   var prc=document.getElementById('home-prc-link');
   if(prc)prc.style.display=_resaOff?'none':'block';
+  var lieu=document.getElementById('home-lieu-link');
+  if(lieu)lieu.style.display=_resaOff?'block':'none';
+  if(_resaOff)renderLieuHome();
   if(document.getElementById('rules-content'))renderRules();
 }
 function secretTap(){
