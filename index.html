@@ -320,7 +320,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
       <!-- MODE INSCRIPTION (resa off) -->
       <div id="m-marco-inscription" style="display:none">
         <div id="m-inscription-form" style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
-          <input id="m-inscription-nom" type="text" placeholder="Inscris ton prénom et ton nom"
+          <input id="m-inscription-nom" type="text" placeholder="Inscrire nom et prénom"
             oninput="var b=document.getElementById('m-inscription-btn');b.style.opacity=this.value.trim()?'1':'0.35';b._ok=!!this.value.trim();"
             style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#fff;color:#000;font-size:15px;font-family:'DM Sans',sans-serif;outline:none"/>
           <button id="m-inscription-btn" onclick="if(this._ok)soumettreinscription()"
@@ -450,7 +450,7 @@ var allSongs = [];
   }
 })();
 
-function g(rows,r,col){return(rows&&rows[r]&&rows[r][col]!=null)?String(rows[r][col]).trim().replace(/‘|’|‚|‛/g,"'").replace(/“|”|„|‟/g,'"'):'';}
+function g(rows,r,col){return(rows&&rows[r]&&rows[r][col]!=null)?String(rows[r][col]).trim().replace(/‘|’|‚|‛|`/g,"'").replace(/“|”|„|‟/g,'"'):'';}
 
 var BNM={'p-home':'bn-home','p-switch':'bn-switch','p-osl':'bn-osl','p-rules':'bn-rules','p-resa':'bn-resa'};
 function nav(id,direction){
@@ -694,10 +694,12 @@ function renderOSL(){
     }
     ce.appendChild(sd);
   }else{
-    var c2=document.createElement('div');c2.className='callout';
-    var cl=document.createElement('div');cl.className='clt';cl.textContent='One Shot LIVE';
-    var cp=document.createElement('p');cp.textContent=statusTxt||noChoice;
-    c2.appendChild(cl);c2.appendChild(cp);ce.appendChild(c2);
+    if(!statusTxt){
+      var c2=document.createElement('div');c2.className='callout';
+      var cl=document.createElement('div');cl.className='clt';cl.textContent='One Shot LIVE';
+      var cp=document.createElement('p');cp.textContent=noChoice;
+      c2.appendChild(cl);c2.appendChild(cp);ce.appendChild(c2);
+    }
   }
 }
 
