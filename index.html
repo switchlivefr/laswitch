@@ -816,7 +816,7 @@ function openMarco(title, ctx, full) {
     var limite = 40;
     if (RAW.inscriptions && RAW.inscriptions.rows) {
       var irows = RAW.inscriptions.rows;
-      if (irows[0] && irows[0][1]) limite = parseInt(irows[0][1]) || 40;
+      if (irows[1] && irows[1][1] !== '' && irows[1][1] !== null) limite = parseInt(irows[1][1]);
       for (var i = 0; i < irows.length; i++) {
         if (irows[i] && irows[i][5] && irows[i][5].trim()) count++;
       }
