@@ -138,6 +138,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .osl-slogan{text-align:center;padding:8px 16px 4px;font-size:clamp(13px,3.8vw,18px);font-weight:700;color:#e8407a;letter-spacing:.3px;font-family:'Bebas Neue',sans-serif;line-height:1.2;white-space:nowrap}
 .cc .sec{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--amber);font-weight:700;margin:14px 0 4px;display:block}
 .cc .sec.sub{font-size:15px;color:var(--white);font-family:'DM Sans',sans-serif;font-weight:700;margin:6px 0 2px}
+.cc-info .sec{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:#4a9eff;font-weight:700;margin:14px 0 4px;display:block}
+.cc-info .sec.sub{font-size:15px;color:var(--white);font-family:'DM Sans',sans-serif;font-weight:700;margin:6px 0 2px}
 .hint-bar{position:fixed;bottom:calc(var(--nh) + env(safe-area-inset-bottom));left:0;right:0;z-index:150;text-align:center;padding:8px 12px;background:var(--bg);border-top:1px solid var(--border);font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;color:var(--gold);opacity:0;pointer-events:none}
 .hint-bar.pulsing{animation:hintpulse 3s ease-in-out 3;pointer-events:auto}
 .spacer{height:20px}
@@ -257,7 +259,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
   <button class="bn" id="bn-switch" onclick="nav('p-switch')"><span class="ico" style="filter:hue-rotate(140deg) saturate(3) brightness(1.2)">🎵</span><span>Répertoire</span></button>
   <button class="bn" id="bn-osl" onclick="nav('p-osl')"><span class="ico">✨</span><span>One Shot Live</span></button>
   <button class="bn" id="bn-rules" onclick="nav('p-rules')"><span class="ico">📋</span><span>Inscription</span></button>
-  <button class="bn" id="bn-resa" onclick="nav('p-resa')"><span class="ico">ℹ️</span><span>Information</span></button>
+  <button class="bn" id="bn-resa" onclick="bnResaClick()"><span class="ico" id="bn-resa-ico">🍽️</span><span id="bn-resa-lbl">Réservation</span></button>
 </nav>
 
 <!-- MODALE : Pro Race Cafe -->
@@ -275,9 +277,6 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 <div class="moverlay" id="m-lieu" onclick="if(event.target===this)closeM('m-lieu')">
   <div class="mbox">
     <div class="mhead" style="text-align:center"><h3 id="m-lieu-head" style="color:var(--gold)"></h3></div>
-    <div class="mbody" style="text-align:center">
-      <p id="m-lieu-body" style="color:#b0adc4;font-size:15px;line-height:1.8"></p>
-    </div>
     <div class="mfoot" style="gap:8px">
       <button class="mbtn sec" onclick="closeM('m-lieu')">Annuler</button>
       <button class="mbtn" id="m-lieu-btn-continuer" onclick="closeM('m-lieu')" style="background:var(--gold);color:#000">Continuer</button>
@@ -771,6 +770,10 @@ function renderRules(){
   wrap.appendChild(card);re.appendChild(wrap);
 }
 
+function bnResaClick(){
+  if(_resaOff){nav('p-resa');}else{openM('m-resa');}
+}
+
 function renderLieuHome(){
   var dl=RAW.informationLieu;
   if(!dl||dl.error||!dl.rows)return;
@@ -783,9 +786,7 @@ function renderLieuHome(){
   if(txt)txt.textContent=c2;
   // Modale
   var head=document.getElementById('m-lieu-head');
-  if(head)head.textContent='ALLER SUR '+c2.toUpperCase();
-  var body=document.getElementById('m-lieu-body');
-  if(body)body.textContent=c11;
+  if(head)head.textContent=c11;
   var btnC=document.getElementById('m-lieu-btn-continuer');
   if(btnC&&c10){btnC.onclick=function(){window.open(c10,'_blank');closeM('m-lieu');};}
 }
@@ -797,7 +798,7 @@ function renderInfo(){
   if(!d||d.error){if(re)re.innerHTML='<div class="empty">Données indisponibles</div>';return;}
   var rows=d.rows;re.innerHTML='';
   var wrap=document.createElement('div');wrap.className='cc-wrap';
-  var card=document.createElement('div');card.className='cc';
+  var card=document.createElement('div');card.className='cc cc-info';
   for(var i=0;i<rows.length;i++){
     var codeA=(rows[i][0]||'').trim().toUpperCase();
     if(codeA==='X')continue;
@@ -1095,7 +1096,10 @@ function applyResaMode(mode){
   if(_resaOff){_reperShown=true;}else{_reperShown=false;}
   var horaires=document.getElementById('m-marco-horaires');if(horaires)horaires.style.display=_resaOff?'none':'block';
   var btn=document.getElementById('bn-resa');if(!btn)return;
-  // onglet information toujours accessible
+  var bnIco=document.getElementById('bn-resa-ico');
+  var bnLbl=document.getElementById('bn-resa-lbl');
+  if(bnIco)bnIco.textContent=_resaOff?'ℹ️':'🍽️';
+  if(bnLbl)bnLbl.textContent=_resaOff?'Information':'Réservation';
   var prc=document.getElementById('home-prc-link');
   if(prc)prc.style.display=_resaOff?'none':'block';
   var lieu=document.getElementById('home-lieu-link');
