@@ -6,8 +6,10 @@ const SHEETS = {
   'pitchSw':      'PITCH SWiTCH',
   'regles':       'REGLES',
   'pitchOsl':     'PITCH ONE SHOT LIVE',
-  'inscriptions': 'INSCRIPTIONS',
-  'contactSw':    'CONTACT SWiTCH'
+  'inscriptions':    'INSCRIPTIONS',
+  'contactSw':       'CONTACT SWiTCH',
+  'information':     'INFORMATION',
+  'informationLieu': 'INFORMATION LIEU'
 };
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRxLRh2URcPDRhMKC9mQwDsToEBTGCkrRrULgAFqYSvaldTh2wWRZGP7vbZa9eMYWP/exec';
 
