@@ -345,7 +345,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 <!-- MODALE INSCRIPTIONS CLOSES -->
 <div class="moverlay" id="m-closes" onclick="if(event.target===this)closeM('m-closes')">
   <div class="mbox">
-    <div class="mhead" style="text-align:center"><h3 style="color:var(--gold)">INSCRIPTIONS SUSPENDUES</h3></div>
+    <div class="mhead" style="text-align:center"><h3 id="m-closes-head" style="color:var(--gold)">INSCRIPTIONS SUSPENDUES</h3></div>
     <div class="mfoot" style="flex-direction:column;gap:8px">
       <button onclick="openLink('https://m.me/marco.onlyformusic','m-closes')" style="width:100%;padding:12px;border-radius:var(--rs);border:none;background:var(--card);border:1px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877f2"><path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.744 6.614 4.469 8.652V24l4.088-2.242c1.092.3 2.246.464 3.443.464 6.627 0 12-4.974 12-11.111S18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.732 8l3.131 3.259L19.752 8l-6.561 6.963z"/></svg>
@@ -819,7 +819,17 @@ function openMarco(title, ctx, full) {
       if (irows[0] && irows[0][0] !== '' && irows[0][0] !== null) count = parseInt(irows[0][0]) || 0;
       if (irows[0] && irows[0][1] !== '' && irows[0][1] !== null) limite = parseInt(irows[0][1]);
     }
-    if (count >= limite) { openM('m-closes'); return; }
+    if (count >= limite) {
+      var closesHead = document.getElementById('m-closes-head');
+      if (closesHead) {
+        if (limite === 0) {
+          closesHead.innerHTML = 'OUVERTURE DES INSCRIPTIONS<br>PROCHAINEMENT';
+        } else {
+          closesHead.textContent = 'INSCRIPTIONS CLOSES';
+        }
+      }
+      openM('m-closes'); return;
+    }
 
     document.getElementById('m-marco-normal').style.display = 'none';
     document.getElementById('m-marco-inscription').style.display = 'block';
