@@ -585,7 +585,8 @@ function renderSwitch(){
     var tag=null,m1=t.match(/\[([^\]]+)\]/),m2=t.match(/\(([^)]+)\)/);
     if(m1)tag=m1[1];else if(m2)tag=m2[1];
     var clean=t.replace(/\s*\[[^\]]*\]\s*/g,'').replace(/\s*\([^)]*\)\s*/g,'').trim();
-    allSongs.push({artist:a,title:clean,tag:tag});
+    var full=t.trim();
+    allSongs.push({artist:a,title:clean,tag:tag,full:full});
   }
   var sw=document.getElementById('sw-count-sub');if(sw){var c1=g(RAW.switch.rows,0,2);sw.textContent=c1||(allSongs.length+' titres');}
   buildAlpha();
@@ -625,15 +626,15 @@ function paintSongs(list){
     body.appendChild(artist);body.appendChild(title);
     var dot=document.createElement('div');dot.className='sdot';
     row.appendChild(colA);row.appendChild(body);row.appendChild(dot);
-    (function(r,t){
+    (function(r,t,f){
       var timer;
-      r.addEventListener('touchstart',function(){timer=setTimeout(function(){openMarco(t,'switch');},1000);},{passive:true});
+      r.addEventListener('touchstart',function(){timer=setTimeout(function(){openMarco(t,'switch',f);},1000);},{passive:true});
       r.addEventListener('touchend',function(){clearTimeout(timer);},{passive:true});
       r.addEventListener('touchmove',function(){clearTimeout(timer);},{passive:true});
-      r.addEventListener('mousedown',function(){timer=setTimeout(function(){openMarco(t,'switch');},1000);});
+      r.addEventListener('mousedown',function(){timer=setTimeout(function(){openMarco(t,'switch',f);},1000);});
       r.addEventListener('mouseup',function(){clearTimeout(timer);});
       r.addEventListener('mouseleave',function(){clearTimeout(timer);});
-    })(row,s.title);
+    })(row,s.title,s.full);
     curDiv.appendChild(row);
   }
 }
@@ -666,7 +667,7 @@ function renderOSL(){
     var a=g(rows,i,0),t=g(rows,i,2),colI=g(rows,i,8);
     if(a==='FIN'||t==='fin'||t.toLowerCase()==='zzz')break;
     if(i<4||!a||!t)continue;
-    songs.push({colA:a,title:t,colI:colI});
+    songs.push({colA:a,title:t,colI:colI,full:t});
   }
   if(isTimed)songs.sort(function(a,b){if(!a.colI)return 1;if(!b.colI)return-1;return a.colI<b.colI?-1:a.colI>b.colI?1:0;});
   ce.innerHTML='';
@@ -679,16 +680,16 @@ function renderOSL(){
       var ttl=document.createElement('div');ttl.className=s.colI?'stitle':'stitle stitle-grey';ttl.textContent=s.title;
       bd.appendChild(ttl);row.appendChild(ca);row.appendChild(bd);
       if(s.colI){var ci=document.createElement('div');ci.className='scol-i';var b=document.createElement('b');b.textContent=s.colI;ci.appendChild(b);row.appendChild(ci);}
-      (function(r,t,dispo,timed){
+      (function(r,t,dispo,timed,f){
         if(timed||!dispo)return;
         var timer;
-        r.addEventListener('touchstart',function(){timer=setTimeout(function(){openMarco(t,'osl');},1000);},{passive:true});
+        r.addEventListener('touchstart',function(){timer=setTimeout(function(){openMarco(t,'osl',f);},1000);},{passive:true});
         r.addEventListener('touchend',function(){clearTimeout(timer);},{passive:true});
         r.addEventListener('touchmove',function(){clearTimeout(timer);},{passive:true});
-        r.addEventListener('mousedown',function(){timer=setTimeout(function(){openMarco(t,'osl');},1000);});
+        r.addEventListener('mousedown',function(){timer=setTimeout(function(){openMarco(t,'osl',f);},1000);});
         r.addEventListener('mouseup',function(){clearTimeout(timer);});
         r.addEventListener('mouseleave',function(){clearTimeout(timer);});
-      })(row,s.title,s.colI,isTimed);
+      })(row,s.title,s.colI,isTimed,s.full);
       sd.appendChild(row);
     }
     ce.appendChild(sd);
@@ -808,9 +809,9 @@ function silentRefresh(){
 function showHint(){var el=document.getElementById('hint-bar');if(!el)return;el.classList.remove('pulsing');void el.offsetWidth;el.classList.add('pulsing');el.addEventListener('animationend',function h(){el.classList.remove('pulsing');el.removeEventListener('animationend',h);});}
 function hideHint(){var el=document.getElementById('hint-bar');if(el)el.classList.remove('pulsing');}
 
-function openMarco(title, ctx) {
+function openMarco(title, ctx, full) {
   document.getElementById('m-marco-title').textContent = title;
-  window._marcoTitle = title;
+  window._marcoTitle = full || title;
   window._marcoCtx = ctx;
 
   if (_resaOff) {
