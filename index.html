@@ -885,12 +885,15 @@ function soumettreinscription() {
   var url = 'https://script.google.com/macros/s/AKfycbxbbSk0CKR35xLn6PpqsR3-IXM6GFElq6NhL5q8_ti9zKd2MmRdBQm67iisrF38M06K/exec'
     + '?titre=' + encodeURIComponent(titre)
     + '&nom=' + encodeURIComponent(nom);
-  var img = new Image();
-  img.onload = img.onerror = function() {
-    document.getElementById('m-inscription-form').style.display = 'none';
-    document.getElementById('m-inscription-ok').style.display = 'block';
-  };
-  img.src = url;
+  fetch(url, {method:'GET', mode:'no-cors'})
+    .then(function() {
+      document.getElementById('m-inscription-form').style.display = 'none';
+      document.getElementById('m-inscription-ok').style.display = 'block';
+    })
+    .catch(function() {
+      document.getElementById('m-inscription-form').style.display = 'none';
+      document.getElementById('m-inscription-ok').style.display = 'block';
+    });
 }
 
 function copyMarcoMsg(){
