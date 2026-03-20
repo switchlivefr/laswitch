@@ -989,6 +989,7 @@ function secretTap2(){
 var _tapCount=0,_tapTimer=null;
 function applyResaMode(mode){
   _resaOff=(mode==='off');
+  if(_resaOff){_reperShown=true;}else{_reperShown=false;}
   var btn=document.getElementById('bn-resa');if(!btn)return;
   if(_resaOff)btn.classList.add('bn-resa-off');else btn.classList.remove('bn-resa-off');
   var prc=document.getElementById('home-prc-link');
