@@ -889,7 +889,7 @@ function soumettreinscription() {
     + '&nom=' + encodeURIComponent(nom);
   var okEl = document.getElementById('m-inscription-ok');
   document.getElementById('m-inscription-form').style.display = 'none';
-  okEl.textContent = 'PATIENTEZ…';
+  okEl.textContent = 'INSCRIPTION EN COURS...';
   okEl.style.display = 'block';
   fetch(url, {method:'GET', mode:'no-cors'})
     .then(function() {
