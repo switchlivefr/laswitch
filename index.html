@@ -284,8 +284,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
   <div class="mbox">
     <div class="mhead" style="text-align:center">
       <h3 id="m-marco-head" style="color:var(--gold)">CONTACTE MARCO POUR T'INSCRIRE</h3>
-      <div id="m-marco-horaires" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--gold);line-height:1.6">ICI JUSQU'À 17H JOUR DE SWiTCH</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--gold);line-height:1.6">PUIS EN SALLE DÈS 19H30</div>
+      <div id="m-marco-horaires">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--gold);line-height:1.6">ICI JUSQU'À 17H JOUR DE SWiTCH</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--gold);line-height:1.6">PUIS EN SALLE DÈS 19H30</div>
+      </div>
     </div>
     <div class="mbody" style="text-align:center">
       <p id="m-marco-title" style="font-size:18px;font-weight:700;color:var(--white);margin-bottom:10px;animation:titlepulse 3s ease-in-out infinite">—</p>
@@ -993,6 +995,7 @@ var _tapCount=0,_tapTimer=null;
 function applyResaMode(mode){
   _resaOff=(mode==='off');
   if(_resaOff){_reperShown=true;}else{_reperShown=false;}
+  var horaires=document.getElementById('m-marco-horaires');if(horaires)horaires.style.display=_resaOff?'none':'block';
   var btn=document.getElementById('bn-resa');if(!btn)return;
   if(_resaOff)btn.classList.add('bn-resa-off');else btn.classList.remove('bn-resa-off');
   var prc=document.getElementById('home-prc-link');
