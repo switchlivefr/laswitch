@@ -887,14 +887,16 @@ function soumettreinscription() {
   var url = 'https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec'
     + '?titre=' + encodeURIComponent(titre)
     + '&nom=' + encodeURIComponent(nom);
+  var okEl = document.getElementById('m-inscription-ok');
+  document.getElementById('m-inscription-form').style.display = 'none';
+  okEl.textContent = 'PATIENTEZ…';
+  okEl.style.display = 'block';
   fetch(url, {method:'GET', mode:'no-cors'})
     .then(function() {
-      document.getElementById('m-inscription-form').style.display = 'none';
-      document.getElementById('m-inscription-ok').style.display = 'block';
+      okEl.textContent = 'INSCRIPTION VALIDÉE';
     })
     .catch(function() {
-      document.getElementById('m-inscription-form').style.display = 'none';
-      document.getElementById('m-inscription-ok').style.display = 'block';
+      okEl.textContent = 'INSCRIPTION VALIDÉE';
     });
 }
 
