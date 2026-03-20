@@ -450,7 +450,7 @@ var allSongs = [];
   }
 })();
 
-function g(rows,r,col){return(rows&&rows[r]&&rows[r][col]!=null)?String(rows[r][col]).trim():'';}
+function g(rows,r,col){return(rows&&rows[r]&&rows[r][col]!=null)?String(rows[r][col]).trim().replace(/‘|’|‚|‛/g,"'").replace(/“|”|„|‟/g,'"'):'';}
 
 var BNM={'p-home':'bn-home','p-switch':'bn-switch','p-osl':'bn-osl','p-rules':'bn-rules','p-resa':'bn-resa'};
 function nav(id,direction){
