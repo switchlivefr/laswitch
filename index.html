@@ -472,7 +472,7 @@ function nav(id,direction){
     }else{ne.classList.add('active');}
   }
   if(id==='p-switch'){renderSwitch();showHint();if(!_reperShown){_reperShown=true;setTimeout(function(){openM('m-reper-osl');},200);}}
-  if(id==='p-osl'){renderOSL();showHint();_reperShown=true;}
+  if(id==='p-osl'){renderOSL();_reperShown=true;}
   if(id==='p-rules'){renderRules();hideHint();}
   if(id==='p-home')hideHint();
 }
@@ -670,6 +670,7 @@ function renderOSL(){
     songs.push({colA:a,title:t,colI:colI,full:t});
   }
   if(isTimed)songs.sort(function(a,b){if(!a.colI)return 1;if(!b.colI)return-1;return a.colI<b.colI?-1:a.colI>b.colI?1:0;});
+  if(songs.length)showHint();else hideHint();
   ce.innerHTML='';
   if(songs.length){
     var sd=document.createElement('div');sd.className='slist';sd.style.padding='0 16px';
