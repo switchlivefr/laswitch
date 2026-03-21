@@ -154,12 +154,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 #scroll-hint-up{top:16px;animation:scrollpulse-up 1.5s ease-in-out infinite}
 #scroll-hint-down.visible{opacity:1}
 #scroll-hint-up{opacity:0 !important}
-@keyframes scrollpulse{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
-@keyframes scrollpulse-up{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes scrollpulse{0%,100%{transform:translateY(0);opacity:.2}50%{transform:translateY(4px);opacity:1}}
+@keyframes scrollpulse-up{0%,100%{transform:translateY(0);opacity:.2}50%{transform:translateY(-4px);opacity:1}}
+@keyframes mbodypulse{0%,100%{transform:translateY(0);opacity:.2}50%{transform:translateY(4px);opacity:1}}
 .mbody-hint{position:sticky;font-size:19px;opacity:0;pointer-events:none;transition:opacity .3s;display:block;height:0;overflow:visible;line-height:0;margin-right:-18px;text-align:right}
 .mbody-hint-down.visible{opacity:1}
 .mbody-hint-up{opacity:0 !important}
-.mbody-hint-down{bottom:4px;animation:scrollpulse 1.5s ease-in-out infinite}
+.mbody-hint-down{bottom:4px;animation:mbodypulse 1.5s ease-in-out infinite}
 .mbody-hint-up{top:0px;animation:scrollpulse-up 1.5s ease-in-out infinite}
 .hint-bar{position:fixed;bottom:calc(var(--nh) + env(safe-area-inset-bottom));left:0;right:0;z-index:150;text-align:center;padding:8px 12px;background:var(--bg);border-top:1px solid var(--border);font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;color:var(--gold);opacity:0;pointer-events:none}
 .hint-bar.pulsing{animation:hintpulse 3s ease-in-out 3;pointer-events:auto}
@@ -273,7 +274,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
   <div id="info-content"><div class="empty">Chargement…</div></div>
   <div id="info-lieu-btn"></div>
 </div>
-<div class="hint-bar" id="hint-bar">Appui long sur un titre pour réserver</div>
+<div class="hint-bar" id="hint-bar">APPUI LONG SUR UN TITRE POUR S'INSCRIRE</div>
 
 <nav class="bnav">
   <button class="bn active" id="bn-home" onclick="nav('p-home')"><span class="ico">🏠</span><span>Accueil</span></button>
