@@ -140,17 +140,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .cc .sec.sub{font-size:15px;color:var(--white);font-family:'DM Sans',sans-serif;font-weight:700;margin:6px 0 2px}
 .cc-info .sec{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:#4a9eff;font-weight:700;margin:14px 0 4px;display:block}
 .cc-info .sec.sub{font-size:15px;color:var(--white);font-family:'DM Sans',sans-serif;font-weight:700;margin:6px 0 2px}
-.cc-info p{line-height:1.4;margin-bottom:6px}
-#scroll-hint-down,#scroll-hint-up{position:fixed;right:6px;font-size:19px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:9999}
-#scroll-hint-down{bottom:calc(var(--nh) + 16px);animation:scrollpulse 1.5s ease-in-out infinite}
-#scroll-hint-up{top:16px;animation:scrollpulse-up 1.5s ease-in-out infinite}
-#scroll-hint-down.visible,#scroll-hint-up.visible{opacity:1}
-@keyframes scrollpulse{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
-@keyframes scrollpulse-up{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-.mbody-hint{position:sticky;font-size:19px;opacity:0;pointer-events:none;transition:opacity .3s;display:block;height:0;overflow:visible;line-height:0;margin-right:-18px;text-align:right}
-.mbody-hint.visible{opacity:1}
-.mbody-hint-down{bottom:4px;animation:scrollpulse 1.5s ease-in-out infinite}
-.mbody-hint-up{top:0px;animation:scrollpulse-up 1.5s ease-in-out infinite}
+#info-lieu-btn:not(:empty){position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--border);padding:12px 16px;margin-top:8px}
 .hint-bar{position:fixed;bottom:calc(var(--nh) + env(safe-area-inset-bottom));left:0;right:0;z-index:150;text-align:center;padding:8px 12px;background:var(--bg);border-top:1px solid var(--border);font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;color:var(--gold);opacity:0;pointer-events:none}
 .hint-bar.pulsing{animation:hintpulse 3s ease-in-out 3;pointer-events:auto}
 .spacer{height:20px}
@@ -256,12 +246,12 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
   <div class="spacer"></div>
 </div>
 
-<div class="page" id="p-resa" style="display:flex;flex-direction:column;overflow:hidden">
-  <div class="sub-hero sh-blue" style="flex-shrink:0">
+<div class="page" id="p-resa">
+  <div class="sub-hero sh-blue">
     <div class="sht sht-blue">INFORMATION</div>
   </div>
-  <div id="info-content" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch"><div class="empty">Chargement…</div></div>
-  <div id="info-lieu-btn" style="padding:12px 16px;flex-shrink:0;border-top:1px solid var(--border);background:var(--bg)"></div>
+  <div id="info-content"><div class="empty">Chargement…</div></div>
+  <div id="info-lieu-btn" style="padding:16px 16px 8px"></div>
 </div>
 <div class="hint-bar" id="hint-bar">Appui long sur un titre pour réserver</div>
 
@@ -512,10 +502,9 @@ function nav(id,direction){
   }
   if(id==='p-switch'){renderSwitch();showHint();if(!_reperShown){_reperShown=true;setTimeout(function(){openM('m-reper-osl');},200);}}
   if(id==='p-osl'){renderOSL();_reperShown=true;}
-  if(id==='p-rules'){renderRules();hideHint();setTimeout(function(){initScrollHints(document.getElementById('p-rules'));},300);}
-  if(id==='p-resa'){renderInfo();hideHint();setTimeout(function(){initScrollHintsPage(document.getElementById('info-content'));},400);}
-  if(id==='p-home'){hideHint();hideScrollHints();}
-  if(id==='p-switch'||id==='p-osl')hideScrollHints();
+  if(id==='p-rules'){renderRules();hideHint();}
+  if(id==='p-resa'){renderInfo();hideHint();}
+  if(id==='p-home')hideHint();
 }
 
 document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')){e.preventDefault();return false;}},true);
@@ -523,11 +512,10 @@ function openM(id){
   var el=document.getElementById(id);el.classList.add('open');
   document.body.style.overflow='hidden';
   if(id==='m-reper-osl'){el.classList.add('fadein');}
-  var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);
   if(id==='m-osl')renderOslPitch();
   if(id==='m-home-pitch'||id==='m-renseignements'||id==='m-resa'){muteVideo();_videoMuted=true;}
 }
-function closeM(id){hideScrollHints();
+function closeM(id){
   document.getElementById(id).classList.remove('open');
   if(!document.querySelector('.moverlay.open')&&!document.querySelector('.coverlay.open')){
     document.body.style.overflow='';
@@ -787,79 +775,6 @@ function bnResaClick(){
   if(_resaOff){nav('p-resa');}else{openM('m-resa');}
 }
 
-// Créer les indicateurs fixes une seule fois
-(function(){
-  var dn=document.createElement('div');dn.id='scroll-hint-down';dn.textContent='👇';
-  var up=document.createElement('div');up.id='scroll-hint-up';up.textContent='👆';
-  document.body.appendChild(dn);document.body.appendChild(up);
-})();
-
-var _scrollHintEl=null,_scrollHintListener=null;
-
-function initScrollHintsPage(el){
-  // Pour info-content : scroll sur l'élément lui-même comme une modale
-  if(!el)return;
-  initScrollHintsModal(el);
-}
-
-function initScrollHints(pageId){
-  var dn=document.getElementById('scroll-hint-down');
-  var up=document.getElementById('scroll-hint-up');
-  if(!dn||!up)return;
-  if(_scrollHintListener){window.removeEventListener('scroll',_scrollHintListener);}
-  function update(){
-    var el=document.documentElement;
-    var atTop=window.scrollY<=4;
-    var atBot=window.scrollY+window.innerHeight>=el.scrollHeight-4;
-    var needsScroll=el.scrollHeight>window.innerHeight+8;
-    dn.classList.toggle('visible',needsScroll&&!atBot);
-    up.classList.toggle('visible',needsScroll&&!atTop);
-  }
-  _scrollHintListener=update;
-  window.addEventListener('scroll',update,{passive:true});
-  setTimeout(update,400);
-}
-
-function initScrollHintsModal(mbody){
-  if(!mbody)return;
-  // Nettoyer anciens hints
-  var old=mbody.querySelectorAll('.mbody-hint');
-  old.forEach(function(o){o.remove();});
-  // Créer hints sticky dans mbody
-  var up=document.createElement('span');
-  up.className='mbody-hint mbody-hint-up';up.textContent='👆';
-  var dn=document.createElement('span');
-  dn.className='mbody-hint mbody-hint-down';dn.textContent='👇';
-  mbody.insertBefore(up,mbody.firstChild);
-  mbody.appendChild(dn);
-  function update(){
-    var atTop=mbody.scrollTop<=4;
-    var atBot=mbody.scrollTop+mbody.clientHeight>=mbody.scrollHeight-4;
-    var needsScroll=mbody.scrollHeight>mbody.clientHeight+8;
-    dn.classList.toggle('visible',needsScroll&&!atBot);
-    up.classList.toggle('visible',needsScroll&&!atTop);
-  }
-  mbody.addEventListener('scroll',update,{passive:true});
-  setTimeout(update,50);
-  setTimeout(update,300);
-  setTimeout(update,800);
-  if(window.MutationObserver){
-    var mo=new MutationObserver(function(){update();});
-    mo.observe(mbody,{childList:true,subtree:true,characterData:true});
-  }
-}
-
-function hideScrollHints(){
-  var dn=document.getElementById('scroll-hint-down');
-  var up=document.getElementById('scroll-hint-up');
-  if(dn)dn.classList.remove('visible');
-  if(up)up.classList.remove('visible');
-  if(_scrollHintEl&&_scrollHintListener){
-    _scrollHintEl.removeEventListener('scroll',_scrollHintListener);
-    _scrollHintEl=null;
-  }
-}
-
 function renderLieuHome(){
   var dl=RAW.informationLieu;
   if(!dl||dl.error||!dl.rows)return;
@@ -892,13 +807,11 @@ function renderInfo(){
     var colB=(rows[i][1]||'').trim();
     var colC=(rows[i][2]||'').trim();
     txt=colB||colC;
-    if(codeA==='L'){var lsp=document.createElement('div');lsp.style.height='10px';card.appendChild(lsp);continue;}
     if(!txt)continue;
     if(codeA==='T'){var ti=document.createElement('div');ti.className='sec';ti.textContent=txt;card.appendChild(ti);}
     else if(codeA==='H'){var sh=document.createElement('div');sh.className='sec';sh.textContent=txt;card.appendChild(sh);}
     else if(codeA==='S'){var ss=document.createElement('div');ss.className='sec sub';ss.textContent=txt;card.appendChild(ss);}
     else if(codeA==='K'){var lk=txt.split(/[\n\r]+/);for(var lki=0;lki<lk.length;lki++){var lkl=lk[lki].trim();if(!lkl)continue;var lkp=document.createElement('p');lkp.textContent=lkl;card.appendChild(lkp);}}
-    else if(codeA==='L'){var lsp=document.createElement('div');lsp.style.height='8px';card.appendChild(lsp);}
     else{var lines=txt.split(/[\n\r]+/);for(var li=0;li<lines.length;li++){var line=lines[li].trim();if(!line)continue;var p=document.createElement('p');p.textContent=line;card.appendChild(p);}}
   }
   wrap.appendChild(card);re.appendChild(wrap);
