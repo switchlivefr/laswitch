@@ -807,6 +807,7 @@ function renderInfo(){
     var colB=(rows[i][1]||'').trim();
     var colC=(rows[i][2]||'').trim();
     txt=colB||colC;
+    if(codeA==='L'){var lsp=document.createElement('div');lsp.style.height='10px';card.appendChild(lsp);continue;}
     if(!txt)continue;
     if(codeA==='T'){var ti=document.createElement('div');ti.className='sec';ti.textContent=txt;card.appendChild(ti);}
     else if(codeA==='H'){var sh=document.createElement('div');sh.className='sec';sh.textContent=txt;card.appendChild(sh);}
