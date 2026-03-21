@@ -526,7 +526,6 @@ function nav(id,direction){
   if(id==='p-resa'){renderInfo();hideHint();var shdI=document.getElementById('scroll-hint-down');if(shdI)shdI.style.bottom='calc(var(--nh) + 112px)';setTimeout(initScrollHints,400);}
   if(id==='p-home'){hideHint();hideScrollHints();}
   if(id==='p-switch'||id==='p-osl')hideScrollHints();
-  var shdX=document.getElementById('scroll-hint-down');if(shdX)shdX.style.bottom='calc(var(--nh) + 16px)';
 }
 
 document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')){e.preventDefault();return false;}},true);
