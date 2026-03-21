@@ -812,6 +812,7 @@ function renderInfo(){
     else if(codeA==='H'){var sh=document.createElement('div');sh.className='sec';sh.textContent=txt;card.appendChild(sh);}
     else if(codeA==='S'){var ss=document.createElement('div');ss.className='sec sub';ss.textContent=txt;card.appendChild(ss);}
     else if(codeA==='K'){var lk=txt.split(/[\n\r]+/);for(var lki=0;lki<lk.length;lki++){var lkl=lk[lki].trim();if(!lkl)continue;var lkp=document.createElement('p');lkp.textContent=lkl;card.appendChild(lkp);}}
+    else if(codeA==='L'){var lsp=document.createElement('div');lsp.style.height='8px';card.appendChild(lsp);}
     else{var lines=txt.split(/[\n\r]+/);for(var li=0;li<lines.length;li++){var line=lines[li].trim();if(!line)continue;var p=document.createElement('p');p.textContent=line;card.appendChild(p);}}
   }
   wrap.appendChild(card);re.appendChild(wrap);
