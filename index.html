@@ -902,6 +902,7 @@ function renderInfo(){
       var mapsUrl='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(c8);
       var a=document.createElement('a');
       a.href=mapsUrl;
+      a.className='pulse-btn';
       a.style.cssText='text-decoration:none;display:flex;align-items:center;border:1px solid rgba(52,209,192,.22);border-radius:10px;padding:10px 18px;width:100%;box-sizing:border-box';
       a.innerHTML='<span style="display:inline-flex;align-items:center;gap:8px"><span style="font-size:1.2em;flex-shrink:0">📍</span><span style="color:var(--cyan);font-size:16px;line-height:1.5;text-align:left">'+addrLines.join('<br>')+'</span></span>';
       lb.appendChild(a);
