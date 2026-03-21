@@ -141,12 +141,16 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .cc-info .sec{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:#4a9eff;font-weight:700;margin:14px 0 4px;display:block}
 .cc-info .sec.sub{font-size:15px;color:var(--white);font-family:'DM Sans',sans-serif;font-weight:700;margin:6px 0 2px}
 .cc-info p{line-height:1.4;margin-bottom:6px}
-#scroll-hint-down,#scroll-hint-up{position:fixed;right:12px;font-size:24px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:9999}
+#scroll-hint-down,#scroll-hint-up{position:fixed;right:12px;font-size:22px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:9999}
 #scroll-hint-down{bottom:calc(var(--nh) + 16px);animation:scrollpulse 1.5s ease-in-out infinite}
 #scroll-hint-up{top:16px;animation:scrollpulse-up 1.5s ease-in-out infinite}
 #scroll-hint-down.visible,#scroll-hint-up.visible{opacity:1}
 @keyframes scrollpulse{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
 @keyframes scrollpulse-up{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.mbody-hint{position:sticky;right:8px;font-size:20px;opacity:0;pointer-events:none;transition:opacity .3s;display:block;text-align:right;height:0;overflow:visible}
+.mbody-hint.visible{opacity:1}
+.mbody-hint-down{bottom:4px;animation:scrollpulse 1.5s ease-in-out infinite}
+.mbody-hint-up{top:4px;animation:scrollpulse-up 1.5s ease-in-out infinite}
 .hint-bar{position:fixed;bottom:calc(var(--nh) + env(safe-area-inset-bottom));left:0;right:0;z-index:150;text-align:center;padding:8px 12px;background:var(--bg);border-top:1px solid var(--border);font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;color:var(--gold);opacity:0;pointer-events:none}
 .hint-bar.pulsing{animation:hintpulse 3s ease-in-out 3;pointer-events:auto}
 .spacer{height:20px}
@@ -508,9 +512,10 @@ function nav(id,direction){
   }
   if(id==='p-switch'){renderSwitch();showHint();if(!_reperShown){_reperShown=true;setTimeout(function(){openM('m-reper-osl');},200);}}
   if(id==='p-osl'){renderOSL();_reperShown=true;}
-  if(id==='p-rules'){renderRules();hideHint();setTimeout(function(){initScrollHints(document.getElementById('rules-content'));},100);}
-  if(id==='p-resa'){renderInfo();hideHint();setTimeout(function(){initScrollHints(document.getElementById('info-content'));},100);}
-  if(id==='p-home')hideHint();
+  if(id==='p-rules'){renderRules();hideHint();setTimeout(function(){initScrollHints(document.getElementById('p-rules'));},300);}
+  if(id==='p-resa'){renderInfo();hideHint();setTimeout(function(){initScrollHints(document.getElementById('p-resa'));},300);}
+  if(id==='p-home'){hideHint();hideScrollHints();}
+  if(id==='p-switch'||id==='p-osl')hideScrollHints();
 }
 
 document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')){e.preventDefault();return false;}},true);
@@ -518,7 +523,7 @@ function openM(id){
   var el=document.getElementById(id);el.classList.add('open');
   document.body.style.overflow='hidden';
   if(id==='m-reper-osl'){el.classList.add('fadein');}
-  var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHints(mb);},100);
+  var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);
   if(id==='m-osl')renderOslPitch();
   if(id==='m-home-pitch'||id==='m-renseignements'||id==='m-resa'){muteVideo();_videoMuted=true;}
 }
@@ -792,10 +797,10 @@ function bnResaClick(){
 var _scrollHintEl=null,_scrollHintListener=null;
 
 function initScrollHints(el){
+  // Pour les pages : scroll sur window
   var dn=document.getElementById('scroll-hint-down');
   var up=document.getElementById('scroll-hint-up');
   if(!dn||!up)return;
-  // Détacher l'ancien listener
   if(_scrollHintEl&&_scrollHintListener){
     _scrollHintEl.removeEventListener('scroll',_scrollHintListener);
   }
@@ -811,6 +816,29 @@ function initScrollHints(el){
   _scrollHintListener=update;
   el.addEventListener('scroll',update,{passive:true});
   update();
+}
+
+function initScrollHintsModal(mbody){
+  if(!mbody)return;
+  // Nettoyer anciens hints
+  var old=mbody.querySelectorAll('.mbody-hint');
+  old.forEach(function(o){o.remove();});
+  // Créer hints sticky dans mbody
+  var up=document.createElement('span');
+  up.className='mbody-hint mbody-hint-up';up.textContent='👆';
+  var dn=document.createElement('span');
+  dn.className='mbody-hint mbody-hint-down';dn.textContent='👇';
+  mbody.insertBefore(up,mbody.firstChild);
+  mbody.appendChild(dn);
+  function update(){
+    var atTop=mbody.scrollTop<=4;
+    var atBot=mbody.scrollTop+mbody.clientHeight>=mbody.scrollHeight-4;
+    var needsScroll=mbody.scrollHeight>mbody.clientHeight+8;
+    dn.classList.toggle('visible',needsScroll&&!atBot);
+    up.classList.toggle('visible',needsScroll&&!atTop);
+  }
+  mbody.addEventListener('scroll',update,{passive:true});
+  setTimeout(update,50);
 }
 
 function hideScrollHints(){
