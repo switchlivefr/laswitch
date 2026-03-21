@@ -139,7 +139,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .cc .sec{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--amber);font-weight:700;margin:14px 0 4px;display:block}
 .cc .sec.sub{font-size:15px;color:var(--white);font-family:'DM Sans',sans-serif;font-weight:700;margin:6px 0 2px}
 .cc-info .sec{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:#4a9eff;font-weight:700;margin:14px 0 4px;display:block}
-#p-resa{display:none;flex-direction:column;height:calc(100vh - var(--nh));padding-bottom:env(safe-area-inset-bottom)}
+#p-resa{display:none;flex-direction:column;height:calc(100vh - var(--nh) - env(safe-area-inset-bottom) - 1px)}
 #p-resa.active{display:flex}
 #info-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 #info-lieu-btn:not(:empty){flex-shrink:0;background:var(--bg);border-top:1px solid var(--border);padding:8px 16px}
