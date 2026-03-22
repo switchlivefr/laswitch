@@ -990,15 +990,18 @@ function openMarco(title, ctx, full) {
   window._marcoCtx = ctx;
 
   if (_resaOff) {
-    // Vérifier limite depuis A1 (compteur) et B1 (limite) de la feuille INSCRIPTIONS
+    // Vérifier limite depuis A1 (compteur), B1 (limite) et C1 (forcer clôture) de la feuille INSCRIPTIONS
     var count = 0;
     var limite = 40;
+    var forceClos = false;
     if (RAW.inscriptions && RAW.inscriptions.rows) {
       var irows = RAW.inscriptions.rows;
       if (irows[0] && irows[0][0] !== '' && irows[0][0] !== null) count = parseInt(irows[0][0]) || 0;
       if (irows[0] && irows[0][1] !== '' && irows[0][1] !== null) limite = parseInt(irows[0][1]);
+      var c1 = irows[0] && irows[0][2] ? String(irows[0][2]).trim().toUpperCase() : '';
+      forceClos = (c1 === 'TRUE' || c1 === 'VRAI' || c1 === '1');
     }
-    if (count >= limite) {
+    if (forceClos || count >= limite) {
       var closesHead = document.getElementById('m-closes-head');
       if (closesHead) {
         if (limite === 0) {
