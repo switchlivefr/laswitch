@@ -384,7 +384,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
     <div id="m-inscription-infos" style="display:none;padding:10px 18px;text-align:center;border-top:1px solid rgba(255,255,255,0.1);font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.4;letter-spacing:-0.2px"></div>
     <div class="mfoot" style="flex-direction:column;gap:8px">
       <div id="m-marco-btn-contact" style="display:none;flex-direction:column;gap:8px;width:100%">
-        <div style="font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;color:var(--gold);text-align:center">Une Question ? Contacte Marco</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:700;color:var(--gold);text-align:center">Une Question ? Contacte Marco</div>
         <div style="display:flex;gap:10px;justify-content:center">
           <button onclick="openLink('https://m.me/marco.onlyformusic?ref='+encodeURIComponent(window._marcoTitle||''),'m-marco')" style="display:flex;flex-direction:column;align-items:center;gap:6px;border:none;cursor:pointer;border-radius:12px;padding:14px 18px;flex:1;background:#1877f2">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.744 6.614 4.469 8.652V24l4.088-2.242c1.092.3 2.246.464 3.443.464 6.627 0 12-4.974 12-11.111S18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.732 8l3.131 3.259L19.752 8l-6.561 6.963z"/></svg>
@@ -431,7 +431,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
     <div class="mhead" style="text-align:center"><h3 id="m-closes-head" style="color:var(--gold)">INSCRIPTIONS SUSPENDUES</h3></div>
     <div class="mfoot" style="flex-direction:column;gap:8px">
       <div style="flex-direction:column;gap:8px;width:100%;display:flex">
-        <div style="font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;color:var(--gold);text-align:center">Une Question ? Contacte Marco</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:700;color:var(--gold);text-align:center">Une Question ? Contacte Marco</div>
         <div style="display:flex;gap:10px;justify-content:center">
           <button onclick="openLink('https://m.me/marco.onlyformusic','m-closes')" style="display:flex;flex-direction:column;align-items:center;gap:6px;border:none;cursor:pointer;border-radius:12px;padding:14px 18px;flex:1;background:#1877f2">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.744 6.614 4.469 8.652V24l4.088-2.242c1.092.3 2.246.464 3.443.464 6.627 0 12-4.974 12-11.111S18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.732 8l3.131 3.259L19.752 8l-6.561 6.963z"/></svg>
@@ -1124,7 +1124,7 @@ function openMarco(title, ctx, full) {
 function ouvrirInscription() {
   document.getElementById('m-marco-normal').style.display = 'none';
   document.getElementById('m-marco-inscription').style.display = 'block';
-  document.getElementById('m-marco-head').textContent = 'TU AS CHOISI TON SWiTCH';
+  document.getElementById('m-marco-head').textContent = 'TU AS CHOISI TON SWiTCH !';
   var _cp='';
   if(RAW.inscriptions&&RAW.inscriptions.rows&&RAW.inscriptions.rows[2]){_cp=String(RAW.inscriptions.rows[2][1]||'').trim();}
   document.getElementById('m-marco-btn-contact').style.display=_cp?'flex':'none';
