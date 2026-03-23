@@ -698,13 +698,13 @@ var quitting=false,quitUrl=null;
 history.pushState(null,'',window.location.href);
 
 (function(){
-  var pages=['p-home','p-switch','p-osl','p-rules'];
   var sx=0,sy=0,th=60;
   document.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
   document.addEventListener('touchend',function(e){
     if(document.querySelector('.moverlay.open')||document.querySelector('.coverlay.open'))return;
     var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
     if(Math.abs(dy)>Math.abs(dx)||Math.abs(dx)<th)return;
+    var pages=_resaOff?['p-home','p-switch','p-osl','p-rules','p-resa']:['p-home','p-switch','p-osl','p-rules'];
     var idx=pages.indexOf(currentPage);if(idx===-1)return;
     if(dx<0&&idx<pages.length-1)nav(pages[idx+1],'left');
     else if(dx>0&&idx>0)nav(pages[idx-1],'right');
