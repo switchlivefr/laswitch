@@ -392,6 +392,26 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
   </div>
 </div>
 
+<!-- MODALE : Code PIN inscription -->
+<div class="moverlay" id="m-pin">
+  <div class="mbox">
+    <div class="mhead" style="text-align:center">
+      <h3 style="color:var(--gold)">ENTRE LE CODE</h3>
+    </div>
+    <div class="mbody" style="text-align:center;padding:24px 18px">
+      <div style="display:flex;gap:12px;justify-content:center;margin-bottom:8px" id="pin-boxes">
+        <input id="pin-0" type="tel" maxlength="1" style="width:56px;height:64px;font-size:32px;font-weight:700;text-align:center;border-radius:10px;border:2px solid var(--border2);background:var(--card);color:var(--white);outline:none" oninput="pinInput(0,this)">
+        <input id="pin-1" type="tel" maxlength="1" style="width:56px;height:64px;font-size:32px;font-weight:700;text-align:center;border-radius:10px;border:2px solid var(--border2);background:var(--card);color:var(--white);outline:none" oninput="pinInput(1,this)">
+        <input id="pin-2" type="tel" maxlength="1" style="width:56px;height:64px;font-size:32px;font-weight:700;text-align:center;border-radius:10px;border:2px solid var(--border2);background:var(--card);color:var(--white);outline:none" oninput="pinInput(2,this)">
+        <input id="pin-3" type="tel" maxlength="1" style="width:56px;height:64px;font-size:32px;font-weight:700;text-align:center;border-radius:10px;border:2px solid var(--border2);background:var(--card);color:var(--white);outline:none" oninput="pinInput(3,this)">
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="mbtn sec" onclick="closeM('m-pin');resetPin()">Fermer</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODALE INSCRIPTIONS CLOSES -->
 <div class="moverlay" id="m-closes" onclick="if(event.target===this)closeM('m-closes')">
   <div class="mbox">
@@ -583,6 +603,44 @@ function initScrollHintsModal(mbody){
   mbody.addEventListener('scroll',update,{passive:true});
   setTimeout(update,50);setTimeout(update,300);setTimeout(update,800);
   if(window.MutationObserver){new MutationObserver(update).observe(mbody,{childList:true,subtree:true});}
+}
+
+function resetPin(){
+  for(var i=0;i<4;i++){
+    var el=document.getElementById('pin-'+i);
+    if(el){el.value='';el.style.borderColor='var(--border2)';}
+  }
+  var first=document.getElementById('pin-0');
+  if(first)setTimeout(function(){first.focus();},100);
+}
+
+function pinInput(idx,el){
+  el.value=el.value.replace(/[^0-9]/g,'');
+  if(el.value.length===1){
+    if(idx<3){
+      var next=document.getElementById('pin-'+(idx+1));
+      if(next)next.focus();
+    }
+    // Vérifier si les 4 cases sont remplies
+    var code='';
+    for(var i=0;i<4;i++){
+      var v=document.getElementById('pin-'+i);
+      code+=v?v.value:'';
+    }
+    if(code.length===4){
+      var codePin='';
+      if(RAW.inscriptions&&RAW.inscriptions.rows&&RAW.inscriptions.rows[2]){
+        codePin=String(RAW.inscriptions.rows[2][1]||'').trim();
+      }
+      if(code===codePin){
+        closeM('m-pin');
+        resetPin();
+        ouvrirInscription();
+        openM('m-marco');
+      }
+      // Mauvais code : ne rien faire
+    }
+  }
 }
 
 function openM(id){
@@ -1013,55 +1071,55 @@ function openMarco(title, ctx, full) {
       openM('m-closes'); return;
     }
 
-    document.getElementById('m-marco-normal').style.display = 'none';
-    document.getElementById('m-marco-inscription').style.display = 'block';
-    document.getElementById('m-marco-head').textContent = 'INSCRIPTION';
-    document.getElementById('m-marco-btn-contact').style.display = 'flex';
-
-    var inp = document.getElementById('m-inscription-nom');
-    inp.value = '';
-    var btn = document.getElementById('m-inscription-btn');
-    btn.style.opacity = '0.35';
-    btn._ok = false;
-    btn.textContent = '\u2713';
-    document.getElementById('m-inscription-form').style.display = 'flex';
-    document.getElementById('m-inscription-ok').style.display = 'none';
-
-    // Infos J1-J4 (colonne J = index 9)
-    var infosEl = document.getElementById('m-inscription-infos');
-    infosEl.innerHTML = '';
-    infosEl.style.display = 'none';
-    if (RAW.inscriptions && RAW.inscriptions.rows) {
-      var hasInfo = false;
-      for (var j = 0; j < Math.min(4, RAW.inscriptions.rows.length); j++) {
-        var val = RAW.inscriptions.rows[j] && RAW.inscriptions.rows[j][9] ? RAW.inscriptions.rows[j][9].trim() : '';
-        if (val) {
-          var p = document.createElement('p');
-          p.style.cssText = 'color:#fff;font-size:13px;margin:3px 0;';
-          p.textContent = val;
-          infosEl.appendChild(p);
-          hasInfo = true;
-        }
-      }
-      if (hasInfo) infosEl.style.display = 'block';
+    // Vérifier si un code PIN est requis (B3 de la feuille INSCRIPTIONS)
+    var codePin = '';
+    if (RAW.inscriptions && RAW.inscriptions.rows && RAW.inscriptions.rows[2]) {
+      codePin = String(RAW.inscriptions.rows[2][1] || '').trim();
     }
-  } else {
-    document.getElementById('m-marco-normal').style.display = 'block';
-    document.getElementById('m-marco-inscription').style.display = 'none';
-    document.getElementById('m-inscription-infos').style.display = 'none';
-    document.getElementById('m-marco-btn-contact').style.display = 'none';
-    document.getElementById('m-marco-head').textContent = "CONTACTE MARCO POUR T'INSCRIRE";
-    var msg = (ctx === 'osl')
-      ? "Hello Marco !\nJe pr\u00e9f\u00e8re int\u00e9grer le One Shot LIVE en r\u00e9servant '" + title + "'"
-      : "Hello Marco !\nJ'aimerais r\u00e9server '" + title + "' pour la prochaine SWiTCH";
-    window._marcoMsg = msg;
-    var msgEl = document.getElementById('m-marco-msg');
-    if (msgEl) msgEl.textContent = msg;
-    var copyBtn = document.getElementById('m-marco-copy');
-    if (copyBtn) copyBtn.textContent = '\uD83D\uDCCB COPIER LE MESSAGE';
+    if (codePin) {
+      window._pendingInscription = true;
+      resetPin();
+      openM('m-pin');
+      return;
+    }
+    ouvrirInscription();
+  }
+}
+
+function ouvrirInscription() {
+  document.getElementById('m-marco-normal').style.display = 'none';
+  document.getElementById('m-marco-inscription').style.display = 'block';
+  document.getElementById('m-marco-head').textContent = 'INSCRIPTION';
+  document.getElementById('m-marco-btn-contact').style.display = 'flex';
+  var inp = document.getElementById('m-inscription-nom');
+  inp.value = '';
+  var btn = document.getElementById('m-inscription-btn');
+  btn.style.opacity = '0.35';
+  btn._ok = false;
+  btn.textContent = '\u2713';
+  document.getElementById('m-inscription-form').style.display = 'flex';
+  document.getElementById('m-inscription-ok').style.display = 'none';
+  var infosEl = document.getElementById('m-inscription-infos');
+  infosEl.innerHTML = '';
+  infosEl.style.display = 'none';
+  if (RAW.inscriptions && RAW.inscriptions.rows) {
+    var hasInfo = false;
+    for (var j = 0; j < Math.min(4, RAW.inscriptions.rows.length); j++) {
+      var val = RAW.inscriptions.rows[j] && RAW.inscriptions.rows[j][9] ? RAW.inscriptions.rows[j][9].trim() : '';
+      if (val) {
+        var p = document.createElement('p');
+        p.style.cssText = 'color:#fff;font-size:13px;margin:3px 0;';
+        p.textContent = val;
+        infosEl.appendChild(p);
+        hasInfo = true;
+      }
+    }
+    if (hasInfo) infosEl.style.display = 'block';
   }
   openM('m-marco');
 }
+
+
 
 function soumettreinscription() {
   var nom = document.getElementById('m-inscription-nom').value.trim();
