@@ -396,7 +396,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 <div class="moverlay" id="m-pin">
   <div class="mbox">
     <div class="mhead" style="text-align:center">
-      <h3 style="color:var(--gold)">ENTRE LE CODE</h3>
+      <h3 id="pin-title" style="color:var(--gold)">ENTRE LE CODE</h3>
     </div>
     <div class="mbody" style="text-align:center;padding:24px 18px">
       <div style="display:flex;gap:12px;justify-content:center;margin-bottom:8px" id="pin-boxes">
@@ -638,7 +638,16 @@ function pinInput(idx,el){
         ouvrirInscription();
         openM('m-marco');
       }
-      // Mauvais code : ne rien faire
+      // Mauvais code : afficher CODE ERRONÉ 2s puis reset
+      var title=document.getElementById('pin-title');
+      if(title){title.textContent='CODE ERRONÉ';title.style.color='#e84057';}
+      setTimeout(function(){
+        resetPin();
+        var t=document.getElementById('pin-title');
+        if(t){t.textContent='ENTRE LE CODE';t.style.color='var(--gold)';}
+        var first=document.getElementById('pin-0');
+        if(first)first.focus();
+      },2000);
     }
   }
 }
