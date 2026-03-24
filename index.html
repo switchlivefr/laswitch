@@ -1111,9 +1111,8 @@ function openMarco(title, ctx, full) {
           closesHead.textContent = 'INSCRIPTIONS CLOSES';
         }
       }
-      // Limite atteinte : afficher phrase + boutons sociaux
       var social=document.getElementById('m-closes-social');
-      if(social)social.style.display='flex';
+      if(social)social.style.display='none';
       openM('m-closes'); return;
     }
 
