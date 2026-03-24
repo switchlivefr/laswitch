@@ -430,7 +430,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
   <div class="mbox">
     <div class="mhead" style="text-align:center"><h3 id="m-closes-head" style="color:var(--gold)">INSCRIPTIONS SUSPENDUES</h3></div>
     <div class="mfoot" style="flex-direction:column;gap:8px">
-      <div style="flex-direction:column;gap:8px;width:100%;display:flex">
+      <div id="m-closes-social" style="flex-direction:column;gap:8px;width:100%;display:flex">
         <div style="font-family:'DM Sans',sans-serif;font-size:18px;font-weight:700;color:var(--gold);text-align:center">Une Question ? Contacte Marco</div>
         <div style="display:flex;gap:10px;justify-content:center">
           <button onclick="openLink('https://m.me/marco.onlyformusic','m-closes')" style="display:flex;flex-direction:column;align-items:center;gap:6px;border:none;cursor:pointer;border-radius:12px;padding:14px 18px;flex:1;background:#1877f2">
@@ -1103,6 +1103,8 @@ function openMarco(title, ctx, full) {
           closesHead.textContent = 'INSCRIPTIONS CLOSES';
         }
       }
+      var social=document.getElementById('m-closes-social');
+      if(social)social.style.display='none';
       openM('m-closes'); return;
     }
 
