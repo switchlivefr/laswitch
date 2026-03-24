@@ -578,8 +578,8 @@ function nav(id,direction){
 document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')){e.preventDefault();return false;}},true);
 // Scroll hints fixes (pages)
 (function(){
-  var dn=document.createElement('div');dn.id='scroll-hint-down';dn.innerHTML='<svg width="30" height="12" viewBox="0 0 60 24" fill="none"><polygon points="8,0 52,0 52,14 60,14 30,24 0,14 8,14" fill="#f2c94c" opacity="0.55"/></svg>';
-  var up=document.createElement('div');up.id='scroll-hint-up';up.innerHTML='<svg width="30" height="12" viewBox="0 0 60 24" fill="none"><polygon points="0,10 30,0 60,10 52,10 52,24 8,24 8,10" fill="#f2c94c" opacity="0.55"/></svg>';
+  var dn=document.createElement('div');dn.id='scroll-hint-down';dn.innerHTML='<svg width="30" height="20" viewBox="0 0 30 20" fill="none"><path d="M11 0 H19 V11 H26 L15 20 L4 11 H11 Z" fill="#f2c94c"/></svg>';
+  var up=document.createElement('div');up.id='scroll-hint-up';up.innerHTML='<svg width="30" height="20" viewBox="0 0 30 20" fill="none"><path d="M11 20 H19 V9 H26 L15 0 L4 9 H11 Z" fill="#f2c94c"/></svg>';
   document.body.appendChild(dn);document.body.appendChild(up);
 })();
 
@@ -616,7 +616,7 @@ function initScrollHintsModal(mbody){
   var up=document.createElement('span');
   up.className='mbody-hint mbody-hint-up';up.innerHTML='<svg width="60" height="24" viewBox="0 0 60 24" fill="none"><polygon points="0,10 30,0 60,10 52,10 52,24 8,24 8,10" fill="#f2c94c"/></svg>';
   var dn=document.createElement('span');
-  dn.className='mbody-hint mbody-hint-down';dn.innerHTML='<svg width="30" height="12" viewBox="0 0 60 24" fill="none"><polygon points="8,0 52,0 52,14 60,14 30,24 0,14 8,14" fill="#f2c94c" opacity="0.55"/></svg>';
+  dn.className='mbody-hint mbody-hint-down';dn.innerHTML='<svg width="30" height="20" viewBox="0 0 30 20" fill="none"><path d="M11 0 H19 V11 H26 L15 20 L4 11 H11 Z" fill="#f2c94c"/></svg>';
   mbody.insertBefore(up,mbody.firstChild);
   mbody.appendChild(dn);
   function update(){
