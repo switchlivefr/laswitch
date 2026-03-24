@@ -1094,7 +1094,15 @@ function openMarco(title, ctx, full) {
       var c1 = irows[0] && irows[0][2] ? String(irows[0][2]).trim().toUpperCase() : '';
       forceClos = (c1 === 'TRUE' || c1 === 'VRAI' || c1 === '1');
     }
-    if (forceClos || count >= limite) {
+    if (forceClos) {
+      // C1=TRUE : priorité absolue → INSCRIPTIONS CLOSES, sans boutons sociaux
+      var closesHead = document.getElementById('m-closes-head');
+      if (closesHead) closesHead.textContent = 'INSCRIPTIONS CLOSES';
+      var social=document.getElementById('m-closes-social');
+      if(social)social.style.display='none';
+      openM('m-closes'); return;
+    }
+    if (count >= limite) {
       var closesHead = document.getElementById('m-closes-head');
       if (closesHead) {
         if (limite === 0) {
@@ -1103,8 +1111,9 @@ function openMarco(title, ctx, full) {
           closesHead.textContent = 'INSCRIPTIONS CLOSES';
         }
       }
+      // Limite atteinte : afficher phrase + boutons sociaux
       var social=document.getElementById('m-closes-social');
-      if(social)social.style.display='none';
+      if(social)social.style.display='flex';
       openM('m-closes'); return;
     }
 
