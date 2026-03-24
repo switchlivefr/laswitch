@@ -153,6 +153,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 #scroll-hint-down{bottom:calc(var(--nh) + 112px);animation:scrollpulse 1.5s ease-in-out infinite}
 #scroll-hint-up{top:16px;animation:scrollpulse-up 1.5s ease-in-out infinite}
 #scroll-hint-down.visible{opacity:1}
+body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:0!important}
 #scroll-hint-up{opacity:0 !important}
 @keyframes scrollpulse{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
 @keyframes scrollpulse-up{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
@@ -514,8 +515,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
     <h3>Marco Kiff Ton SWiTCH</h3>
     <p>Aller sur la page Facebook Marco Kiff Ton SWiTCH ?</p>
     <div class="cbtns">
-      <button class="cno" onclick="document.getElementById('c-marco-fb').classList.remove('open')">Annuler</button>
-      <button class="cyes" onclick="openLink('https://www.facebook.com/marco.onlyformusic','c-marco-fb');document.getElementById('c-marco-fb').classList.remove('open')">Valider</button>
+      <button class="cno" onclick="document.getElementById('c-marco-fb').classList.remove('open');document.body.classList.remove('coverlay-open')">Annuler</button>
+      <button class="cyes" onclick="openLink('https://www.facebook.com/marco.onlyformusic','c-marco-fb');document.getElementById('c-marco-fb').classList.remove('open');document.body.classList.remove('coverlay-open')">Valider</button>
     </div>
   </div>
 </div>
@@ -525,7 +526,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
     <h3>Quitter ?</h3>
     <p>Quitter l'application SWiTCH ?</p>
     <div class="cbtns">
-      <button class="cno" onclick="document.getElementById('c-quit').classList.remove('open')">Annuler</button>
+      <button class="cno" onclick="document.getElementById('c-quit').classList.remove('open');document.body.classList.remove('coverlay-open')">Annuler</button>
     </div>
   </div>
 </div>
@@ -688,6 +689,7 @@ function openM(id){
 }
 function closeM(id){
   hideScrollHints();
+  document.body.classList.remove('coverlay-open');
   document.getElementById(id).classList.remove('open');
   if(!document.querySelector('.moverlay.open')&&!document.querySelector('.coverlay.open')){
     document.body.style.overflow='';
@@ -714,7 +716,7 @@ history.pushState(null,'',window.location.href);
 window.addEventListener('load',function(){history.pushState(null,'',window.location.href);});
 window.addEventListener('popstate',function(){
   if(quitting){quitting=false;return;}
-  document.getElementById('c-quit').classList.add('open');
+  document.getElementById('c-quit').classList.add('open');document.body.classList.add('coverlay-open');
   history.pushState(null,'',window.location.href);
 });
 
@@ -930,7 +932,7 @@ function renderRules(){
       var p=document.createElement('p');var colon=txt.indexOf(':');
       if(colon>-1)p.textContent=txt.slice(0,colon+1)+' ';else p.textContent=txt+' ';
       var aM=document.createElement('a');aM.href='#';aM.style.color='#1877f2';aM.style.fontWeight='700';aM.style.textDecoration='none';aM.textContent='Marco Kiff Ton SWiTCH';
-      aM.onclick=function(e){e.preventDefault();document.getElementById('c-marco-fb').classList.add('open');};
+      aM.onclick=function(e){e.preventDefault();document.getElementById('c-marco-fb').classList.add('open');document.body.classList.add('coverlay-open');};
       p.appendChild(aM);card.appendChild(p);
     }else{
       var lines=txt.split(/[\n\r]+/);
@@ -1208,7 +1210,7 @@ function copyMarcoMsg(){
 }
 
 function doQuit(){
-  document.getElementById('c-quit').classList.remove('open');
+  document.getElementById('c-quit').classList.remove('open');document.body.classList.remove('coverlay-open');
   if(quitUrl){window.open(quitUrl,'_blank');quitUrl=null;}else{quitting=true;history.go(-2);}
 }
 
