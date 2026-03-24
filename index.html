@@ -1140,8 +1140,13 @@ function ouvrirInscription() {
   document.getElementById('m-marco-inscription').style.display = 'block';
   document.getElementById('m-marco-head').textContent = 'TU AS CHOISI TON SWiTCH !';
   var _cp='';
-  if(RAW.inscriptions&&RAW.inscriptions.rows&&RAW.inscriptions.rows[2]){_cp=String(RAW.inscriptions.rows[2][1]||'').trim();}
-  document.getElementById('m-marco-btn-contact').style.display=_cp?'flex':'none';
+  var _skipPin=false;
+  if(RAW.inscriptions&&RAW.inscriptions.rows&&RAW.inscriptions.rows[2]){
+    _cp=String(RAW.inscriptions.rows[2][1]||'').trim();
+    var _c3=String(RAW.inscriptions.rows[2][2]||'').trim().toUpperCase();
+    if(_c3==='TRUE'||_c3==='VRAI'||_c3==='1')_skipPin=true;
+  }
+  document.getElementById('m-marco-btn-contact').style.display=(_cp&&!_skipPin)?'flex':'none';
   var inp = document.getElementById('m-inscription-nom');
   inp.value = '';
   var btn = document.getElementById('m-inscription-btn');
