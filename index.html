@@ -578,8 +578,8 @@ function nav(id,direction){
 document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')){e.preventDefault();return false;}},true);
 // Scroll hints fixes (pages)
 (function(){
-  var dn=document.createElement('div');dn.id='scroll-hint-down';dn.innerHTML='<svg width="32" height="18" viewBox="0 0 32 18" fill="none"><path d="M2 2L16 16L30 2" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  var up=document.createElement('div');up.id='scroll-hint-up';up.innerHTML='<svg width="32" height="18" viewBox="0 0 32 18" fill="none"><path d="M2 16L16 2L30 16" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var dn=document.createElement('div');dn.id='scroll-hint-down';dn.innerHTML='<svg width="28" height="32" viewBox="0 0 28 32" fill="none"><rect x="8" y="0" width="12" height="18" fill="#f2c94c"/><polygon points="0,16 28,16 14,32" fill="#f2c94c"/></svg>';
+  var up=document.createElement('div');up.id='scroll-hint-up';up.innerHTML='<svg width="28" height="32" viewBox="0 0 28 32" fill="none"><polygon points="0,16 28,16 14,0" fill="#f2c94c"/><rect x="8" y="14" width="12" height="18" fill="#f2c94c"/></svg>';
   document.body.appendChild(dn);document.body.appendChild(up);
 })();
 
@@ -614,9 +614,9 @@ function initScrollHintsModal(mbody){
   if(!mbody)return;
   mbody.querySelectorAll('.mbody-hint').forEach(function(o){o.remove();});
   var up=document.createElement('span');
-  up.className='mbody-hint mbody-hint-up';up.innerHTML='<svg width="32" height="18" viewBox="0 0 32 18" fill="none"><path d="M2 16L16 2L30 16" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  up.className='mbody-hint mbody-hint-up';up.innerHTML='<svg width="28" height="32" viewBox="0 0 28 32" fill="none"><polygon points="0,16 28,16 14,0" fill="#f2c94c"/><rect x="8" y="14" width="12" height="18" fill="#f2c94c"/></svg>';
   var dn=document.createElement('span');
-  dn.className='mbody-hint mbody-hint-down';dn.innerHTML='<svg width="32" height="18" viewBox="0 0 32 18" fill="none"><path d="M2 2L16 16L30 2" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  dn.className='mbody-hint mbody-hint-down';dn.innerHTML='<svg width="28" height="32" viewBox="0 0 28 32" fill="none"><rect x="8" y="0" width="12" height="18" fill="#f2c94c"/><polygon points="0,16 28,16 14,32" fill="#f2c94c"/></svg>';
   mbody.insertBefore(up,mbody.firstChild);
   mbody.appendChild(dn);
   function update(){
