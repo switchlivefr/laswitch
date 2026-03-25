@@ -371,7 +371,7 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
       <!-- MODE INSCRIPTION (resa off) -->
       <div id="m-marco-inscription" style="display:none">
         <div id="m-inscription-form" style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
-          <input id="m-inscription-nom" type="text" placeholder="Inscris ton prénom et ton nom"
+          <input id="m-inscription-nom" type="text" placeholder="Inscris ton PRÉNOM et ton NOM"
             oninput="var b=document.getElementById('m-inscription-btn');b.style.opacity=this.value.trim()?'1':'0.35';b._ok=!!this.value.trim();"
             style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#fff;color:#000;font-size:15px;font-family:'DM Sans',sans-serif;outline:none"/>
           <button id="m-inscription-btn" onclick="if(this._ok)soumettreinscription()"
