@@ -1134,6 +1134,22 @@ function openMarco(title, ctx, full) {
       return;
     }
     ouvrirInscription();
+  } else {
+    // MODE RESA_ON : afficher message et boutons pour contacter Marco
+    document.getElementById('m-marco-normal').style.display = 'block';
+    document.getElementById('m-marco-inscription').style.display = 'none';
+    document.getElementById('m-inscription-infos').style.display = 'none';
+    document.getElementById('m-marco-btn-contact').style.display = 'none';
+    document.getElementById('m-marco-head').textContent = "CONTACTE MARCO POUR T'INSCRIRE";
+    var msg = (ctx === 'osl')
+      ? "Hello Marco !\nJe préfère intégrer le One Shot LIVE en réservant '" + title + "'"
+      : "Hello Marco !\nJ'aimerais réserver '" + title + "' pour la prochaine SWiTCH";
+    window._marcoMsg = msg;
+    var msgEl = document.getElementById('m-marco-msg');
+    if (msgEl) msgEl.textContent = msg;
+    var copyBtn = document.getElementById('m-marco-copy');
+    if (copyBtn) copyBtn.textContent = '\uD83D\uDCCB COPIE LE MESSAGE';
+    openM('m-marco');
   }
 }
 
