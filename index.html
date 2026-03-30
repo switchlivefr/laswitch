@@ -931,7 +931,7 @@ function renderRules(){
     else if(txt.indexOf('After du Spectacle')>-1){
       var p=document.createElement('p');var colon=txt.indexOf(':');
       if(colon>-1)p.textContent=txt.slice(0,colon+1)+' ';else p.textContent=txt+' ';
-      var aM=document.createElement('a');aM.href='#';aM.style.color='#1877f2';aM.style.fontWeight='700';aM.style.textDecoration='none';aM.textContent='🔗 Marco Kiff Ton SWiTCH';
+      var aM=document.createElement('a');aM.href='#';aM.style.color='#1877f2';aM.style.fontWeight='700';aM.style.textDecoration='none';aM.textContent='🔗Marco Kiff Ton SWiTCH';
       aM.onclick=function(e){e.preventDefault();document.getElementById('c-marco-fb').classList.add('open');document.body.classList.add('coverlay-open');};
       p.appendChild(aM);card.appendChild(p);
     }else{
