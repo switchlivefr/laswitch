@@ -182,16 +182,27 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
     flex:0 0 130px;width:130px;overflow:hidden;height:100%;position:relative;
     background:#2c1a0e
   }
-  /* Bandes de perforations réalistes : SVG trous arrondis sur fond marron */
-  .film-strip::before,.film-strip::after{
-    content:'';position:absolute;top:0;bottom:0;width:22px;z-index:2;pointer-events:none;
-    background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOCIgaGVpZ2h0PSIyMiI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjIyIiBmaWxsPSIjMmMxYTBlIi8+PHJlY3QgeD0iNCIgeT0iNSIgd2lkdGg9IjEwIiBoZWlnaHQ9IjEyIiByeD0iMi41IiByeT0iMi41IiBmaWxsPSIjMGEwNTAzIi8+PC9zdmc+');
-    background-repeat:repeat-y;
-    background-size:22px 22px;
+  /* Pellicule : fond marron, perforations sur les côtés DANS le flux (défilent avec les photos) */
+  .film-strip{overflow:hidden;height:100%;position:relative;background:#2c1a0e}
+  .film-strip-inner{display:flex;flex-direction:column;will-change:transform}
+  .film-strip-inner{padding:0}
+  /* Chaque frame inclut les perforations dans son padding gauche/droit */
+  .film-frame{
+    width:130px;cursor:pointer;flex-shrink:0;background:#2c1a0e;
+    padding:3px 0;
+    display:flex;align-items:center;
   }
-  .film-strip::before{left:0}
-  .film-strip::after{right:0}
-  .film-strip-inner{display:flex;flex-direction:column;will-change:transform;padding:0 22px}
+  .film-perf{
+    width:18px;flex-shrink:0;align-self:stretch;
+    background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOCIgaGVpZ2h0PSIyMiI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjIyIiBmaWxsPSIjMmMxYTBlIi8+PHJlY3QgeD0iMyIgeT0iNSIgd2lkdGg9IjEyIiBoZWlnaHQ9IjEyIiByeD0iMi41IiByeT0iMi41IiBmaWxsPSIjMGEwNTAzIi8+PC9zdmc+');
+    background-repeat:repeat-y;
+    background-size:18px 22px;
+  }
+  .film-frame-wrap{width:94px;height:94px;overflow:hidden;background:#0a0503;flex-shrink:0}
+  /* Toutes les miniatures remplissent le cadre (cover) */
+  .film-frame img{width:94px;height:94px;object-fit:cover;display:block}
+  /* Légèrement assombries */
+  .film-frame img{filter:brightness(0.55)}
   #film-left-inner{animation:filmUp 160s linear infinite}
   #film-right-inner{animation:filmDown 160s linear infinite}
   .film-strip-inner.paused{animation-play-state:paused!important}
@@ -648,10 +659,12 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
   function makeFrame(p, side){
     var f=document.createElement('div');
     f.className='film-frame '+(p.landscape?'landscape':'portrait');
+    var pl=document.createElement('div');pl.className='film-perf';
     var tw=document.createElement('div');tw.className='film-frame-wrap';
     var img=document.createElement('img');img.src=p.thumb;img.loading='lazy';img.alt='';
+    var pr=document.createElement('div');pr.className='film-perf';
     tw.appendChild(img);
-    f.appendChild(tw);
+    f.appendChild(pl);f.appendChild(tw);f.appendChild(pr);
     f.style.cursor='pointer';
     f.addEventListener('click',function(){ openViewer(p.full); });
     return f;
@@ -670,15 +683,14 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
   function openViewer(src){
     if(_viewing)return;
     _viewing=true;
-    // Pellicule continue de défiler pendant la visualisation
     var v=document.getElementById('film-viewer');
     var vimg=document.getElementById('film-viewer-img');
     var credit=document.getElementById('film-viewer-credit');
     var box=document.getElementById('film-viewer-box');
-    // Cacher le crédit avant chargement
+    // Crédit : visible immédiatement, fondu sur 1s
     credit.style.display='block';
     credit.style.opacity='0';
-    credit.style.transition='none';
+    credit.style.transition='opacity 1s ease';
     // Adapter le box au ratio de la photo
     function onImgLoaded(){
       var w=vimg.naturalWidth, h=vimg.naturalHeight;
@@ -689,21 +701,18 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
         box.style.width=Math.round(w*ratio)+'px';
         box.style.height=Math.round(h*ratio)+'px';
       }
-      // Crédit en fondu après 1s
-      setTimeout(function(){
-        credit.style.transition='opacity 1s ease';
-        credit.style.opacity='1';
-      },1000);
+      // Crédit apparaît dès l'affichage de la photo
+      setTimeout(function(){ credit.style.opacity='1'; }, 50);
     }
     vimg.src=src;
     if(vimg.complete&&vimg.naturalWidth){ onImgLoaded(); }
     else{ vimg.onload=onImgLoaded; }
     v.classList.add('open');
-    // Clic sur la photo = fermer
-    function onBoxClick(){ closeViewer(); }
-    box.addEventListener('click', onBoxClick, {once:true});
+    // Clic n'importe où sur l'écran = fermer
+    function onAnyClick(){ closeViewer(); }
+    document.addEventListener('click', onAnyClick, {once:true});
     v._cleanListeners=function(){
-      box.removeEventListener('click',onBoxClick);
+      document.removeEventListener('click',onAnyClick);
     };
   }
 
@@ -717,7 +726,7 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
       document.getElementById('film-viewer-img').src='';
       document.getElementById('film-viewer-credit').style.display='none';
       _viewing=false;
-      // (pellicule n'était pas pausée)
+
     },280);
   }
 
