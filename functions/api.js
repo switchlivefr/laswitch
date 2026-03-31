@@ -104,7 +104,9 @@ async function handleRequest(request, env) {
       const folderId = '1UCSMq48CuBEFWWgTUB7QoxY7Fzgf2xW2';
       const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent("'" + folderId + "' in parents and mimeType contains 'image/' and trashed=false")}&key=${API_KEY}&fields=${encodeURIComponent('files(id,name,imageMediaMetadata(width,height))')}&pageSize=50&orderBy=name`;
       const r = await fetch(url);
+      if (!r.ok) throw new Error('Drive API error: ' + r.status);
       const data = await r.json();
+      if (data.error) throw new Error('Drive: ' + data.error.message);
       const photos = (data.files || []).map(f => ({
         id: f.id,
         name: f.name,
