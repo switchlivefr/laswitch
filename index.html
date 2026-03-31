@@ -178,37 +178,18 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
   /* =====================================================
      PELLICULE CINEMA — perforations continues sur les bords
      ===================================================== */
-  /* Pellicule : fond marron, perforations DANS le flux avec les photos */
+  /* === PELLICULE CINEMA - CSS UNIQUE === */
   .film-strip{flex:0 0 130px;width:130px;overflow:hidden;height:100%;position:relative;background:#2c1a0e}
-  .film-strip-inner{display:flex;flex-direction:column;will-change:transform;padding:0}
-  /* Chaque frame inclut les perforations dans son padding gauche/droit */
-  .film-frame{
-    width:130px;cursor:pointer;flex-shrink:0;background:#2c1a0e;
-    padding:3px 0;
-    display:flex;align-items:center;
-  }
-  .film-perf{
-    width:18px;flex-shrink:0;align-self:stretch;pointer-events:none;
-    background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOCIgaGVpZ2h0PSIyMiI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjIyIiBmaWxsPSIjMmMxYTBlIi8+PHJlY3QgeD0iMyIgeT0iNSIgd2lkdGg9IjEyIiBoZWlnaHQ9IjEyIiByeD0iMi41IiByeT0iMi41IiBmaWxsPSIjMGEwNTAzIi8+PC9zdmc+');
-    background-repeat:repeat-y;
-    background-size:18px 22px;
-  }
-  .film-frame-wrap{width:94px;height:94px;overflow:hidden;background:#0a0503;flex-shrink:0}
-  /* Toutes les miniatures remplissent le cadre (cover) */
-  .film-frame img{width:94px;height:94px;object-fit:cover;display:block}
-  /* Légèrement assombries */
-  .film-frame img{filter:brightness(0.55)}
+  .film-strip-inner{display:flex;flex-direction:column;will-change:transform}
   #film-left-inner{animation:filmUp 160s linear infinite}
   #film-right-inner{animation:filmDown 160s linear infinite}
   .film-strip-inner.paused{animation-play-state:paused!important}
   @keyframes filmUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
   @keyframes filmDown{0%{transform:translateY(-50%)}100%{transform:translateY(0)}}
-  .film-frame{width:102px;cursor:pointer;flex-shrink:0;background:#0a0503;margin-bottom:3px}
-  .film-frame-wrap{width:102px;height:102px;overflow:hidden;background:#0a0503}
-  /* Toutes les miniatures remplissent le cadre (cover) */
-  .film-frame img{width:102px;height:102px;object-fit:cover;display:block}
-  /* Toutes les photos à l'horizontal, légèrement assombries */
-  .film-frame img{filter:brightness(0.55)}
+  .film-frame{width:130px;cursor:pointer;flex-shrink:0;background:#2c1a0e;display:flex;align-items:center;padding:3px 0}
+  .film-perf{width:18px;flex-shrink:0;align-self:stretch;pointer-events:none;background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOCIgaGVpZ2h0PSIyMiI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjIyIiBmaWxsPSIjMmMxYTBlIi8+PHJlY3QgeD0iMyIgeT0iNSIgd2lkdGg9IjEyIiBoZWlnaHQ9IjEyIiByeD0iMi41IiByeT0iMi41IiBmaWxsPSIjMGEwNTAzIi8+PC9zdmc+');background-repeat:repeat-y;background-size:18px 22px}
+  .film-frame-wrap{width:94px;height:94px;overflow:hidden;background:#0a0503;flex-shrink:0}
+  .film-frame img{width:94px;height:94px;object-fit:cover;display:block;filter:brightness(0.55)}
   #film-viewer{position:fixed;inset:0;z-index:8000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7)}
   #film-viewer.open{display:flex}
   #film-viewer-box{max-width:min(85vw,900px);max-height:min(85vh,700px);background:#111;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;border:2px solid #444;transform:scale(0.05);opacity:0;transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .25s ease;position:relative}
