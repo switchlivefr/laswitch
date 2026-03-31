@@ -178,14 +178,9 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
   /* =====================================================
      PELLICULE CINEMA — perforations continues sur les bords
      ===================================================== */
-  .film-strip{
-    flex:0 0 130px;width:130px;overflow:hidden;height:100%;position:relative;
-    background:#2c1a0e
-  }
-  /* Pellicule : fond marron, perforations sur les côtés DANS le flux (défilent avec les photos) */
-  .film-strip{overflow:hidden;height:100%;position:relative;background:#2c1a0e}
-  .film-strip-inner{display:flex;flex-direction:column;will-change:transform}
-  .film-strip-inner{padding:0}
+  /* Pellicule : fond marron, perforations DANS le flux avec les photos */
+  .film-strip{flex:0 0 130px;width:130px;overflow:hidden;height:100%;position:relative;background:#2c1a0e}
+  .film-strip-inner{display:flex;flex-direction:column;will-change:transform;padding:0}
   /* Chaque frame inclut les perforations dans son padding gauche/droit */
   .film-frame{
     width:130px;cursor:pointer;flex-shrink:0;background:#2c1a0e;
@@ -193,7 +188,7 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
     display:flex;align-items:center;
   }
   .film-perf{
-    width:18px;flex-shrink:0;align-self:stretch;
+    width:18px;flex-shrink:0;align-self:stretch;pointer-events:none;
     background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOCIgaGVpZ2h0PSIyMiI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjIyIiBmaWxsPSIjMmMxYTBlIi8+PHJlY3QgeD0iMyIgeT0iNSIgd2lkdGg9IjEyIiBoZWlnaHQ9IjEyIiByeD0iMi41IiByeT0iMi41IiBmaWxsPSIjMGEwNTAzIi8+PC9zdmc+');
     background-repeat:repeat-y;
     background-size:18px 22px;
