@@ -205,12 +205,13 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
   .film-frame img{width:102px;height:102px;object-fit:cover;display:block}
   /* Toutes les photos à l'horizontal, légèrement assombries */
   .film-frame img{filter:brightness(0.55)}
-  #film-viewer{position:fixed;inset:0;z-index:8000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.8)}
+  #film-viewer{position:fixed;inset:0;z-index:8000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7)}
   #film-viewer.open{display:flex}
-  #film-viewer-box{width:500px;height:500px;background:#111;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;border:2px solid #333;transform:scale(0.05);opacity:0;transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .25s ease}
+  #film-viewer-box{width:min(85vw,820px);height:min(85vh,820px);background:#111;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;border:2px solid #444;transform:scale(0.05);opacity:0;transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .25s ease;position:relative}
   #film-viewer.open #film-viewer-box{transform:scale(1);opacity:1}
   #film-viewer.closing #film-viewer-box{transform:scale(0.05)!important;opacity:0!important;transition:transform .25s ease-in,opacity .2s!important}
-  #film-viewer img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+  #film-viewer-img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+  #film-viewer-credit{position:absolute;bottom:10px;right:12px;font-family:'DM Sans',sans-serif;font-size:12px;color:rgba(255,255,255,.75);background:rgba(0,0,0,.45);padding:3px 8px;border-radius:4px;pointer-events:none}
 }
 </style>
 </head>
@@ -279,7 +280,7 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
   </div><!-- /home-app-center-wrap -->
   <div id="film-right" class="film-strip" style="display:none"><div class="film-strip-inner" id="film-right-inner"></div></div>
 </div>
-<div id="film-viewer"><div id="film-viewer-box"><img src="" alt="" id="film-viewer-img"></div></div>
+<div id="film-viewer"><div id="film-viewer-box"><img src="" alt="" id="film-viewer-img"><div id="film-viewer-credit">© Margaux CG</div></div></div>
 
 <div class="page" id="p-switch">
   <div class="sub-hero sh-gold">
@@ -653,7 +654,13 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
     var img=document.createElement('img');img.src=p.thumb;img.loading='lazy';img.alt='';
     tw.appendChild(img);
     f.appendChild(tw);
-    f.addEventListener('mouseenter',function(){openViewer(p.full);});
+    var _hoverTimer=null;
+    f.addEventListener('mouseenter',function(){
+      _hoverTimer=setTimeout(function(){openViewer(p.full,f);},500);
+    });
+    f.addEventListener('mouseleave',function(){
+      clearTimeout(_hoverTimer);_hoverTimer=null;
+    });
     return f;
   }
 
@@ -667,7 +674,7 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
     list.forEach(function(p){el.appendChild(makeFrame(p,id));});
   }
 
-  function openViewer(src){
+  function openViewer(src, fromEl){
     if(_viewing)return;
     _viewing=true;
     document.querySelectorAll('.film-strip-inner').forEach(function(e){e.classList.add('paused');});
@@ -675,24 +682,23 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
     var img=document.getElementById('film-viewer-img');
     img.src=src;
     v.classList.add('open');
-    _viewTimer=setTimeout(closeViewer,3000);
-    v.addEventListener('mousedown',function onD(e){
-      if(e.target===v)return;
-      clearTimeout(_viewTimer);_viewTimer=null;
-      v.removeEventListener('mousedown',onD);
-      document.addEventListener('mouseup',function onU(){
-        document.removeEventListener('mouseup',onU);
-        closeViewer();
-      },{once:true});
-    },{once:true});
-    v.addEventListener('click',function onC(e){
-      if(e.target===v){v.removeEventListener('click',onC);closeViewer();}
-    });
+    // Timer 3s : repart à chaque entrée sur la visionneuse
+    function startTimer(){ clearTimeout(_viewTimer); _viewTimer=setTimeout(closeViewer,3000); }
+    startTimer();
+    // Tant que la souris est sur la visionneuse, pas de fermeture
+    function onEnter(){ clearTimeout(_viewTimer); _viewTimer=null; }
+    function onLeave(){ startTimer(); }
+    var box=document.getElementById('film-viewer-box');
+    box.addEventListener('mouseenter',onEnter);
+    box.addEventListener('mouseleave',onLeave);
+    // Stocker pour nettoyage
+    v._cleanListeners=function(){box.removeEventListener('mouseenter',onEnter);box.removeEventListener('mouseleave',onLeave);};
   }
 
   function closeViewer(){
     clearTimeout(_viewTimer);_viewTimer=null;
     var v=document.getElementById('film-viewer');
+    if(v._cleanListeners){v._cleanListeners();v._cleanListeners=null;}
     v.classList.add('closing');
     setTimeout(function(){
       v.classList.remove('open','closing');
