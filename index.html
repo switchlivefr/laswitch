@@ -116,7 +116,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 #m-home-pitch .mbox{max-width:680px;flex-direction:column}
 #m-home-pitch .mbox-inner{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
 #m-home-pitch-photos{width:130px;flex-shrink:0;overflow:hidden;position:relative;background:var(--card)}
-#m-home-pitch-photos-inner{display:flex;flex-direction:column;will-change:transform;animation:pitchPhotoUp 60s linear infinite}
+#m-home-pitch-photos-inner{display:flex;flex-direction:column;will-change:transform;animation:pitchPhotoUp 120s linear infinite}
 @keyframes pitchPhotoUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
 .pitch-photo-frame{width:130px;height:130px;overflow:hidden;cursor:pointer;flex-shrink:0}
 .pitch-photo-frame img{width:130px;height:130px;object-fit:cover;display:block;filter:brightness(0.65);transition:filter .2s}
@@ -710,7 +710,7 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
     list.forEach(function(p){el.appendChild(makeFrame(p,id));});
   }
 
-  function openViewer(src){
+  window.openViewer=function openViewer(src){
     if(_viewing)return;
     _viewing=true;
     var v=document.getElementById('film-viewer');
@@ -865,6 +865,7 @@ function fillPitchPhotos(photos){
     img.src=p.thumb;img.loading='lazy';img.alt='';
     frame.appendChild(img);
     frame.addEventListener('click',function(){ openViewer(p.full); });
+    frame.addEventListener('touchend',function(e){ e.preventDefault(); openViewer(p.full); },{passive:false});
     inner.appendChild(frame);
   });
 }
