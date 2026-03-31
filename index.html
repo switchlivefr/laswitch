@@ -24,7 +24,7 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{font-size:22px}
-body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;padding-bottom:calc(var(--nh) + env(safe-area-inset-bottom));-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;overflow-y:hidden;padding-bottom:calc(var(--nh) + env(safe-area-inset-bottom));-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none}
 @keyframes pIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
@@ -172,7 +172,8 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
 @media(max-width:380px){.htitle{font-size:66px}}
 @media(min-width:600px){body{max-width:480px;margin:0 auto}.bnav{max-width:480px;left:50%;transform:translateX(-50%)}#info-lieu-btn:not(:empty){max-width:480px;left:50%;transform:translateX(-50%);right:auto;width:480px}}
 @media(min-width:900px){
-  body{max-width:none!important;overflow:hidden}
+  /* body reste normal - géré par JS selon l'onglet actif */
+  body.home-desktop{max-width:none!important;overflow:hidden}
   #p-home.active{display:flex!important;flex-direction:row;align-items:stretch;justify-content:center;height:calc(100vh - var(--nh));overflow:hidden}
   #home-app-center-wrap{flex:0 0 480px;width:480px;overflow-y:auto;height:100%}
   /* =====================================================
@@ -616,6 +617,11 @@ function nav(id,direction){
   if(oldId&&oldId!==id){var o=document.getElementById(oldId);if(o){o.style.display='none';o.classList.remove('active');}}
   if(id!=='p-home'){muteVideo();_videoMuted=true;}
   if(id==='p-home')applyVideoSound();
+  // Desktop pellicules : max-width none uniquement sur accueil
+  if(window.innerWidth>=900){
+    if(id==='p-home'){document.body.classList.add('home-desktop');}
+    else{document.body.classList.remove('home-desktop');}
+  }
   currentPage=id;
   Object.keys(BNM).forEach(function(k){var b=document.getElementById(BNM[k]);if(b)b.classList.toggle('active',k===id);});
   var ne=document.getElementById(id);
@@ -803,8 +809,14 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
   }
 
   function init(){
-    if(isDesk()){show();load();}
-    else{hide();}
+    if(isDesk()){
+      show();load();
+      if(currentPage==='p-home'){document.body.classList.add('home-desktop');}
+      else{document.body.classList.remove('home-desktop');}
+    } else {
+      hide();
+      document.body.classList.remove('home-desktop');
+    }
   }
 
   window.addEventListener('load',init);
