@@ -98,6 +98,30 @@ async function handleRequest(request, env) {
     }
   }
 
+  // GET photos depuis Google Drive (sans CORS côté client)
+  if (request.method === 'GET' && action === 'getPhotos') {
+    try {
+      const folderId = '1UCSMq48CuBEFWWgTUB7QoxY7Fzgf2xW2';
+      const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent("'" + folderId + "' in parents and mimeType contains 'image/' and trashed=false")}&key=${API_KEY}&fields=${encodeURIComponent('files(id,name,imageMediaMetadata(width,height))')}&pageSize=50&orderBy=name`;
+      const r = await fetch(url);
+      const data = await r.json();
+      const photos = (data.files || []).map(f => ({
+        id: f.id,
+        name: f.name,
+        landscape: f.imageMediaMetadata ? f.imageMediaMetadata.width > f.imageMediaMetadata.height : false,
+        thumb: `https://lh3.googleusercontent.com/d/${f.id}=w220`,
+        full:  `https://lh3.googleusercontent.com/d/${f.id}=w1200`
+      }));
+      return new Response(JSON.stringify({ photos }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'max-age=300' }
+      });
+    } catch(e) {
+      return new Response(JSON.stringify({ photos: [], error: e.message }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
+  }
+
   // GET : lecture des sheets
   try {
     const result = {};
