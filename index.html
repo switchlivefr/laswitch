@@ -187,7 +187,7 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
   @keyframes filmUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
   @keyframes filmDown{0%{transform:translateY(-50%)}100%{transform:translateY(0)}}
   .film-frame{width:130px;cursor:pointer;flex-shrink:0;background:#2c1a0e;display:flex;align-items:center;padding:3px 0}
-  .film-perf{width:18px;flex-shrink:0;align-self:stretch;pointer-events:none;background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOCIgaGVpZ2h0PSIyMiI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjIyIiBmaWxsPSIjMmMxYTBlIi8+PHJlY3QgeD0iMyIgeT0iNSIgd2lkdGg9IjEyIiBoZWlnaHQ9IjEyIiByeD0iMi41IiByeT0iMi41IiBmaWxsPSIjMGEwNTAzIi8+PC9zdmc+');background-repeat:repeat-y;background-size:18px 22px}
+  .film-perf{width:18px;flex-shrink:0;align-self:stretch;pointer-events:none;background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOCIgaGVpZ2h0PSIyMiI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjIyIiBmaWxsPSIjMmMxYTBlIi8+PHJlY3QgeD0iNCIgeT0iNSIgd2lkdGg9IjEwIiBoZWlnaHQ9IjEyIiByeD0iMiIgcnk9IjIiIGZpbGw9IiMwYTA1MDMiLz48L3N2Zz4=');background-repeat:repeat-y;background-size:18px 22px}
   .film-frame-wrap{width:94px;height:94px;overflow:hidden;background:#0a0503;flex-shrink:0}
   .film-frame img{width:94px;height:94px;object-fit:cover;display:block;filter:brightness(0.55)}
   #film-viewer{position:fixed;inset:0;z-index:8000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7)}
@@ -684,11 +684,15 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
     if(vimg.complete&&vimg.naturalWidth){ onImgLoaded(); }
     else{ vimg.onload=onImgLoaded; }
     v.classList.add('open');
-    // Clic n'importe où sur l'écran = fermer
-    function onAnyClick(){ closeViewer(); }
-    document.addEventListener('click', onAnyClick, {once:true});
+    // Clic n'importe où = fermer — délai 300ms pour ne pas capter le clic d'ouverture
+    var onAnyClick=null;
+    var _closeDelay=setTimeout(function(){
+      onAnyClick=function(){ closeViewer(); };
+      document.addEventListener('click', onAnyClick, {once:true});
+    },300);
     v._cleanListeners=function(){
-      document.removeEventListener('click',onAnyClick);
+      clearTimeout(_closeDelay);
+      if(onAnyClick) document.removeEventListener('click',onAnyClick);
     };
   }
 
