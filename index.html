@@ -1170,6 +1170,9 @@ function openMarco(title, ctx, full) {
     if(socialBtns){socialBtns.style.opacity='0.3';socialBtns.style.pointerEvents='none';}
     var prem=document.getElementById('m-marco-premiere');
     if(prem){prem.style.color='var(--bg)';prem.style.animation='none';}
+    // Remettre opacités à 1
+    var head=document.getElementById('m-marco-head');if(head)head.style.opacity='1';
+    var horaires=document.getElementById('m-marco-horaires');if(horaires)horaires.style.opacity='1';
     openM('m-marco');
   }
 }
@@ -1249,15 +1252,20 @@ function soumettreinscription() {
 // ============================================================
 function activateAfterCopy(){
   if(_resaOff) return; // PROTECTION : ne rien faire en mode resa_off
-  // Titre : arrête de clignoter, devient vert
+  // Titre : arrête de clignoter, devient rouge
   var titleEl=document.getElementById('m-marco-title');
-  if(titleEl){titleEl.style.animation='none';titleEl.style.color='#4caf50';}
+  if(titleEl){titleEl.style.animation='none';titleEl.style.color='#e84057';}
   // Boutons sociaux resa_on : activer
   var socialBtns=document.getElementById('m-marco-social-btns');
   if(socialBtns){socialBtns.style.opacity='1';socialBtns.style.pointerEvents='auto';}
   // Phrase première SWiTCH : apparaît clignotante
   var prem=document.getElementById('m-marco-premiere');
   if(prem){prem.style.color='#fff';prem.style.animation='titlepulse 3s ease-in-out infinite';}
+  // "Contacte Marco..." et "jusqu'à 17h..." : griser
+  var head=document.getElementById('m-marco-head');
+  if(head)head.style.opacity='0.35';
+  var horaires=document.getElementById('m-marco-horaires');
+  if(horaires)horaires.style.opacity='0.35';
 }
 
 function copyMarcoMsg(){
