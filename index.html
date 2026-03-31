@@ -704,6 +704,7 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
     fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/photos')
       .then(function(r){return r.json();})
       .then(function(files){
+        console.log('Pellicule GitHub réponse:', JSON.stringify(files).substring(0,300));
         if(!Array.isArray(files)||!files.length){console.log('Pellicule: aucune photo dans assets/photos');return;}
         _loaded=true;
         // Filtrer images uniquement
