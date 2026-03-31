@@ -174,56 +174,38 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
   #p-home.active{display:flex!important;flex-direction:row;align-items:stretch;justify-content:center;height:calc(100vh - var(--nh));overflow:hidden}
   #home-app-center-wrap{flex:0 0 480px;width:480px;overflow-y:auto;height:100%}
   /* =====================================================
-     PELLICULE CINEMA — fond marron, double perforation
+     PELLICULE CINEMA — perforations continues sur les bords
      ===================================================== */
-  .film-strip{flex:0 0 130px;width:130px;overflow:hidden;height:100%;position:relative;background:#2c1a0e}
-  .film-strip-inner{display:flex;flex-direction:column;will-change:transform}
+  .film-strip{
+    flex:0 0 130px;width:130px;overflow:hidden;height:100%;position:relative;
+    /* Fond marron + perforations continues gauche ET droite via pseudo-éléments */
+    background:#2c1a0e
+  }
+  /* Perforations continues sur le bord gauche */
+  .film-strip::before,.film-strip::after{
+    content:'';position:absolute;top:0;bottom:0;width:14px;z-index:2;pointer-events:none;
+    background:repeating-linear-gradient(
+      to bottom,
+      #2c1a0e 0px,#2c1a0e 4px,
+      #0a0503 4px,#0a0503 14px,
+      #2c1a0e 14px,#2c1a0e 18px
+    )
+  }
+  .film-strip::before{left:0}
+  .film-strip::after{right:0}
+  .film-strip-inner{display:flex;flex-direction:column;will-change:transform;padding:0 14px}
   #film-left-inner{animation:filmUp 160s linear infinite}
   #film-right-inner{animation:filmDown 160s linear infinite}
   .film-strip-inner.paused{animation-play-state:paused!important}
   @keyframes filmUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
   @keyframes filmDown{0%{transform:translateY(-50%)}100%{transform:translateY(0)}}
-  .film-frame{width:130px;cursor:pointer;flex-shrink:0;background:#2c1a0e}
-  /* Bande de perforations : rangée continue de petits trous arrondis */
-  .film-holes{
-    height:16px;
-    background:
-      repeating-linear-gradient(90deg,
-        #2c1a0e 0px, #2c1a0e 3px,
-        #0d0704 3px, #0d0704 13px,
-        #2c1a0e 13px, #2c1a0e 17px
-      );
-    border-top:1px solid #1a0e06;
-    border-bottom:1px solid #1a0e06;
-  }
-  /* Zone photo */
-  .film-frame-wrap{
-    width:130px;height:120px;
-    background:#0d0704;
-    display:flex;align-items:center;justify-content:center;
-    overflow:hidden
-  }
-  /* PORTRAIT : photo dans le bon sens, vide sur les côtés */
-  .film-frame.portrait .film-frame-wrap img{
-    height:120px;width:auto;max-width:130px;
-    object-fit:contain;display:block
-  }
-  /* PAYSAGE gauche : incliné bas→droite (rotate -90°) */
-  #film-left .film-frame.landscape .film-frame-wrap{overflow:visible}
-  #film-left .film-frame.landscape .film-frame-wrap img{
-    width:120px;height:auto;max-height:130px;
-    object-fit:contain;display:block;
-    transform:rotate(-90deg);
-    transform-origin:center center
-  }
-  /* PAYSAGE droite : incliné bas→gauche (rotate +90°) */
-  #film-right .film-frame.landscape .film-frame-wrap{overflow:visible}
-  #film-right .film-frame.landscape .film-frame-wrap img{
-    width:120px;height:auto;max-height:130px;
-    object-fit:contain;display:block;
-    transform:rotate(90deg);
-    transform-origin:center center
-  }
+  .film-frame{width:102px;cursor:pointer;flex-shrink:0;background:#0a0503;margin-bottom:3px}
+  .film-frame-wrap{width:102px;height:102px;overflow:hidden;background:#0a0503}
+  /* Toutes les miniatures remplissent le cadre (cover) */
+  .film-frame img{width:102px;height:102px;object-fit:cover;display:block}
+  /* Paysage : tourné dans le cadre */
+  #film-left .film-frame.landscape img{transform:rotate(-90deg) scale(1.35);transform-origin:center center}
+  #film-right .film-frame.landscape img{transform:rotate(90deg) scale(1.35);transform-origin:center center}
   #film-viewer{position:fixed;inset:0;z-index:8000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.8)}
   #film-viewer.open{display:flex}
   #film-viewer-box{width:500px;height:500px;background:#111;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;border:2px solid #333;transform:scale(0.05);opacity:0;transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .25s ease}
@@ -668,14 +650,10 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
   function makeFrame(p, side){
     var f=document.createElement('div');
     f.className='film-frame '+(p.landscape?'landscape':'portrait');
-    function makeHoles(){
-      var h=document.createElement('div');h.className='film-holes';
-      return h;
-    }
     var tw=document.createElement('div');tw.className='film-frame-wrap';
     var img=document.createElement('img');img.src=p.thumb;img.loading='lazy';img.alt='';
     tw.appendChild(img);
-    f.appendChild(makeHoles());f.appendChild(tw);f.appendChild(makeHoles());
+    f.appendChild(tw);
     f.addEventListener('mouseenter',function(){openViewer(p.full);});
     return f;
   }
