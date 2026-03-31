@@ -349,7 +349,7 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
           <div id="m-marco-msg" style="font-size:13px;color:var(--white);line-height:1.5;font-style:italic;margin-bottom:8px">—</div>
           <button onclick="copyMarcoMsg()" id="m-marco-copy" style="width:100%;background:var(--gold);color:#000;border:none;border-radius:8px;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">📋 COPIE LE MESSAGE</button>
         </div>
-        <div style="display:flex;gap:12px;justify-content:center;margin-bottom:4px">
+        <div id="m-marco-social-btns" style="display:flex;gap:12px;justify-content:center;margin-bottom:4px;opacity:0.3;pointer-events:none">
           <button id="m-marco-fb" onclick="openLink('https://m.me/marco.onlyformusic?ref='+encodeURIComponent(window._marcoTitle||''),'m-marco')" style="display:flex;flex-direction:column;align-items:center;gap:6px;border:none;cursor:pointer;border-radius:12px;padding:14px 18px;flex:1;background:#1877f2">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.744 6.614 4.469 8.652V24l4.088-2.242c1.092.3 2.246.464 3.443.464 6.627 0 12-4.974 12-11.111S18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.732 8l3.131 3.259L19.752 8l-6.561 6.963z"/></svg>
             <span style="color:white;font-size:12px;font-weight:700;font-family:DM Sans,sans-serif">Messenger</span>
@@ -364,7 +364,7 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
           </button>
         </div>
         <div style="padding:10px 0 4px;text-align:center">
-          <div style="font-family:'DM Sans',sans-serif;font-size:17px;font-weight:700;color:#fff;line-height:1.4">Indique aussi si c'est ta première SWiTCH</div>    <!-- ligne sup 1ere SWiTCH -->
+          <div id="m-marco-premiere" style="font-family:'DM Sans',sans-serif;font-size:17px;font-weight:700;color:var(--bg);line-height:1.4">Indique aussi si c'est ta première SWiTCH</div>
         </div>
       </div>
 
@@ -1161,6 +1161,13 @@ function openMarco(title, ctx, full) {
     if (msgEl) msgEl.textContent = msg;
     var copyBtn = document.getElementById('m-marco-copy');
     if (copyBtn) copyBtn.textContent = '\uD83D\uDCCB COPIE LE MESSAGE';
+    // Réinitialiser état avant copie
+    var titleEl=document.getElementById('m-marco-title');
+    if(titleEl){titleEl.style.color='var(--white)';titleEl.style.animation='titlepulse 3s ease-in-out infinite';}
+    var socialBtns=document.getElementById('m-marco-social-btns');
+    if(socialBtns){socialBtns.style.opacity='0.3';socialBtns.style.pointerEvents='none';}
+    var prem=document.getElementById('m-marco-premiere');
+    if(prem){prem.style.color='var(--bg)';prem.style.animation='none';}
     openM('m-marco');
   }
 }
@@ -1227,13 +1234,27 @@ function soumettreinscription() {
     .catch(function() { okEl.textContent = 'INSCRIPTION VALIDÉE'; });
 }
 
+function activateAfterCopy(){
+  // Titre : arrête de clignoter, devient vert
+  var titleEl=document.getElementById('m-marco-title');
+  if(titleEl){titleEl.style.animation='none';titleEl.style.color='#4caf50';}
+  // Boutons sociaux : activer
+  var socialBtns=document.getElementById('m-marco-social-btns');
+  if(socialBtns){socialBtns.style.opacity='1';socialBtns.style.pointerEvents='auto';}
+  // Phrase première SWiTCH : apparaît clignotante
+  var prem=document.getElementById('m-marco-premiere');
+  if(prem){prem.style.color='#fff';prem.style.animation='titlepulse 3s ease-in-out infinite';}
+}
+
 function copyMarcoMsg(){
   if(!window._marcoMsg)return;
   navigator.clipboard.writeText(window._marcoMsg).then(function(){
     var b=document.getElementById('m-marco-copy');if(b)b.textContent='\u2705 MESSAGE COPIÉ : CONTACTE MARCO !';
+    activateAfterCopy();
   }).catch(function(){
     var ta=document.createElement('textarea');ta.value=window._marcoMsg;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();
     var b=document.getElementById('m-marco-copy');if(b)b.textContent='\u2705 MESSAGE COPIÉ : CONTACTE MARCO !';
+    activateAfterCopy();
   });
 }
 
