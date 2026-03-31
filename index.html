@@ -112,6 +112,17 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .mbody a,.mbody a *{-webkit-touch-callout:none !important;-webkit-user-select:none !important;user-select:none !important}
 .mbody a{display:block}
 .mbox{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);width:100%;max-width:460px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden}
+/* Modale pitch : layout avec colonne photos gauche */
+#m-home-pitch .mbox{max-width:680px;flex-direction:column}
+#m-home-pitch .mbox-inner{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
+#m-home-pitch-photos{width:130px;flex-shrink:0;overflow:hidden;position:relative;background:var(--card)}
+#m-home-pitch-photos-inner{display:flex;flex-direction:column;will-change:transform;animation:pitchPhotoUp 60s linear infinite}
+@keyframes pitchPhotoUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
+.pitch-photo-frame{width:130px;height:130px;overflow:hidden;cursor:pointer;flex-shrink:0}
+.pitch-photo-frame img{width:130px;height:130px;object-fit:cover;display:block;filter:brightness(0.65);transition:filter .2s}
+.pitch-photo-frame:hover img,.pitch-photo-frame:active img{filter:brightness(0.9)}
+#m-home-pitch .mbody{flex:1;overflow-y:auto;min-height:0}
+#m-home-pitch-hint{position:absolute;bottom:50px;left:65px;transform:translateX(-50%);pointer-events:none;opacity:0;transition:opacity .3s;z-index:2}
 .mhead{padding:16px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .mhead h3{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--cyan)}
 .mhead h3.amber{color:var(--amber)}
@@ -390,7 +401,14 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
 <!-- MODALE : C'est quoi la SWiTCH -->
 <div class="moverlay" id="m-home-pitch" onclick="if(event.target===this)closeM('m-home-pitch')">
   <div class="mbox">
-    <div class="mbody" id="m-home-pitch-body"></div>
+    <div class="mbox-inner">
+      <!-- Colonne photos gauche -->
+      <div id="m-home-pitch-photos">
+        <div id="m-home-pitch-photos-inner"></div>
+      </div>
+      <!-- Contenu texte -->
+      <div class="mbody" id="m-home-pitch-body"></div>
+    </div>
     <div class="mfoot"><button class="mbtn sec" onclick="closeM('m-home-pitch')">Fermer</button></div>
   </div>
 </div>
@@ -793,6 +811,7 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
             _photos.push({landscape:this.naturalWidth>this.naturalHeight,thumb:url,full:url});
             loaded++;
             if(loaded===imgs.length){
+              window._pitchPhotos=_photos;
               fillStrip('film-left-inner',_photos);
               fillStrip('film-right-inner',_photos);
               console.log('Pellicule: '+_photos.length+' photos chargées');
@@ -828,6 +847,34 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
 // ============================================================
 // FIN PELLICULES CINEMA
 // ============================================================
+// ============================================================
+// PHOTOS COLONNE GAUCHE - FENETRE "C'EST QUOI LA SWITCH"
+// Même photos que pellicule, même viewer, sans pellicule
+// ============================================================
+function initPitchPhotos(){
+  var inner=document.getElementById('m-home-pitch-photos-inner');
+  if(!inner||inner.dataset.loaded)return;
+  // Récupérer les photos déjà chargées par la pellicule
+  if(!window._pitchPhotos||!window._pitchPhotos.length)return;
+  inner.innerHTML='';
+  var list=window._pitchPhotos.slice();
+  while(list.length<12)list=list.concat(window._pitchPhotos);
+  list=list.concat(list); // x2 pour boucle infinie
+  list.forEach(function(p){
+    var frame=document.createElement('div');
+    frame.className='pitch-photo-frame';
+    var img=document.createElement('img');
+    img.src=p.thumb;img.loading='lazy';img.alt='';
+    frame.appendChild(img);
+    frame.addEventListener('click',function(){ openViewer(p.full); });
+    inner.appendChild(frame);
+  });
+  inner.dataset.loaded='1';
+}
+// ============================================================
+// FIN PHOTOS PITCH
+// ============================================================
+
 // Scroll hints fixes (pages)
 (function(){
   var dn=document.createElement('div');dn.id='scroll-hint-down';dn.innerHTML='<svg width="30" height="20" viewBox="0 0 30 20" fill="none"><path d="M11 5 H19 V13 H26 L15 20 L4 13 H11 Z" fill="#f2c94c"/></svg>';
@@ -936,6 +983,7 @@ function openM(id){
   if(id==='m-reper-osl'){el.classList.add('fadein');}
   if(id==='m-osl')renderOslPitch();
   if(id==='m-home-pitch'||id==='m-renseignements'||id==='m-resa'){muteVideo();_videoMuted=true;}
+  if(id==='m-home-pitch'){initPitchPhotos();}
   if(id!=='m-marco'&&id!=='m-pin'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
 }
 function closeM(id){
