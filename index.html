@@ -173,20 +173,40 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
   body{max-width:none!important;overflow:hidden}
   #p-home.active{display:flex!important;flex-direction:row;align-items:stretch;justify-content:center;height:calc(100vh - var(--nh));overflow:hidden}
   #home-app-center-wrap{flex:0 0 480px;width:480px;overflow-y:auto;height:100%}
-  .film-strip{flex:0 0 130px;width:130px;overflow:hidden;height:100%;position:relative}
+  /* Pellicule cinema - bande marron, perforations */
+  .film-strip{flex:0 0 136px;width:136px;overflow:hidden;height:100%;position:relative;background:#2c1a0e}
   .film-strip-inner{display:flex;flex-direction:column;will-change:transform}
-  #film-left-inner{animation:filmUp 40s linear infinite}
-  #film-right-inner{animation:filmDown 40s linear infinite}
+  #film-left-inner{animation:filmUp 80s linear infinite}
+  #film-right-inner{animation:filmDown 80s linear infinite}
   .film-strip-inner.paused{animation-play-state:paused!important}
   @keyframes filmUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
   @keyframes filmDown{0%{transform:translateY(-50%)}100%{transform:translateY(0)}}
-  .film-frame{width:110px;margin:2px 10px;cursor:pointer;flex-shrink:0}
-  .film-holes{height:10px;background:repeating-linear-gradient(90deg,transparent 0,transparent 4px,#080810 4px,#080810 6px,#444 6px,#444 12px,#080810 12px,#080810 14px,transparent 14px,transparent 18px)}
-  .film-frame-wrap{width:110px;height:110px;overflow:hidden;background:#0a0a14;display:flex;align-items:center;justify-content:center}
-  .film-frame img{display:block;object-fit:cover}
-  .film-frame.portrait img{width:110px;height:110px}
-  #film-left .film-frame.landscape img{width:110px;height:73px;transform:rotate(-90deg);margin:-18px 0}
-  #film-right .film-frame.landscape img{width:110px;height:73px;transform:rotate(90deg);margin:-18px 0}
+  .film-frame{width:116px;margin:0 10px;cursor:pointer;flex-shrink:0;background:#2c1a0e}
+  .film-holes{
+    height:14px;background:#2c1a0e;
+    display:flex;align-items:center;justify-content:space-around;padding:0 4px
+  }
+  .film-hole{
+    width:9px;height:7px;border-radius:2px;
+    background:#0a0604;border:1px solid #1a0e06;
+    box-shadow:inset 0 0 2px rgba(0,0,0,.8)
+  }
+  /* Zone photo : portrait = vide sur côtés, paysage = tourné */
+  .film-frame-wrap{
+    width:116px;height:116px;overflow:hidden;
+    background:#1a0e06;
+    display:flex;align-items:center;justify-content:center;
+    border-left:2px solid #1a0e06;border-right:2px solid #1a0e06
+  }
+  /* Portrait : contenu dans la hauteur, vide sur les côtés */
+  .film-frame.portrait .film-frame-wrap img{height:116px;width:auto;max-width:116px;object-fit:contain}
+  /* Paysage : tourné, contenu dans la largeur */
+  #film-left .film-frame.landscape .film-frame-wrap img{
+    height:116px;width:auto;transform:rotate(-90deg);transform-origin:center center
+  }
+  #film-right .film-frame.landscape .film-frame-wrap img{
+    height:116px;width:auto;transform:rotate(90deg);transform-origin:center center
+  }
   #film-viewer{position:fixed;inset:0;z-index:8000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.8)}
   #film-viewer.open{display:flex}
   #film-viewer-box{width:500px;height:500px;background:#111;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;border:2px solid #333;transform:scale(0.05);opacity:0;transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .25s ease}
@@ -631,12 +651,15 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
   function makeFrame(p, side){
     var f=document.createElement('div');
     f.className='film-frame '+(p.landscape?'landscape':'portrait');
-    var th=document.createElement('div');th.className='film-holes';
+    function makeHoles(){
+      var h=document.createElement('div');h.className='film-holes';
+      for(var i=0;i<7;i++){var d=document.createElement('div');d.className='film-hole';h.appendChild(d);}
+      return h;
+    }
     var tw=document.createElement('div');tw.className='film-frame-wrap';
     var img=document.createElement('img');img.src=p.thumb;img.loading='lazy';img.alt='';
     tw.appendChild(img);
-    var bh=document.createElement('div');bh.className='film-holes';
-    f.appendChild(th);f.appendChild(tw);f.appendChild(bh);
+    f.appendChild(makeHoles());f.appendChild(tw);f.appendChild(makeHoles());
     f.addEventListener('mouseenter',function(){openViewer(p.full);});
     return f;
   }
