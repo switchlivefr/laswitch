@@ -701,15 +701,37 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
 
   function load(){
     if(_loaded)return;
-    fetch('/api?action=getPhotos')
+    fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/photos')
       .then(function(r){return r.json();})
-      .then(function(d){
-        if(!d.photos||!d.photos.length){console.log('Pellicule: aucune photo');return;}
+      .then(function(files){
+        if(!Array.isArray(files)||!files.length){console.log('Pellicule: aucune photo dans assets/photos');return;}
         _loaded=true;
-        _photos=d.photos;
-        fillStrip('film-left-inner',_photos);
-        fillStrip('film-right-inner',_photos);
-        console.log('Pellicule: '+_photos.length+' photos chargées');
+        // Filtrer images uniquement
+        var imgs=files.filter(function(f){return f.name.match(/\.(jpg|jpeg|png|webp|gif)$/i);});
+        // Déterminer portrait/paysage via une image temporaire
+        var loaded=0;
+        _photos=[];
+        imgs.forEach(function(f){
+          var url=f.download_url;
+          var img=new Image();
+          img.onload=function(){
+            _photos.push({landscape:this.naturalWidth>this.naturalHeight,thumb:url,full:url});
+            loaded++;
+            if(loaded===imgs.length){
+              fillStrip('film-left-inner',_photos);
+              fillStrip('film-right-inner',_photos);
+              console.log('Pellicule: '+_photos.length+' photos chargées');
+            }
+          };
+          img.onerror=function(){
+            loaded++;
+            if(loaded===imgs.length&&_photos.length){
+              fillStrip('film-left-inner',_photos);
+              fillStrip('film-right-inner',_photos);
+            }
+          };
+          img.src=url;
+        });
       })
       .catch(function(e){console.log('Pellicule erreur:',e);});
   }
