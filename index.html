@@ -203,9 +203,8 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
   .film-frame-wrap{width:102px;height:102px;overflow:hidden;background:#0a0503}
   /* Toutes les miniatures remplissent le cadre (cover) */
   .film-frame img{width:102px;height:102px;object-fit:cover;display:block}
-  /* Paysage : tourné dans le cadre */
-  #film-left .film-frame.landscape img{transform:rotate(-90deg) scale(1.35);transform-origin:center center}
-  #film-right .film-frame.landscape img{transform:rotate(90deg) scale(1.35);transform-origin:center center}
+  /* Toutes les photos à l'horizontal, légèrement assombries */
+  .film-frame img{filter:brightness(0.55)}
   #film-viewer{position:fixed;inset:0;z-index:8000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.8)}
   #film-viewer.open{display:flex}
   #film-viewer-box{width:500px;height:500px;background:#111;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;border:2px solid #333;transform:scale(0.05);opacity:0;transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .25s ease}
