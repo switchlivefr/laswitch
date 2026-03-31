@@ -1161,7 +1161,9 @@ function openMarco(title, ctx, full) {
     if (msgEl) msgEl.textContent = msg;
     var copyBtn = document.getElementById('m-marco-copy');
     if (copyBtn) copyBtn.textContent = '\uD83D\uDCCB COPIE LE MESSAGE';
-    // Réinitialiser état avant copie
+    // ============================================================
+    // RESA_ON UNIQUEMENT : réinitialisation état avant copie
+    // ============================================================
     var titleEl=document.getElementById('m-marco-title');
     if(titleEl){titleEl.style.color='var(--white)';titleEl.style.animation='titlepulse 3s ease-in-out infinite';}
     var socialBtns=document.getElementById('m-marco-social-btns');
@@ -1172,7 +1174,14 @@ function openMarco(title, ctx, full) {
   }
 }
 
+// ============================================================
+// RESA_OFF UNIQUEMENT : ouverture fenetre inscription
+// Ne touche pas au mode resa_on
+// ============================================================
 function ouvrirInscription() {
+  // Remettre le titre en blanc clignotant (protection contre état resa_on résiduel)
+  var titleEl=document.getElementById('m-marco-title');
+  if(titleEl){titleEl.style.color='var(--white)';titleEl.style.animation='titlepulse 3s ease-in-out infinite';}
   document.getElementById('m-marco-normal').style.display = 'none';
   document.getElementById('m-marco-inscription').style.display = 'block';
   document.getElementById('m-marco-head').textContent = 'TU AS CHOISI TON SWiTCH !';
@@ -1234,11 +1243,16 @@ function soumettreinscription() {
     .catch(function() { okEl.textContent = 'INSCRIPTION VALIDÉE'; });
 }
 
+// ============================================================
+// RESA_ON UNIQUEMENT : activation après copie du message
+// Ne touche pas au mode resa_off
+// ============================================================
 function activateAfterCopy(){
+  if(_resaOff) return; // PROTECTION : ne rien faire en mode resa_off
   // Titre : arrête de clignoter, devient vert
   var titleEl=document.getElementById('m-marco-title');
   if(titleEl){titleEl.style.animation='none';titleEl.style.color='#4caf50';}
-  // Boutons sociaux : activer
+  // Boutons sociaux resa_on : activer
   var socialBtns=document.getElementById('m-marco-social-btns');
   if(socialBtns){socialBtns.style.opacity='1';socialBtns.style.pointerEvents='auto';}
   // Phrase première SWiTCH : apparaît clignotante
