@@ -173,39 +173,56 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
   body{max-width:none!important;overflow:hidden}
   #p-home.active{display:flex!important;flex-direction:row;align-items:stretch;justify-content:center;height:calc(100vh - var(--nh));overflow:hidden}
   #home-app-center-wrap{flex:0 0 480px;width:480px;overflow-y:auto;height:100%}
-  /* Pellicule cinema - bande marron, perforations */
-  .film-strip{flex:0 0 136px;width:136px;overflow:hidden;height:100%;position:relative;background:#2c1a0e}
+  /* =====================================================
+     PELLICULE CINEMA — fond marron, double perforation
+     ===================================================== */
+  .film-strip{flex:0 0 130px;width:130px;overflow:hidden;height:100%;position:relative;background:#2c1a0e}
   .film-strip-inner{display:flex;flex-direction:column;will-change:transform}
-  #film-left-inner{animation:filmUp 80s linear infinite}
-  #film-right-inner{animation:filmDown 80s linear infinite}
+  #film-left-inner{animation:filmUp 160s linear infinite}
+  #film-right-inner{animation:filmDown 160s linear infinite}
   .film-strip-inner.paused{animation-play-state:paused!important}
   @keyframes filmUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
   @keyframes filmDown{0%{transform:translateY(-50%)}100%{transform:translateY(0)}}
-  .film-frame{width:116px;margin:0 10px;cursor:pointer;flex-shrink:0;background:#2c1a0e}
+  .film-frame{width:130px;cursor:pointer;flex-shrink:0;background:#2c1a0e}
+  /* Bande de perforations : rangée continue de petits trous arrondis */
   .film-holes{
-    height:14px;background:#2c1a0e;
-    display:flex;align-items:center;justify-content:space-around;padding:0 4px
+    height:16px;
+    background:
+      repeating-linear-gradient(90deg,
+        #2c1a0e 0px, #2c1a0e 3px,
+        #0d0704 3px, #0d0704 13px,
+        #2c1a0e 13px, #2c1a0e 17px
+      );
+    border-top:1px solid #1a0e06;
+    border-bottom:1px solid #1a0e06;
   }
-  .film-hole{
-    width:9px;height:7px;border-radius:2px;
-    background:#0a0604;border:1px solid #1a0e06;
-    box-shadow:inset 0 0 2px rgba(0,0,0,.8)
-  }
-  /* Zone photo : portrait = vide sur côtés, paysage = tourné */
+  /* Zone photo */
   .film-frame-wrap{
-    width:116px;height:116px;overflow:hidden;
-    background:#1a0e06;
+    width:130px;height:120px;
+    background:#0d0704;
     display:flex;align-items:center;justify-content:center;
-    border-left:2px solid #1a0e06;border-right:2px solid #1a0e06
+    overflow:hidden
   }
-  /* Portrait : contenu dans la hauteur, vide sur les côtés */
-  .film-frame.portrait .film-frame-wrap img{height:116px;width:auto;max-width:116px;object-fit:contain}
-  /* Paysage : tourné, contenu dans la largeur */
+  /* PORTRAIT : photo dans le bon sens, vide sur les côtés */
+  .film-frame.portrait .film-frame-wrap img{
+    height:120px;width:auto;max-width:130px;
+    object-fit:contain;display:block
+  }
+  /* PAYSAGE gauche : incliné bas→droite (rotate -90°) */
+  #film-left .film-frame.landscape .film-frame-wrap{overflow:visible}
   #film-left .film-frame.landscape .film-frame-wrap img{
-    height:116px;width:auto;transform:rotate(-90deg);transform-origin:center center
+    width:120px;height:auto;max-height:130px;
+    object-fit:contain;display:block;
+    transform:rotate(-90deg);
+    transform-origin:center center
   }
+  /* PAYSAGE droite : incliné bas→gauche (rotate +90°) */
+  #film-right .film-frame.landscape .film-frame-wrap{overflow:visible}
   #film-right .film-frame.landscape .film-frame-wrap img{
-    height:116px;width:auto;transform:rotate(90deg);transform-origin:center center
+    width:120px;height:auto;max-height:130px;
+    object-fit:contain;display:block;
+    transform:rotate(90deg);
+    transform-origin:center center
   }
   #film-viewer{position:fixed;inset:0;z-index:8000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.8)}
   #film-viewer.open{display:flex}
@@ -653,7 +670,6 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
     f.className='film-frame '+(p.landscape?'landscape':'portrait');
     function makeHoles(){
       var h=document.createElement('div');h.className='film-holes';
-      for(var i=0;i<7;i++){var d=document.createElement('div');d.className='film-hole';h.appendChild(d);}
       return h;
     }
     var tw=document.createElement('div');tw.className='film-frame-wrap';
