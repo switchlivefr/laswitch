@@ -851,15 +851,13 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
 // PHOTOS COLONNE GAUCHE - FENETRE "C'EST QUOI LA SWITCH"
 // Même photos que pellicule, même viewer, sans pellicule
 // ============================================================
-function initPitchPhotos(){
+function fillPitchPhotos(photos){
   var inner=document.getElementById('m-home-pitch-photos-inner');
-  if(!inner||inner.dataset.loaded)return;
-  // Récupérer les photos déjà chargées par la pellicule
-  if(!window._pitchPhotos||!window._pitchPhotos.length)return;
+  if(!inner)return;
   inner.innerHTML='';
-  var list=window._pitchPhotos.slice();
-  while(list.length<12)list=list.concat(window._pitchPhotos);
-  list=list.concat(list); // x2 pour boucle infinie
+  var list=photos.slice();
+  while(list.length<12)list=list.concat(photos);
+  list=list.concat(list);
   list.forEach(function(p){
     var frame=document.createElement('div');
     frame.className='pitch-photo-frame';
@@ -869,7 +867,37 @@ function initPitchPhotos(){
     frame.addEventListener('click',function(){ openViewer(p.full); });
     inner.appendChild(frame);
   });
-  inner.dataset.loaded='1';
+}
+
+function initPitchPhotos(){
+  // Si photos déjà chargées, les utiliser directement
+  if(window._pitchPhotos&&window._pitchPhotos.length){
+    fillPitchPhotos(window._pitchPhotos);
+    return;
+  }
+  // Sinon charger depuis GitHub
+  fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/photos')
+    .then(function(r){return r.json();})
+    .then(function(files){
+      if(!Array.isArray(files)||!files.length)return;
+      var imgs=files.filter(function(f){return f.name.match(/\.(jpg|jpeg|png|webp|gif)$/i);});
+      var loaded=0, photos=[];
+      imgs.forEach(function(f){
+        var url=f.download_url;
+        var img=new Image();
+        img.onload=function(){
+          photos.push({thumb:url,full:url});
+          loaded++;
+          if(loaded===imgs.length){
+            window._pitchPhotos=photos;
+            fillPitchPhotos(photos);
+          }
+        };
+        img.onerror=function(){ loaded++; if(loaded===imgs.length&&photos.length)fillPitchPhotos(photos); };
+        img.src=url;
+      });
+    })
+    .catch(function(e){console.log('Pitch photos erreur:',e);});
 }
 // ============================================================
 // FIN PHOTOS PITCH
