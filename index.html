@@ -181,19 +181,16 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
     /* Fond marron + perforations continues gauche ET droite via pseudo-éléments */
     background:#2c1a0e
   }
-  /* Perforations continues sur le bord gauche */
+  /* Bandes de perforations réalistes : SVG trous arrondis sur fond marron */
   .film-strip::before,.film-strip::after{
-    content:'';position:absolute;top:0;bottom:0;width:14px;z-index:2;pointer-events:none;
-    background:repeating-linear-gradient(
-      to bottom,
-      #2c1a0e 0px,#2c1a0e 4px,
-      #0a0503 4px,#0a0503 14px,
-      #2c1a0e 14px,#2c1a0e 18px
-    )
+    content:'';position:absolute;top:0;bottom:0;width:18px;z-index:2;pointer-events:none;
+    background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxOCIgaGVpZ2h0PSIyMiI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjIyIiBmaWxsPSIjN2EzZDBhIi8+PHJlY3QgeD0iNCIgeT0iNSIgd2lkdGg9IjEwIiBoZWlnaHQ9IjEyIiByeD0iMi41IiByeT0iMi41IiBmaWxsPSIjMWEwYTAyIi8+PC9zdmc+');
+    background-repeat:repeat-y;
+    background-size:18px 22px;
   }
   .film-strip::before{left:0}
   .film-strip::after{right:0}
-  .film-strip-inner{display:flex;flex-direction:column;will-change:transform;padding:0 14px}
+  .film-strip-inner{display:flex;flex-direction:column;will-change:transform;padding:0 18px}
   #film-left-inner{animation:filmUp 160s linear infinite}
   #film-right-inner{animation:filmDown 160s linear infinite}
   .film-strip-inner.paused{animation-play-state:paused!important}
