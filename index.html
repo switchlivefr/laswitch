@@ -170,29 +170,29 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
 @media(max-width:380px){.htitle{font-size:66px}}
 @media(min-width:600px){body{max-width:480px;margin:0 auto}.bnav{max-width:480px;left:50%;transform:translateX(-50%)}#info-lieu-btn:not(:empty){max-width:480px;left:50%;transform:translateX(-50%);right:auto;width:480px}}
 @media(min-width:900px){
-  body{max-width:none}
-  #p-home.active{display:flex;flex-direction:row;align-items:stretch;justify-content:center;overflow:hidden;height:calc(100vh - var(--nh))}
-  #home-app-center-wrap{flex:0 0 480px;width:480px;overflow-y:auto;height:calc(100vh - var(--nh))}
-  .film-strip{width:130px;flex-shrink:0;overflow:hidden;height:calc(100vh - var(--nh))}
-  .film-strip-inner{display:flex;flex-direction:column;gap:0;will-change:transform}
-  .film-left .film-strip-inner{animation:filmUp 35s linear infinite}
-  .film-right .film-strip-inner{animation:filmDown 35s linear infinite}
+  body{max-width:none!important;overflow:hidden}
+  #p-home.active{display:flex!important;flex-direction:row;align-items:stretch;justify-content:center;height:calc(100vh - var(--nh));overflow:hidden}
+  #home-app-center-wrap{flex:0 0 480px;width:480px;overflow-y:auto;height:100%}
+  .film-strip{flex:0 0 130px;width:130px;overflow:hidden;height:100%;position:relative}
+  .film-strip-inner{display:flex;flex-direction:column;will-change:transform}
+  #film-left-inner{animation:filmUp 40s linear infinite}
+  #film-right-inner{animation:filmDown 40s linear infinite}
   .film-strip-inner.paused{animation-play-state:paused!important}
-  @keyframes filmUp{from{transform:translateY(0)}to{transform:translateY(-50%)}}
-  @keyframes filmDown{from{transform:translateY(-50%)}to{transform:translateY(0)}}
-  .film-frame{width:110px;margin:0 10px 4px;cursor:pointer;flex-shrink:0}
-  .film-holes{height:12px;background:repeating-linear-gradient(90deg,transparent 0,transparent 5px,var(--bg) 5px,var(--bg) 7px,#444 7px,#444 13px,var(--bg) 13px,var(--bg) 15px,transparent 15px,transparent 20px);border-top:1px solid #222;border-bottom:1px solid #222}
-  .film-frame-wrap{width:110px;height:110px;overflow:hidden;background:#111;display:flex;align-items:center;justify-content:center}
-  .film-frame-img{object-fit:cover;display:block}
-  .film-frame.portrait .film-frame-img{width:110px;height:110px}
-  .film-left .film-frame.landscape .film-frame-img{width:110px;height:73px;transform:rotate(-90deg);width:73px;height:110px}
-  .film-right .film-frame.landscape .film-frame-img{width:73px;height:110px;transform:rotate(90deg)}
-  #film-viewer{position:fixed;inset:0;z-index:8000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.75);cursor:pointer}
+  @keyframes filmUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
+  @keyframes filmDown{0%{transform:translateY(-50%)}100%{transform:translateY(0)}}
+  .film-frame{width:110px;margin:2px 10px;cursor:pointer;flex-shrink:0}
+  .film-holes{height:10px;background:repeating-linear-gradient(90deg,transparent 0,transparent 4px,#080810 4px,#080810 6px,#444 6px,#444 12px,#080810 12px,#080810 14px,transparent 14px,transparent 18px)}
+  .film-frame-wrap{width:110px;height:110px;overflow:hidden;background:#0a0a14;display:flex;align-items:center;justify-content:center}
+  .film-frame img{display:block;object-fit:cover}
+  .film-frame.portrait img{width:110px;height:110px}
+  #film-left .film-frame.landscape img{width:110px;height:73px;transform:rotate(-90deg);margin:-18px 0}
+  #film-right .film-frame.landscape img{width:110px;height:73px;transform:rotate(90deg);margin:-18px 0}
+  #film-viewer{position:fixed;inset:0;z-index:8000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.8)}
   #film-viewer.open{display:flex}
-  #film-viewer-box{width:min(60vw,500px);height:min(60vw,500px);background:#111;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;border:2px solid #333;transform:scale(0.05);opacity:0;transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .25s}
+  #film-viewer-box{width:500px;height:500px;background:#111;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;border:2px solid #333;transform:scale(0.05);opacity:0;transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .25s ease}
   #film-viewer.open #film-viewer-box{transform:scale(1);opacity:1}
-  #film-viewer.closing #film-viewer-box{transform:scale(0.05);opacity:0;transition:transform .25s ease-in,opacity .2s}
-  #film-viewer-img{max-width:100%;max-height:100%;object-fit:contain}
+  #film-viewer.closing #film-viewer-box{transform:scale(0.05)!important;opacity:0!important;transition:transform .25s ease-in,opacity .2s!important}
+  #film-viewer img{max-width:100%;max-height:100%;object-fit:contain;display:block}
 }
 </style>
 </head>
@@ -261,7 +261,7 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
   </div><!-- /home-app-center-wrap -->
   <div id="film-right" class="film-strip" style="display:none"><div class="film-strip-inner" id="film-right-inner"></div></div>
 </div>
-<div id="film-viewer"><div id="film-viewer-box"><img id="film-viewer-img" src="" alt=""></div></div>
+<div id="film-viewer"><div id="film-viewer-box"><img src="" alt="" id="film-viewer-img"></div></div>
 
 <div class="page" id="p-switch">
   <div class="sub-hero sh-gold">
@@ -621,129 +621,106 @@ function nav(id,direction){
 document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')){e.preventDefault();return false;}},true);
 
 // ============================================================
-// PELLICULES CINEMA — DESKTOP UNIQUEMENT (>=900px)
-// Photos chargées depuis Google Drive folder public
+// PELLICULES CINEMA — DESKTOP >=900px — via /api?action=getPhotos
 // ============================================================
 (function(){
-  var FOLDER = '1UCSMq48CuBEFWWgTUB7QoxY7Fzgf2xW2';
-  var GKEY   = 'AIzaSyCTADjNIhq3jXSJiI_WO_jPsp63pTklT_A';
-  var _photos = [];
-  var _loaded = false;
-  var _viewTimer = null;
-  var _viewing = false;
+  var _photos=[], _loaded=false, _viewTimer=null, _viewing=false;
 
-  function isDesk(){ return window.innerWidth >= 900; }
+  function isDesk(){ return window.innerWidth>=900; }
 
-  function makeFrame(photo, side){
-    var frame = document.createElement('div');
-    frame.className = 'film-frame ' + (photo.landscape ? 'landscape' : 'portrait');
-    var top = document.createElement('div'); top.className = 'film-holes';
-    var wrap = document.createElement('div'); wrap.className = 'film-frame-wrap';
-    var img  = document.createElement('img');
-    img.className = 'film-frame-img';
-    img.src = photo.thumb;
-    img.loading = 'lazy';
-    wrap.appendChild(img);
-    var bot = document.createElement('div'); bot.className = 'film-holes';
-    frame.appendChild(top); frame.appendChild(wrap); frame.appendChild(bot);
-    frame.addEventListener('mouseenter', function(){ openViewer(photo.full, frame); });
-    return frame;
+  function makeFrame(p, side){
+    var f=document.createElement('div');
+    f.className='film-frame '+(p.landscape?'landscape':'portrait');
+    var th=document.createElement('div');th.className='film-holes';
+    var tw=document.createElement('div');tw.className='film-frame-wrap';
+    var img=document.createElement('img');img.src=p.thumb;img.loading='lazy';img.alt='';
+    tw.appendChild(img);
+    var bh=document.createElement('div');bh.className='film-holes';
+    f.appendChild(th);f.appendChild(tw);f.appendChild(bh);
+    f.addEventListener('mouseenter',function(){openViewer(p.full);});
+    return f;
   }
 
-  function openViewer(src, el){
-    if(_viewing) return;
-    _viewing = true;
-    document.querySelectorAll('.film-strip-inner').forEach(function(e){ e.classList.add('paused'); });
-    var viewer = document.getElementById('film-viewer');
-    var img    = document.getElementById('film-viewer-img');
-    img.src = src;
-    viewer.classList.add('open');
-    _viewTimer = setTimeout(closeViewer, 3000);
-    viewer.addEventListener('mousedown', function onDown(){
-      clearTimeout(_viewTimer); _viewTimer = null;
-      viewer.removeEventListener('mousedown', onDown);
-      document.addEventListener('mouseup', function onUp(){
-        document.removeEventListener('mouseup', onUp);
+  function fillStrip(id, photos){
+    var el=document.getElementById(id);
+    if(!el)return;
+    el.innerHTML='';
+    var list=photos.slice();
+    while(list.length<16)list=list.concat(photos);
+    list=list.concat(list);
+    list.forEach(function(p){el.appendChild(makeFrame(p,id));});
+  }
+
+  function openViewer(src){
+    if(_viewing)return;
+    _viewing=true;
+    document.querySelectorAll('.film-strip-inner').forEach(function(e){e.classList.add('paused');});
+    var v=document.getElementById('film-viewer');
+    var img=document.getElementById('film-viewer-img');
+    img.src=src;
+    v.classList.add('open');
+    _viewTimer=setTimeout(closeViewer,3000);
+    v.addEventListener('mousedown',function onD(e){
+      if(e.target===v)return;
+      clearTimeout(_viewTimer);_viewTimer=null;
+      v.removeEventListener('mousedown',onD);
+      document.addEventListener('mouseup',function onU(){
+        document.removeEventListener('mouseup',onU);
         closeViewer();
-      }, {once:true});
-    }, {once:true});
+      },{once:true});
+    },{once:true});
+    v.addEventListener('click',function onC(e){
+      if(e.target===v){v.removeEventListener('click',onC);closeViewer();}
+    });
   }
 
   function closeViewer(){
-    clearTimeout(_viewTimer); _viewTimer = null;
-    var viewer = document.getElementById('film-viewer');
-    viewer.classList.add('closing');
+    clearTimeout(_viewTimer);_viewTimer=null;
+    var v=document.getElementById('film-viewer');
+    v.classList.add('closing');
     setTimeout(function(){
-      viewer.classList.remove('open','closing');
-      document.getElementById('film-viewer-img').src = '';
-      _viewing = false;
-      document.querySelectorAll('.film-strip-inner').forEach(function(e){ e.classList.remove('paused'); });
-    }, 280);
+      v.classList.remove('open','closing');
+      document.getElementById('film-viewer-img').src='';
+      _viewing=false;
+      document.querySelectorAll('.film-strip-inner').forEach(function(e){e.classList.remove('paused');});
+    },280);
   }
 
-  function fillStrip(innerId, photos, side){
-    var el = document.getElementById(innerId);
-    if(!el) return;
-    el.innerHTML = '';
-    // Dupliquer pour boucle infinie
-    var list = photos.slice();
-    while(list.length < 20) list = list.concat(photos);
-    list = list.concat(list); // x2 pour seamless
-    list.forEach(function(p){ el.appendChild(makeFrame(p, side)); });
+  function show(){
+    var fl=document.getElementById('film-left');
+    var fr=document.getElementById('film-right');
+    if(fl)fl.style.display='';
+    if(fr)fr.style.display='';
+  }
+  function hide(){
+    var fl=document.getElementById('film-left');
+    var fr=document.getElementById('film-right');
+    if(fl)fl.style.display='none';
+    if(fr)fr.style.display='none';
   }
 
-  function showStrips(){
-    var fl = document.getElementById('film-left');
-    var fr = document.getElementById('film-right');
-    if(fl) fl.style.display = '';
-    if(fr) fr.style.display = '';
-  }
-  function hideStrips(){
-    var fl = document.getElementById('film-left');
-    var fr = document.getElementById('film-right');
-    if(fl) fl.style.display = 'none';
-    if(fr) fr.style.display = 'none';
-  }
-
-  function loadPhotos(){
-    if(_loaded) return;
-    var url = 'https://www.googleapis.com/drive/v3/files'
-      + '?q=' + encodeURIComponent("'" + FOLDER + "' in parents and mimeType contains 'image/' and trashed=false")
-      + '&key=' + GKEY
-      + '&fields=' + encodeURIComponent('files(id,name,imageMediaMetadata(width,height))')
-      + '&pageSize=50&orderBy=name';
-    fetch(url)
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        if(!data.files || !data.files.length){ console.log('Drive: no photos found'); return; }
-        _loaded = true;
-        _photos = data.files.map(function(f){
-          var w = (f.imageMediaMetadata && f.imageMediaMetadata.width)  || 1;
-          var h = (f.imageMediaMetadata && f.imageMediaMetadata.height) || 1;
-          return {
-            landscape: w > h,
-            thumb: 'https://lh3.googleusercontent.com/d/' + f.id + '=w200',
-            full:  'https://lh3.googleusercontent.com/d/' + f.id + '=w1200'
-          };
-        });
-        fillStrip('film-left-inner',  _photos, 'left');
-        fillStrip('film-right-inner', _photos, 'right');
-        console.log('Drive: loaded ' + _photos.length + ' photos');
+  function load(){
+    if(_loaded)return;
+    fetch('/api?action=getPhotos')
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(!d.photos||!d.photos.length){console.log('Pellicule: aucune photo');return;}
+        _loaded=true;
+        _photos=d.photos;
+        fillStrip('film-left-inner',_photos);
+        fillStrip('film-right-inner',_photos);
+        console.log('Pellicule: '+_photos.length+' photos chargées');
       })
-      .catch(function(e){ console.log('Drive error:', e); });
+      .catch(function(e){console.log('Pellicule erreur:',e);});
   }
 
   function init(){
-    if(isDesk()){
-      showStrips();
-      loadPhotos();
-    } else {
-      hideStrips();
-    }
+    if(isDesk()){show();load();}
+    else{hide();}
   }
 
-  window.addEventListener('load', init);
-  window.addEventListener('resize', init);
+  window.addEventListener('load',init);
+  window.addEventListener('resize',init);
 })();
 // ============================================================
 // FIN PELLICULES CINEMA
