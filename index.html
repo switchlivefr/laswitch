@@ -832,7 +832,7 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
           var url=f.download_url;
           var img=new Image();
           img.onload=function(){
-            _photos.push({landscape:this.naturalWidth>this.naturalHeight,thumb:url,full:url});
+            _photos.push({landscape:this.naturalWidth>this.naturalHeight,thumb:url,full:url,w:this.naturalWidth,h:this.naturalHeight});
             loaded++;
             if(loaded===imgs.length){
               window._pitchPhotos=_photos;
