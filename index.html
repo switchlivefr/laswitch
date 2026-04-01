@@ -1852,11 +1852,13 @@ function fillBandeau(track,photos){
     frame.appendChild(img);
     track.appendChild(frame);
   });
-  // Calculer durée selon largeur totale pour vitesse constante
-  var totalW=track.scrollWidth/2;
-  var speed=320; // px/seconde
-  var dur=Math.round(totalW/speed);
-  track.style.animationDuration=dur+'s';
+  // Calculer après rendu pour avoir scrollWidth correct
+  setTimeout(function(){
+    var totalW=track.scrollWidth/2;
+    var speed=320;
+    var dur=Math.max(5, Math.round(totalW/speed));
+    track.style.animation='bandeauLeft '+dur+'s linear infinite';
+  }, 100);
   _bandeauLoaded=true;
   // Afficher crédit
   var credit=document.getElementById('home-photos-credit');
