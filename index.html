@@ -1884,30 +1884,41 @@ function loadBandeau(){
 function fillBandeau(track, photos){
   var stage=document.getElementById('home-photos-stage');
   if(!stage)return;
+
+  // Dimensions = exactement celles du fb-card (diaporama)
+  var refCard=document.querySelector('.fb-card');
   var refH=document.querySelector('.fb-card-video');
   var baseH=refH?refH.offsetHeight:220;
+  var baseW=refCard?refCard.offsetWidth:0;
   if(baseH<100)baseH=220;
-  var h=Math.round(baseH*1.35); // bandeau plus haut
+
   var bandeau=document.getElementById('home-mode-photos');
-  if(bandeau)bandeau.style.height=h+'px';
-  stage.style.cssText='height:'+h+'px;overflow:hidden;position:relative;background:#000';
+  if(bandeau){
+    bandeau.style.height=baseH+'px';
+    if(baseW>0)bandeau.style.width=baseW+'px';
+    // Aligner les marges sur fb-card
+    bandeau.style.margin='0 16px 14px';
+  }
+  stage.style.cssText='height:'+baseH+'px;overflow:hidden;position:relative;background:#000;border-radius:12px';
   stage.innerHTML='';
 
-  var list=photos.slice();
-  while(list.length<3)list=list.concat(photos);
+  // Filtrer uniquement les photos paysage
+  var landscape=photos.filter(function(p){ return p.w&&p.h?p.w>p.h:true; });
+  if(!landscape.length) landscape=photos; // fallback si aucune paysage
+
+  var list=landscape.slice();
+  while(list.length<3)list=list.concat(landscape);
 
   list.forEach(function(p){
-    var landscape=p.w&&p.h?p.w>p.h:true;
-    // Portrait = pleine hauteur, paysage = 72%
-    var ph=landscape?Math.round(h*0.72):h;
-    var ratio=p.w&&p.h?p.w/p.h:(landscape?16/9:3/4);
-    var pw=Math.round(ph*ratio);
+    var ratio=p.w&&p.h?p.w/p.h:16/9;
+    // Agrandir pour couvrir toute la largeur ET toute la hauteur (object-fit:cover)
     var slide=document.createElement('div');
-    slide.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000;opacity:0';
+    slide.style.cssText='position:absolute;inset:0;background:#000;opacity:0;overflow:hidden';
     var img=document.createElement('img');
     img.src=p.url||p.thumb||p.full;
     img.loading='lazy';img.alt='';
-    img.style.cssText='width:'+pw+'px;height:'+ph+'px;display:block;object-fit:contain;-webkit-user-drag:none;user-select:none;pointer-events:none';
+    // Couvre tout le cadre, recadre si nécessaire
+    img.style.cssText='width:100%;height:100%;display:block;object-fit:cover;-webkit-user-drag:none;user-select:none;pointer-events:none';
     slide.appendChild(img);
     stage.appendChild(slide);
     slide.addEventListener('contextmenu',function(e){e.preventDefault();});
@@ -1916,9 +1927,14 @@ function fillBandeau(track, photos){
   startFlipShow(stage, list.length);
   _bandeauLoaded=true;
 
+  // Crédit en bas à droite
   var credit=document.getElementById('home-photos-credit');
   if(credit){
     credit.style.display='block';
+    credit.style.left='auto';
+    credit.style.right='10px';
+    credit.style.bottom='8px';
+    credit.style.transform='none';
     credit.onclick=function(e){
       e.stopPropagation();
       var el=document.getElementById('m-margaux');
