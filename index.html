@@ -1906,9 +1906,23 @@ function fillBandeau(track, photos){
     baseH=Math.round(baseW*9/16);
   }
 
+  // Hauteur du label "PRENDS LEUR PLACE" pour aligner le bas
+  var gifLabel=document.querySelector('.home-gif-label');
+  var labelH=gifLabel?gifLabel.offsetHeight+parseInt(getComputedStyle(gifLabel).marginBottom||0):0;
+  if(labelH<10){
+    // Fallback : mesurer en rendant le gif visible temporairement
+    var mg=document.getElementById('home-mode-gif');
+    var mgHidden=mg&&mg.style.display==='none';
+    if(mgHidden){mg.style.visibility='hidden';mg.style.display='block';}
+    gifLabel=document.querySelector('.home-gif-label');
+    labelH=gifLabel?gifLabel.offsetHeight+8:50;
+    if(mgHidden){mg.style.display='none';mg.style.visibility='';}
+  }
   var bandeau=document.getElementById('home-mode-photos');
   if(bandeau){
     bandeau.style.height=baseH+'px';
+    bandeau.style.paddingTop=labelH+'px';
+    bandeau.style.boxSizing='border-box';
   }
   stage.style.cssText='height:'+baseH+'px;overflow:hidden;position:relative;background:#000;border-radius:12px';
   stage.innerHTML='';
