@@ -2004,23 +2004,23 @@ function applyVideoSound(){
   var v=document.getElementById('fb-video'),b=document.getElementById('fb-mute-btn');
   if(!v)return;v.muted=_videoMuted;if(b)b.textContent=_videoMuted?'\uD83D\uDD07':'\uD83D\uDD0A';
 }
+var _inVideoMode=false;
 function secretTap2(){
   _tap2Count++;clearTimeout(_tap2Timer);_tap2Timer=setTimeout(function(){_tap2Count=0;},1500);
   if(_tap2Count>=5){
     _tap2Count=0;
-    var nm;
-    var mv=document.getElementById('home-mode-video');
-    if(mv&&mv.style.display!=='none'){
-      nm='video'; // retour teaser, mémoriser le sous-mode
-    } else {
-      // retour depuis teaser → reprendre le dernier sous-mode
-      nm=_currentSubMode||'gif';
+    if(_inVideoMode){
+      // Quitter teaser → reprendre dernier sous-mode
+      _inVideoMode=false;
+      var nm=_currentSubMode||'gif';
       applySubMode(nm,false);
       fetch('/api?action=setMode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:nm})});
-      return;
+    } else {
+      // Aller en teaser
+      _inVideoMode=true;
+      applyHomeMode('video');
+      fetch('/api?action=setMode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'video'})});
     }
-    applyHomeMode(nm);
-    fetch('/api?action=setMode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:nm})});
   }
 }
 
@@ -2064,9 +2064,9 @@ fetch('/api')
     RAW=nd;renderHome();renderContactSw();
     if(nd.homeMode){
       _lastKnownServerMode=nd.homeMode;
-      if(nd.homeMode==='alternance'){applySubMode('alternance',false);}
-      else if(nd.homeMode==='gif'||nd.homeMode==='photos'){applySubMode(nd.homeMode,false);}
-      else{applyHomeMode(nd.homeMode);}
+      if(nd.homeMode==='alternance'){_inVideoMode=false;applySubMode('alternance',false);}
+      else if(nd.homeMode==='gif'||nd.homeMode==='photos'){_inVideoMode=false;applySubMode(nd.homeMode,false);}
+      else{_inVideoMode=true;applyHomeMode(nd.homeMode);}
     }
     if(nd.resaMode)applyResaMode(nd.resaMode);
     if(nd.videoUrl)applyVideoUrl(nd.videoUrl);
