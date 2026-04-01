@@ -274,7 +274,7 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
   </div>
   <!-- MODE BANDEAU PHOTOS -->
   <div id="home-mode-photos" style="display:none;position:relative;margin:4px 16px 16px;overflow:hidden;border-radius:12px" onclick="secretTapBandeau()">
-    <div id="home-photos-track" style="display:flex;flex-direction:row;will-change:transform;animation:bandeauLeft 30s linear infinite"></div>
+    <div id="home-photos-track" style="display:flex;flex-direction:row;will-change:transform;animation:none"></div>
     <div id="home-photos-credit" style="display:none;position:absolute;bottom:8px;right:10px;font-family:'DM Sans',sans-serif;font-size:12px;color:rgba(255,255,255,.9);text-shadow:0 1px 4px rgba(0,0,0,1),0 0 8px rgba(0,0,0,.9);pointer-events:auto;cursor:pointer;z-index:5;animation:creditBlink 2.5s ease-in-out infinite">© Margaux CG</div>
   </div>
   <div class="osl-info-btn pulse-btn" onclick="openM('m-home-pitch')" style="margin-top:20px">
@@ -1854,7 +1854,7 @@ function fillBandeau(track,photos){
   });
   // Calculer durée selon largeur totale pour vitesse constante
   var totalW=track.scrollWidth/2;
-  var speed=80; // px/seconde
+  var speed=320; // px/seconde
   var dur=Math.round(totalW/speed);
   track.style.animationDuration=dur+'s';
   _bandeauLoaded=true;
@@ -1914,7 +1914,11 @@ function applyVideoSound(){
 function secretTap2(){
   _tap2Count++;clearTimeout(_tap2Timer);_tap2Timer=setTimeout(function(){_tap2Count=0;},1500);
   if(_tap2Count>=5){
-    _tap2Count=0;var nm=_homeGifMode?'video':'gif';applyHomeMode(nm);
+    _tap2Count=0;
+    // Ne pas toucher au mode photos
+    var curMode=document.getElementById('home-mode-photos').style.display!=='none'?'photos':(_homeGifMode?'gif':'video');
+    if(curMode==='photos')return;
+    var nm=_homeGifMode?'video':'gif';applyHomeMode(nm);
     fetch('/api?action=setMode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:nm})});
   }
 }
