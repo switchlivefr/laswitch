@@ -283,7 +283,7 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
   <div id="film-right" class="film-strip" style="display:none"><div class="film-strip-inner" id="film-right-inner"></div></div>
 </div>
 <!-- MODALE MARGAUX CG PHOTOGRAPHE -->
-<div class="moverlay" id="m-margaux" style="z-index:600" onclick="if(event.target===this)closeM('m-margaux')">
+<div class="moverlay" id="m-margaux" style="z-index:9000" onclick="if(event.target===this)closeM('m-margaux')">
   <div class="mbox">
     <div class="mhead" style="text-align:center">
       <h3 style="color:var(--gold);font-size:22px">Margaux CG Photographe</h3>
@@ -766,7 +766,7 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
     // Clic n'importe où = fermer — délai 300ms pour ne pas capter le clic d'ouverture
     var onAnyClick=null;
     var _closeDelay=setTimeout(function(){
-      onAnyClick=function(){ if(!document.getElementById('m-margaux').classList.contains('open'))closeViewer(); };
+      onAnyClick=function(e){ if(!document.getElementById('m-margaux').classList.contains('open'))closeViewer(); };
       document.addEventListener('click', onAnyClick, {once:true});
     },300);
     v._cleanListeners=function(){
