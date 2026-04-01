@@ -1933,9 +1933,10 @@ function startFlipShow(stage, count){
   clearInterval(_flipInterval);
   var slides=Array.prototype.slice.call(stage.querySelectorAll('div'));
   var current=0;
+  // Init : première visible, autres cachées
   slides.forEach(function(s,i){
     s.style.opacity=i===0?'1':'0';
-    s.style.transform='perspective(900px) rotateY(0deg)';
+    s.style.transform=i===0?'scale(1)':'scale(0.05)';
     s.style.transition='none';
   });
   _flipInterval=setInterval(function(){
@@ -1943,19 +1944,24 @@ function startFlipShow(stage, count){
     current=(current+1)%count;
     var out=slides[prev];
     var ins=slides[current];
-    // Sortante : bascule vers la droite et disparaît
-    out.style.transition='transform 0.5s ease-in, opacity 0.25s ease-in 0.2s';
-    out.style.transform='perspective(900px) rotateY(-90deg)';
+    // Sortante : explose vers l'extérieur et disparaît
+    out.style.transition='transform 0.55s cubic-bezier(.4,0,.2,1), opacity 0.35s ease-in 0.2s';
+    out.style.transform='scale(1.6)';
     out.style.opacity='0';
-    // Entrante : prête à gauche
+    // Entrante : surgit du centre
     ins.style.transition='none';
-    ins.style.transform='perspective(900px) rotateY(90deg)';
+    ins.style.transform='scale(0.05)';
     ins.style.opacity='1';
-    // Entrante : bascule vers le centre
     setTimeout(function(){
-      ins.style.transition='transform 0.5s ease-out';
-      ins.style.transform='perspective(900px) rotateY(0deg)';
-    },500);
+      ins.style.transition='transform 0.5s cubic-bezier(.34,1.56,.64,1)';
+      ins.style.transform='scale(1)';
+      // Remettre sortante invisible pour réutilisation
+      setTimeout(function(){
+        out.style.transition='none';
+        out.style.transform='scale(0.05)';
+        out.style.opacity='0';
+      },600);
+    },100);
   }, 4000);
 }
 
