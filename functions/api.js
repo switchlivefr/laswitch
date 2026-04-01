@@ -98,19 +98,37 @@ async function handleRequest(request, env) {
     }
   }
 
+  // POST : sauvegarder l'index du gif courant
+  if (request.method === 'POST' && action === 'setGifIndex') {
+    try {
+      const body = await request.json();
+      const index = parseInt(body.index) || 0;
+      await env.LASWITCH_KV.put('gif_index', String(index));
+      return new Response(JSON.stringify({ ok: true, index }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    } catch(e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    }
+  }
+
   // GET assets depuis GitHub (photos + videos) — évite rate limiting côté client
   if (request.method === 'GET' && action === 'getAssets') {
     try {
-      const [photosRes, videosRes] = await Promise.all([
+      const [photosRes, videosRes, gifsRes] = await Promise.all([
         fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/photos', {
           headers: { 'User-Agent': 'laswitch-app' }
         }),
         fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets', {
           headers: { 'User-Agent': 'laswitch-app' }
+        }),
+        fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/Gif', {
+          headers: { 'User-Agent': 'laswitch-app' }
         })
       ]);
       const photosData = await photosRes.json();
       const assetsData = await videosRes.json();
+      const gifsData = await gifsRes.json();
       const photos = Array.isArray(photosData)
         ? photosData.filter(f => f.name.match(/\.(jpg|jpeg|png|webp)$/i) && f.name !== '.gitkeep')
             .map(f => ({ name: f.name, url: f.download_url }))
@@ -119,7 +137,11 @@ async function handleRequest(request, env) {
         ? assetsData.filter(f => f.name.match(/\.mp4$/i))
             .map(f => ({ name: f.name, url: f.download_url }))
         : [];
-      return new Response(JSON.stringify({ photos, videos }), {
+      const gifs = Array.isArray(gifsData)
+        ? gifsData.filter(f => f.name.match(/\.(gif|jpg|jpeg|png|webp)$/i) && f.name !== '.gitkeep')
+            .map(f => ({ name: f.name, url: f.download_url }))
+        : [];
+      return new Response(JSON.stringify({ photos, videos, gifs }), {
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
@@ -170,6 +192,8 @@ async function handleRequest(request, env) {
     const resaMode = await env.LASWITCH_KV.get('resa_mode');
     const videoUrl = await env.LASWITCH_KV.get('video_url');
     result.homeMode = homeMode || 'video';
+    const gifIndex = await env.LASWITCH_KV.get('gif_index');
+    result.gifIndex = parseInt(gifIndex) || 0;
     result.resaMode = resaMode || 'on';
     if (videoUrl) result.videoUrl = videoUrl;
     return new Response(JSON.stringify(result), {
