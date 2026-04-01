@@ -1961,8 +1961,13 @@ function secretTap2(){
   _tap2Count++;clearTimeout(_tap2Timer);_tap2Timer=setTimeout(function(){_tap2Count=0;},1500);
   if(_tap2Count>=5){
     _tap2Count=0;
-    if(document.getElementById('home-mode-photos').style.display!=='none')return;
-    var nm=_homeGifMode?'video':'gif';applyHomeMode(nm);
+    var nm;
+    if(document.getElementById('home-mode-photos').style.display!=='none'){
+      nm='video'; // mode photos → retour teaser
+    } else {
+      nm=_homeGifMode?'video':'gif';
+    }
+    applyHomeMode(nm);
     fetch('/api?action=setMode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:nm})});
   }
 }
