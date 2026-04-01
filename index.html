@@ -1936,7 +1936,8 @@ function startFlipShow(stage, count){
   // Init : première visible, autres cachées
   slides.forEach(function(s,i){
     s.style.opacity=i===0?'1':'0';
-    s.style.transform=i===0?'scale(1)':'scale(0.05)';
+    s.style.transform=i===0?'scale(1)':'scale(1.08)';
+    s.style.filter=i===0?'blur(0px)':'blur(18px)';
     s.style.transition='none';
   });
   _flipInterval=setInterval(function(){
@@ -1944,25 +1945,29 @@ function startFlipShow(stage, count){
     current=(current+1)%count;
     var out=slides[prev];
     var ins=slides[current];
-    // Sortante : explose vers l'extérieur et disparaît
-    out.style.transition='transform 0.55s cubic-bezier(.4,0,.2,1), opacity 0.35s ease-in 0.2s';
-    out.style.transform='scale(1.6)';
-    out.style.opacity='0';
-    // Entrante : surgit du centre — invisible au départ, visible dès le début du zoom
+    // Sortante : se floute et disparaît (géré dans le setTimeout ci-dessous)
+    // Entrante : blur entrant — floue et légèrement zoomée, se met au point
     ins.style.transition='none';
-    ins.style.transform='scale(0.01)';
+    ins.style.filter='blur(18px)';
+    ins.style.transform='scale(1.08)';
     ins.style.opacity='0';
     setTimeout(function(){
-      ins.style.transition='transform 0.55s cubic-bezier(.25,0,.2,1), opacity 0.15s ease-out';
+      ins.style.transition='filter 0.7s ease-out, transform 0.7s ease-out, opacity 0.25s ease-out';
+      ins.style.filter='blur(0px)';
       ins.style.transform='scale(1)';
       ins.style.opacity='1';
-      // Remettre sortante invisible pour réutilisation
       setTimeout(function(){
-        out.style.transition='none';
-        out.style.transform='scale(0.05)';
+        out.style.transition='filter 0.4s ease-in, opacity 0.4s ease-in';
+        out.style.filter='blur(18px)';
         out.style.opacity='0';
-      },600);
-    },100);
+        setTimeout(function(){
+          out.style.transition='none';
+          out.style.filter='blur(18px)';
+          out.style.transform='scale(1.08)';
+          out.style.opacity='0';
+        },450);
+      },2500);
+    },80);
   }, 4000);
 }
 
