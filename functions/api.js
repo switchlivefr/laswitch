@@ -98,6 +98,41 @@ async function handleRequest(request, env) {
     }
   }
 
+  // GET assets depuis GitHub (photos + videos) — évite rate limiting côté client
+  if (request.method === 'GET' && action === 'getAssets') {
+    try {
+      const [photosRes, videosRes] = await Promise.all([
+        fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/photos', {
+          headers: { 'User-Agent': 'laswitch-app' }
+        }),
+        fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets', {
+          headers: { 'User-Agent': 'laswitch-app' }
+        })
+      ]);
+      const photosData = await photosRes.json();
+      const assetsData = await videosRes.json();
+      const photos = Array.isArray(photosData)
+        ? photosData.filter(f => f.name.match(/\.(jpg|jpeg|png|webp)$/i) && f.name !== '.gitkeep')
+            .map(f => ({ name: f.name, url: f.download_url }))
+        : [];
+      const videos = Array.isArray(assetsData)
+        ? assetsData.filter(f => f.name.match(/\.mp4$/i))
+            .map(f => ({ name: f.name, url: f.download_url }))
+        : [];
+      return new Response(JSON.stringify({ photos, videos }), {
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Cache-Control': 'max-age=300' // cache 5min
+        }
+      });
+    } catch(e) {
+      return new Response(JSON.stringify({ photos: [], videos: [], error: e.message }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
+  }
+
   // GET photos depuis Google Drive (sans CORS côté client)
   if (request.method === 'GET' && action === 'getPhotos') {
     try {
