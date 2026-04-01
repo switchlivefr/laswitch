@@ -1823,26 +1823,18 @@ function secretTap3(){
 // BANDEAU PHOTOS ACCUEIL - MODE PHOTOS (gif → photos → gif)
 // ============================================================
 // Applique le gif d'index i et le sauvegarde
-var _gifAutoTimer=null;
 function applyGif(i){
   var img=document.getElementById('home-gif');
   if(!img)return;
-  clearTimeout(_gifAutoTimer);
   if(!window._allGifs||!window._allGifs.length){
     img.src='https://lh3.googleusercontent.com/d/1pqFUrUScxuNj6qM6Em0Nf6X3iuaDMN4O';
     return;
   }
   window._gifIndex=((i%window._allGifs.length)+window._allGifs.length)%window._allGifs.length;
   var url=window._allGifs[window._gifIndex];
-  // Forcer le rechargement pour redémarrer l'animation gif
+  // Forcer le rechargement pour redémarrer l'animation depuis le début
   img.src='';
-  img.src=url+'?t='+Date.now();
-  // Si image statique (pas .gif), boucle automatique toutes les 5s
-  if(!url.match(/\.gif$/i)&&window._allGifs.length>1){
-    _gifAutoTimer=setTimeout(function(){
-      applyGif(window._gifIndex+1);
-    },5000);
-  }
+  img.src=url+'?r='+Date.now();
 }
 
 // Appui long sur le gif = gif suivant pour tous
