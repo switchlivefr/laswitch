@@ -864,7 +864,11 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
     }
   }
 
-  window.addEventListener('load',init);
+  window.addEventListener('load',function(){
+  init();
+  var fc=document.querySelector('.fb-card');
+  if(fc)_fbCardHeight=fc.offsetHeight;
+});
   window.addEventListener('resize',init);
 })();
 // ============================================================
@@ -1735,6 +1739,7 @@ function toggleVideoSound(){
 }
 
 var _videoFiles=[],_videoIndex=0,_videoTapCount=0,_videoTapTimer=null;
+var _fbCardHeight=0;
 function loadVideoList(){
   // Utilise le cache si déjà chargé
   if(window._assetsLoaded){applyVideos();return;}
@@ -1889,39 +1894,12 @@ function fillBandeau(track, photos){
   // Aligner EXACTEMENT sur fb-card : mêmes dimensions, mêmes marges
   // Le bas du mode photos = le bas du fb-card
   // -------------------------------------------------------
-  // Mesurer fb-card-video (aspect-ratio 16/9 — toujours dans le DOM même caché)
-  // On le rend temporairement visible pour mesurer
-  var mv=document.getElementById('home-mode-video');
-  var wasHidden=mv&&mv.style.display==='none';
-  if(wasHidden){mv.style.visibility='hidden';mv.style.display='block';}
-  var refCard=document.querySelector('.fb-card');
-  var refVid=document.querySelector('.fb-card-video');
-  var baseH=refVid?refVid.offsetHeight:0;
-  var baseW=refCard?refCard.offsetWidth:0;
-  if(wasHidden){mv.style.display='none';mv.style.visibility='';}
-  // Fallback : calculer depuis la largeur de la page (aspect 16/9)
-  if(baseH<50){
-    var pw=document.getElementById('home-app-center-wrap')||document.body;
-    baseW=pw.offsetWidth-32; // 16px margin de chaque côté
-    baseH=Math.round(baseW*9/16);
-  }
+  // Utiliser la hauteur mémorisée au chargement
+  var baseH=_fbCardHeight||220;
 
-  // Hauteur du label "PRENDS LEUR PLACE" pour aligner le bas
-  var gifLabel=document.querySelector('.home-gif-label');
-  var labelH=gifLabel?gifLabel.offsetHeight+parseInt(getComputedStyle(gifLabel).marginBottom||0):0;
-  if(labelH<10){
-    // Fallback : mesurer en rendant le gif visible temporairement
-    var mg=document.getElementById('home-mode-gif');
-    var mgHidden=mg&&mg.style.display==='none';
-    if(mgHidden){mg.style.visibility='hidden';mg.style.display='block';}
-    gifLabel=document.querySelector('.home-gif-label');
-    labelH=gifLabel?gifLabel.offsetHeight+8:50;
-    if(mgHidden){mg.style.display='none';mg.style.visibility='';}
-  }
   var bandeau=document.getElementById('home-mode-photos');
   if(bandeau){
-    bandeau.style.height=(baseH+labelH)+'px';
-    bandeau.style.paddingTop='0';
+    bandeau.style.height=baseH+'px';
   }
   stage.style.cssText='height:'+baseH+'px;overflow:hidden;position:relative;background:#000;border-radius:12px';
   stage.innerHTML='';
