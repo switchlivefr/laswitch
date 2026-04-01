@@ -785,7 +785,11 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
       _viewing=false;
       if(window._openMargauxAfterClose){
         window._openMargauxAfterClose=false;
-        setTimeout(function(){ openM('m-margaux'); },50);
+        setTimeout(function(){
+          var el=document.getElementById('m-margaux');
+          el.classList.add('open','fadein');
+          el.addEventListener('animationend',function(){el.classList.remove('fadein');},{once:true});
+        },50);
       }
 
     },280);
