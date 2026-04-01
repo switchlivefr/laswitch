@@ -1903,25 +1903,24 @@ function fillBandeau(track, photos){
   var stage=document.getElementById('home-photos-stage');
   if(!stage)return;
 
-  // -------------------------------------------------------
-  // Aligner EXACTEMENT sur fb-card : mêmes dimensions, mêmes marges
-  // Le bas du mode photos = le bas du fb-card
-  // -------------------------------------------------------
-  // Hauteur = celle du diaporama gif (home-gif-wrap)
-  var baseH=_gifWrapHeight||_fbCardHeight||220;
+  // Filtrer UNIQUEMENT les photos paysage
+  var landscape=photos.filter(function(p){ return p.w&&p.h ? p.w>p.h : false; });
+  if(!landscape.length) return; // Rien à afficher si aucune photo paysage
 
+  // Hauteur = largeur disponible × ratio moyen des photos paysage
+  // La largeur disponible = largeur de home-mode-photos (déjà dans le DOM avec margin:4px 16px 14px)
   var bandeau=document.getElementById('home-mode-photos');
+  var availW=bandeau ? bandeau.offsetWidth : (document.body.offsetWidth - 32);
+  if(availW<100) availW = document.body.offsetWidth - 32;
+  // Ratio moyen des photos paysage
+  var avgRatio = landscape.reduce(function(s,p){ return s + p.w/p.h; }, 0) / landscape.length;
+  var baseH = Math.round(availW / avgRatio);
+
   if(bandeau){
     bandeau.style.height=baseH+'px';
   }
   stage.style.cssText='height:'+baseH+'px;overflow:hidden;position:relative;background:#000;border-radius:12px';
   stage.innerHTML='';
-
-  // -------------------------------------------------------
-  // Uniquement photos PAYSAGE (width > height)
-  // -------------------------------------------------------
-  var landscape=photos.filter(function(p){ return p.w&&p.h?p.w>p.h:true; });
-  if(!landscape.length) landscape=photos;
 
   var list=landscape.slice();
   while(list.length<3)list=list.concat(landscape);
