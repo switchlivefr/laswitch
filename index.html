@@ -763,15 +763,19 @@ document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')
     if(vimg.complete&&vimg.naturalWidth){ onImgLoaded(); }
     else{ vimg.onload=onImgLoaded; }
     v.classList.add('open');
-    // Clic n'importe où = fermer — délai 300ms pour ne pas capter le clic d'ouverture
-    var onAnyClick=null;
-    var _closeDelay=setTimeout(function(){
-      onAnyClick=function(e){ if(!document.getElementById('m-margaux').classList.contains('open'))closeViewer(); };
-      document.addEventListener('click', onAnyClick, {once:true});
-    },300);
+    // Clic n'importe où = fermer (sauf si Margaux est ouverte)
+    var _clickActive=false;
+    var _closeDelay=setTimeout(function(){ _clickActive=true; },300);
+    function onAnyClick(e){
+      if(!_clickActive)return;
+      var mg=document.getElementById('m-margaux');
+      if(mg.classList.contains('open')||mg.contains(e.target))return;
+      closeViewer();
+    }
+    document.addEventListener('click', onAnyClick);
     v._cleanListeners=function(){
       clearTimeout(_closeDelay);
-      if(onAnyClick) document.removeEventListener('click',onAnyClick);
+      document.removeEventListener('click',onAnyClick);
     };
   }
 
