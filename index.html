@@ -28,6 +28,7 @@ body{background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;mi
 body::-webkit-scrollbar{display:none}
 *{scrollbar-width:none;-ms-overflow-style:none}
 *::-webkit-scrollbar{display:none}
+img,video{-webkit-touch-callout:none!important;-webkit-user-drag:none!important;user-select:none!important}
 body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none}
 @keyframes pIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
@@ -685,7 +686,7 @@ function nav(id,direction){
   if(id==='p-switch'||id==='p-osl')hideScrollHints();
 }
 
-document.addEventListener('contextmenu',function(e){if(e.target.closest('.mbox')){e.preventDefault();return false;}},true);
+document.addEventListener('contextmenu',function(e){e.preventDefault();return false;},true);
 
 // ============================================================
 // PELLICULES CINEMA — DESKTOP >=900px — via /api?action=getPhotos
@@ -1171,6 +1172,12 @@ history.pushState(null,'',window.location.href);
 })();
 
 window.addEventListener('load',function(){history.pushState(null,'',window.location.href);});
+// Bloquer le menu contextuel natif sur images/vidéos (iOS et Android)
+document.addEventListener('touchstart',function(e){
+  if(e.target.tagName==='IMG'||e.target.tagName==='VIDEO'){
+    e.target.style.webkitTouchCallout='none';
+  }
+},{passive:true});
 window.addEventListener('popstate',function(){
   if(quitting){quitting=false;return;}
   document.getElementById('c-quit').classList.add('open');document.body.classList.add('coverlay-open');
