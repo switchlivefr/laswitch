@@ -147,13 +147,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .cbtns button{flex:1;padding:12px;border-radius:var(--rs);border:none;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer}
 .cbtns .cyes{background:var(--pink);color:#fff}
 .cbtns .cno{background:var(--card);border:1px solid var(--border2);color:var(--muted2)}
-.home-gif-wrap{padding:16px 16px 4px;text-align:center}
+.home-gif-wrap{padding:4px 16px 0px;text-align:center}
 @keyframes bandeauLeft{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .bandeau-photo{flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:transparent}
 .bandeau-photo img{display:block;object-fit:contain}
 .home-gif-label{font-family:'Bebas Neue',sans-serif;font-size:clamp(30px,9.2vw,51px);letter-spacing:3px;background:linear-gradient(90deg,#f2c94c,#e8407a,#34d1c0,#f2c94c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;width:100%;text-align:center;white-space:nowrap}
 .home-gif{width:100%;max-width:420px;border-radius:var(--r);display:block;margin:0 auto}
-.fb-card{background:#242526;border-radius:12px;overflow:hidden;margin:4px 16px 16px;box-shadow:0 2px 12px rgba(0,0,0,.5)}
+.fb-card{background:#242526;border-radius:12px;overflow:hidden;margin:4px 16px 4px;box-shadow:0 2px 12px rgba(0,0,0,.5)}
 .fb-card-video{position:relative;width:100%;background:#000;aspect-ratio:16/9}
 .fb-card-actions{display:flex;border-top:1px solid #3a3b3c}
 .fb-card-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 0;background:none;border:none;color:#b0b3b8;font-size:13px;font-weight:600;cursor:pointer}
@@ -190,7 +190,7 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
 .mbody-hint-up{top:0px;animation:scrollpulse-up 1.5s ease-in-out infinite}
 .hint-bar{position:fixed;bottom:calc(var(--nh) + env(safe-area-inset-bottom));left:0;right:0;z-index:150;text-align:center;padding:8px 12px;background:var(--bg);border-top:1px solid var(--border);font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;color:var(--gold);opacity:0;pointer-events:none}
 .hint-bar.pulsing{animation:hintpulse 3s ease-in-out 3;pointer-events:auto}
-.spacer{height:20px}
+.spacer{height:6px}
 .empty{text-align:center;padding:40px 20px;font-family:'DM Mono',monospace;font-size:14px;color:var(--muted)}
 @media(max-width:380px){.htitle{font-size:66px}}
 @media(min-width:600px){body{max-width:480px;margin:0 auto}.bnav{max-width:480px;left:50%;transform:translateX(-50%)}#info-lieu-btn:not(:empty){max-width:480px;left:50%;transform:translateX(-50%);right:auto;width:480px}}
@@ -273,11 +273,11 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
     </div>
   </div>
   <!-- MODE BANDEAU PHOTOS -->
-  <div id="home-mode-photos" style="display:none;position:relative;margin:4px 16px 16px;overflow:hidden;border-radius:12px;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none" onclick="secretTapBandeau()">
+  <div id="home-mode-photos" style="display:none;position:relative;margin:0 16px 4px;overflow:hidden;border-radius:12px;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none" onclick="secretTapBandeau()">
     <div id="home-photos-stage" style="width:100%;position:relative"></div>
     <div id="home-photos-credit" style="display:none;position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-family:'DM Sans',sans-serif;font-size:12px;color:rgba(255,255,255,.9);text-shadow:0 1px 4px rgba(0,0,0,1),0 0 8px rgba(0,0,0,.9);pointer-events:auto;cursor:pointer;z-index:5;animation:creditBlink 2.5s ease-in-out infinite">© Margaux CG</div>
   </div>
-  <div class="osl-info-btn pulse-btn" onclick="openM('m-home-pitch')" style="margin-top:20px">
+  <div class="osl-info-btn pulse-btn" onclick="openM('m-home-pitch')" style="margin-top:8px">
     <span>💫</span><span>C'est quoi la SWiTCH ?</span>
   </div>
   <div class="osl-info-btn" onclick="openM('m-renseignements')" style="margin-top:10px">
@@ -2004,10 +2004,16 @@ function secretTap2(){
   if(_tap2Count>=5){
     _tap2Count=0;
     var nm;
-    if(document.getElementById('home-mode-photos').style.display!=='none'){
-      nm='video'; // mode photos → retour teaser
+    var mp=document.getElementById('home-mode-photos');
+    var mg=document.getElementById('home-mode-gif');
+    if(mp&&mp.style.display!=='none'||mg&&mg.style.display!=='none'||_altInterval){
+      nm='video'; // retour teaser, mémoriser le sous-mode
     } else {
-      nm=_homeGifMode?'video':'gif';
+      // retour depuis teaser → reprendre le dernier sous-mode
+      nm=_currentSubMode||'gif';
+      applySubMode(nm,false);
+      fetch('/api?action=setMode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:nm})});
+      return;
     }
     applyHomeMode(nm);
     fetch('/api?action=setMode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:nm})});
