@@ -1978,7 +1978,7 @@ function applyHomeMode(mode){
   if(mg)mg.style.display=(mode==='gif')?'block':'none';
   if(mp)mp.style.display=(mode==='photos')?'block':'none';
   if(mode!=='photos'){stopFlipShow();_bandeauLoaded=false;}
-  if(mode==='video'){
+  if(mode==='video'){clearInterval(_altInterval);_altInterval=null;
     // rien
   } else if(mode==='gif'){
     muteVideo();
@@ -2011,9 +2011,8 @@ function secretTap2(){
   if(_tap2Count>=5){
     _tap2Count=0;
     var nm;
-    var mp=document.getElementById('home-mode-photos');
-    var mg=document.getElementById('home-mode-gif');
-    if(mp&&mp.style.display!=='none'||mg&&mg.style.display!=='none'||_altInterval){
+    var mv=document.getElementById('home-mode-video');
+    if(mv&&mv.style.display!=='none'){
       nm='video'; // retour teaser, mémoriser le sous-mode
     } else {
       // retour depuis teaser → reprendre le dernier sous-mode
