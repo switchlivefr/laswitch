@@ -1526,7 +1526,16 @@ function silentRefresh(){
       if(!nd)return;RAW=nd;renderHome();renderContactSw();
       if(nd.resaMode)applyResaMode(nd.resaMode);
       // Ne pas écraser le mode photos si actif
-      if(nd.homeMode&&document.getElementById('home-mode-photos').style.display==='none')applyHomeMode(nd.homeMode);
+      if(nd.homeMode){
+        var mp=document.getElementById('home-mode-photos');
+        var mg=document.getElementById('home-mode-gif');
+        var inGifOrPhotos=(mp&&mp.style.display!=='none')||(mg&&mg.style.display!=='none');
+        // Ne pas interférer si alternance en cours
+        if(!_altInterval){
+          if(nd.homeMode==='alternance'){applySubMode('alternance',false);}
+          else if(!inGifOrPhotos||nd.homeMode==='video'){applyHomeMode(nd.homeMode);}
+        }
+      }
       var sy=window.scrollY;
       if(currentPage==='p-switch'){renderSwitch();window.scrollTo(0,sy);}
       if(currentPage==='p-osl')renderOSL();
@@ -1781,25 +1790,58 @@ function secretTap3(){
 var _gifTapCount=0,_gifTapTimer=null;
 var _bandeauTapCount=0,_bandeauTapTimer=null;
 var _bandeauLoaded=false;
+var _altInterval=null;
+var _altPhase='gif'; // phase courante en mode alternance
+
+// Afficher un toast sous la zone
+function showModeToast(msg){
+  var t=document.getElementById('home-mode-toast');
+  if(!t){t=document.createElement('div');t.id='home-mode-toast';t.style.cssText='text-align:center;font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#f2c94c;padding:6px 0;height:28px;overflow:hidden;opacity:0;transition:opacity .3s';var mg=document.getElementById('home-mode-gif');if(mg&&mg.parentNode)mg.parentNode.insertBefore(t,mg.nextSibling);}
+  t.textContent=msg;t.style.opacity='1';
+  clearTimeout(t._timer);t._timer=setTimeout(function(){t.style.opacity='0';},2000);
+}
+
+// Cycle gif→photos→alternance
+function cycleSub(){
+  var cur=_currentSubMode||'gif';
+  var next=cur==='gif'?'photos':cur==='photos'?'alternance':'gif';
+  applySubMode(next,true);
+}
+
+var _currentSubMode='gif';
+function applySubMode(mode, save){
+  _currentSubMode=mode;
+  clearInterval(_altInterval);
+  if(mode==='gif'){
+    applyHomeMode('gif');
+    showModeToast('DIAPORAMA ACTIVÉ');
+  } else if(mode==='photos'){
+    applyHomeMode('photos');
+    showModeToast('PHOTOS ACTIVÉ');
+  } else if(mode==='alternance'){
+    _altPhase='gif';
+    applyHomeMode('gif');
+    showModeToast('ALTERNANCE ACTIVÉE');
+    _altInterval=setInterval(function(){
+      _altPhase=_altPhase==='gif'?'photos':'gif';
+      applyHomeMode(_altPhase);
+    }, 90000); // 1min30
+  }
+  if(save){
+    fetch('/api?action=setMode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:mode})});
+  }
+}
 
 function secretTapGif(){
   _gifTapCount++;clearTimeout(_gifTapTimer);
   _gifTapTimer=setTimeout(function(){_gifTapCount=0;},1500);
-  if(_gifTapCount>=5){
-    _gifTapCount=0;
-    applyHomeMode('photos');
-    fetch('/api?action=setMode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'photos'})});
-  }
+  if(_gifTapCount>=5){_gifTapCount=0;cycleSub();}
 }
 
 function secretTapBandeau(){
   _bandeauTapCount++;clearTimeout(_bandeauTapTimer);
   _bandeauTapTimer=setTimeout(function(){_bandeauTapCount=0;},1500);
-  if(_bandeauTapCount>=5){
-    _bandeauTapCount=0;
-    applyHomeMode('gif');
-    fetch('/api?action=setMode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'gif'})});
-  }
+  if(_bandeauTapCount>=5){_bandeauTapCount=0;cycleSub();}
 }
 
 function loadBandeau(){
@@ -2010,7 +2052,10 @@ fetch('/api')
   .then(function(r){return r.json();})
   .then(function(nd){
     RAW=nd;renderHome();renderContactSw();
-    if(nd.homeMode)applyHomeMode(nd.homeMode);
+    if(nd.homeMode){
+      if(nd.homeMode==='alternance'){applySubMode('alternance',false);}
+      else{applyHomeMode(nd.homeMode);}
+    }
     if(nd.resaMode)applyResaMode(nd.resaMode);
     if(nd.videoUrl)applyVideoUrl(nd.videoUrl);
     loadVideoList();
