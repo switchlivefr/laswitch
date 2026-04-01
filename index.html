@@ -818,28 +818,26 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
 
   function load(){
     if(_loaded)return;
-    fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/photos')
+    // Via Cloudflare (pas de rate limit GitHub)
+    fetch('/api?action=getAssets')
       .then(function(r){return r.json();})
-      .then(function(files){
-        console.log('Pellicule GitHub réponse:', JSON.stringify(files).substring(0,300));
-        if(!Array.isArray(files)||!files.length){console.log('Pellicule: aucune photo dans assets/photos');return;}
+      .then(function(data){
+        if(!data.photos||!data.photos.length){console.log('Pellicule: aucune photo');return;}
         _loaded=true;
-        // Filtrer images uniquement
-        var imgs=files.filter(function(f){return f.name.match(/\.(jpg|jpeg|png|webp|gif)$/i);});
-        // Déterminer portrait/paysage via une image temporaire
+        var imgs=data.photos;
         var loaded=0;
         _photos=[];
         imgs.forEach(function(f){
-          var url=f.download_url;
+          var url=f.url;
           var img=new Image();
           img.onload=function(){
             _photos.push({landscape:this.naturalWidth>this.naturalHeight,thumb:url,full:url,w:this.naturalWidth,h:this.naturalHeight});
             loaded++;
             if(loaded===imgs.length){
+              window._allPhotos=_photos;
               window._pitchPhotos=_photos;
               fillStrip('film-left-inner',_photos);
               fillStrip('film-right-inner',_photos);
-              console.log('Pellicule: '+_photos.length+' photos chargées');
             }
           };
           img.onerror=function(){
@@ -909,27 +907,13 @@ function initPitchPhotos(){
     fillPitchPhotos(window._pitchPhotos);
     return;
   }
-  // Sinon charger depuis GitHub
-  fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/photos')
+  // Via Cloudflare (pas de rate limit)
+  fetch('/api?action=getAssets')
     .then(function(r){return r.json();})
-    .then(function(files){
-      if(!Array.isArray(files)||!files.length)return;
-      var imgs=files.filter(function(f){return f.name.match(/\.(jpg|jpeg|png|webp|gif)$/i);});
-      var loaded=0, photos=[];
-      imgs.forEach(function(f){
-        var url=f.download_url;
-        var img=new Image();
-        img.onload=function(){
-          photos.push({thumb:url,full:url});
-          loaded++;
-          if(loaded===imgs.length){
-            window._pitchPhotos=photos;
-            fillPitchPhotos(photos);
-          }
-        };
-        img.onerror=function(){ loaded++; if(loaded===imgs.length&&photos.length)fillPitchPhotos(photos); };
-        img.src=url;
-      });
+    .then(function(data){
+      var photos=(data.photos||[]).map(function(f){return {url:f.url,thumb:f.url,full:f.url};});
+      window._allPhotos=photos; window._pitchPhotos=photos;
+      fillPitchPhotos(photos);
     })
     .catch(function(e){console.log('Pitch photos erreur:',e);});
 }
@@ -1752,26 +1736,36 @@ function toggleVideoSound(){
 
 var _videoFiles=[],_videoIndex=0,_videoTapCount=0,_videoTapTimer=null;
 function loadVideoList(){
-  fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets')
+  // Utilise le cache si déjà chargé
+  if(window._assetsLoaded){applyVideos();return;}
+  fetch('/api?action=getAssets')
     .then(function(r){return r.json();})
-    .then(function(files){
-      _videoFiles=files.filter(function(f){return f.name.match(/\.mp4$/i);}).map(function(f){return f.download_url;});
-      if(!_videoFiles.length)return;
-      var cur=document.querySelector('#fb-video source');
-      var matched=false;
-      if(cur&&cur.src){
-        for(var i=0;i<_videoFiles.length;i++){
-          if(_videoFiles[i]===cur.src||_videoFiles[i].indexOf(cur.getAttribute('src').split('/').pop())>-1){_videoIndex=i;matched=true;break;}
-        }
-      }
-      // Charger le premier teaser si aucun n'est encore chargé
-      if(!matched){
-        _videoIndex=0;
-        var v=document.getElementById('fb-video');
-        var src=v?v.querySelector('source'):null;
-        if(src){src.src=_videoFiles[0];v.load();v.play().catch(function(){});}
-      }
+    .then(function(data){
+      window._assetsLoaded=true;
+      // Videos
+      window._allVideos=(data.videos||[]).map(function(f){return f.url;});
+      // Photos
+      window._allPhotos=(data.photos||[]).map(function(f){return {url:f.url,thumb:f.url,full:f.url};});
+      window._pitchPhotos=window._allPhotos;
+      applyVideos();
     }).catch(function(){});
+}
+function applyVideos(){
+  _videoFiles=window._allVideos||[];
+  if(!_videoFiles.length)return;
+  var cur=document.querySelector('#fb-video source');
+  var matched=false;
+  if(cur&&cur.src){
+    for(var i=0;i<_videoFiles.length;i++){
+      if(_videoFiles[i]===cur.src||_videoFiles[i].indexOf((cur.getAttribute('src')||'').split('/').pop())>-1){_videoIndex=i;matched=true;break;}
+    }
+  }
+  if(!matched){
+    _videoIndex=0;
+    var v=document.getElementById('fb-video');
+    var src=v?v.querySelector('source'):null;
+    if(src){src.src=_videoFiles[0];v.load();v.play().catch(function(){});}
+  }
 }
 function secretTap3(){
   if(_homeGifMode)return;
@@ -1867,22 +1861,22 @@ function loadBandeau(){
     fillBandeau(track,photos);
     return;
   }
-  // Sinon charger depuis GitHub
-  fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/photos')
+  // Via Cloudflare (pas de rate limit)
+  fetch('/api?action=getAssets')
     .then(function(r){return r.json();})
-    .then(function(files){
-      if(!Array.isArray(files))return;
-      var imgs=files.filter(function(f){return f.name.match(/\.(jpg|jpeg|png|webp)$/i);});
+    .then(function(data){
+      var imgs=data.photos||[];
+      if(!imgs.length)return;
       var loaded=0,photos=[];
       imgs.forEach(function(f){
         var img=new Image();
         img.onload=function(){
-          photos.push({url:f.download_url,w:this.naturalWidth,h:this.naturalHeight});
+          photos.push({url:f.url,thumb:f.url,full:f.url,w:this.naturalWidth,h:this.naturalHeight});
           loaded++;
-          if(loaded===imgs.length){window._pitchPhotos=photos;fillBandeau(track,photos);}
+          if(loaded===imgs.length){window._allPhotos=photos;window._pitchPhotos=photos;fillBandeau(track,photos);}
         };
         img.onerror=function(){loaded++;if(loaded===imgs.length&&photos.length)fillBandeau(track,photos);};
-        img.src=f.download_url;
+        img.src=f.url;
       });
     }).catch(function(){});
 }
