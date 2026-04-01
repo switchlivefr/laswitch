@@ -274,7 +274,7 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
   </div>
   <!-- MODE BANDEAU PHOTOS -->
   <div id="home-mode-photos" style="display:none;position:relative;margin:4px 16px 16px;overflow:hidden;border-radius:12px" onclick="secretTapBandeau()">
-    <div id="home-photos-track" style="display:flex;flex-direction:row;will-change:transform;animation:none"></div>
+    <div id="home-photos-stage" style="width:100%;position:relative"></div>
     <div id="home-photos-credit" style="display:none;position:absolute;bottom:8px;right:10px;font-family:'DM Sans',sans-serif;font-size:12px;color:rgba(255,255,255,.9);text-shadow:0 1px 4px rgba(0,0,0,1),0 0 8px rgba(0,0,0,.9);pointer-events:auto;cursor:pointer;z-index:5;animation:creditBlink 2.5s ease-in-out infinite">© Margaux CG</div>
   </div>
   <div class="osl-info-btn pulse-btn" onclick="openM('m-home-pitch')" style="margin-top:20px">
@@ -1801,7 +1801,7 @@ function secretTapBandeau(){
 
 function loadBandeau(){
   if(_bandeauLoaded)return;
-  var track=document.getElementById('home-photos-track');
+  var track=document.getElementById('home-photos-stage');
   if(!track)return;
   // Utiliser les photos déjà chargées si disponibles
   var photos=window._pitchPhotos||[];
@@ -1830,57 +1830,37 @@ function loadBandeau(){
 }
 
 function fillBandeau(track,photos){
+  // track = ancien paramètre, on utilise home-photos-stage
+  var stage=document.getElementById('home-photos-stage');
+  if(!stage)return;
+  // Hauteur = même que fb-card-video
   var refH=document.querySelector('.fb-card-video');
   var h=refH?refH.offsetHeight:220;
   if(h<100)h=220;
   var bandeau=document.getElementById('home-mode-photos');
   if(bandeau)bandeau.style.height=h+'px';
-  track.innerHTML='';
-  track.style.animation='none';
-  track.style.transform='';
+  stage.style.height=h+'px';
+  stage.innerHTML='';
 
-  // Construire UNE séquence de photos (pas de duplication ici)
   var list=photos.slice();
-  while(list.length<12)list=list.concat(photos);
+  while(list.length<3)list=list.concat(photos);
 
-  // Créer UN bloc, puis le cloner pour la boucle seamless
-  var block=document.createDocumentFragment();
-  list.forEach(function(p){
-    var ratio=p.w&&p.h?p.w/p.h:1;
-    var w=Math.round(h*ratio);
-    var frame=document.createElement('div');
-    frame.className='bandeau-photo';
-    frame.style.cssText='width:'+w+'px;height:'+h+'px;flex-shrink:0;overflow:hidden';
+  // Créer les slides empilées
+  list.forEach(function(p,i){
+    var slide=document.createElement('div');
+    slide.style.cssText='position:absolute;inset:0;overflow:hidden;backface-visibility:hidden';
     var img=document.createElement('img');
     img.src=p.url||p.thumb||p.full;
-    img.style.cssText='width:'+w+'px;height:'+h+'px;display:block;object-fit:cover';
+    img.style.cssText='width:100%;height:100%;object-fit:cover;display:block';
     img.loading='lazy';img.alt='';
-    frame.appendChild(img);
-    block.appendChild(frame);
+    slide.appendChild(img);
+    stage.appendChild(slide);
   });
-  // Ajouter le bloc deux fois pour boucle seamless
-  track.appendChild(block);
-  // Cloner tous les enfants du premier bloc
-  var children=Array.prototype.slice.call(track.children);
-  children.forEach(function(c){ track.appendChild(c.cloneNode(true)); });
 
-  // Calculer durée après rendu
-  setTimeout(function(){
-    // La moitié de scrollWidth = largeur d'un bloc
-    var halfW=track.scrollWidth/2;
-    var speed=80; // px/seconde
-    var dur=Math.max(3, halfW/speed);
-    // Créer keyframe dynamique avec la vraie valeur px (pas %)
-    var styleId='bandeau-keyframe-style';
-    var old=document.getElementById(styleId);
-    if(old)old.remove();
-    var style=document.createElement('style');
-    style.id=styleId;
-    style.textContent='@keyframes bandeauScroll{0%{transform:translateX(0)}100%{transform:translateX(-'+halfW+'px)}}';
-    document.head.appendChild(style);
-    track.style.animation='bandeauScroll '+dur+'s linear infinite';
-  }, 150);
+  // Lancer le diaporama flip
+  startFlipShow(stage, list.length, h);
   _bandeauLoaded=true;
+
   // Afficher crédit
   var credit=document.getElementById('home-photos-credit');
   if(credit){
@@ -1892,6 +1872,38 @@ function fillBandeau(track,photos){
       el.addEventListener('animationend',function(){el.classList.remove('fadein');},{once:true});
     };
   }
+}
+
+var _flipInterval=null;
+function startFlipShow(stage, count, h){
+  clearInterval(_flipInterval);
+  var slides=stage.querySelectorAll('div');
+  var current=0;
+  // Montrer la première slide
+  slides.forEach(function(s,i){ s.style.opacity=i===0?'1':'0'; s.style.transform='rotateY(0deg)'; s.style.transition='none'; });
+  _flipInterval=setInterval(function(){
+    var prev=current;
+    current=(current+1)%count;
+    var outSlide=slides[prev];
+    var inSlide=slides[current];
+    // Phase 1 : sortante bascule vers la droite
+    outSlide.style.transition='transform 0.5s ease-in, opacity 0.25s ease-in 0.25s';
+    outSlide.style.transform='perspective(800px) rotateY(-90deg)';
+    outSlide.style.opacity='0';
+    // Phase 2 : entrante arrive de la gauche
+    inSlide.style.transition='none';
+    inSlide.style.transform='perspective(800px) rotateY(90deg)';
+    inSlide.style.opacity='1';
+    setTimeout(function(){
+      inSlide.style.transition='transform 0.5s ease-out';
+      inSlide.style.transform='perspective(800px) rotateY(0deg)';
+    }, 500);
+  }, 4000);
+}
+
+function stopFlipShow(){
+  clearInterval(_flipInterval);
+  _flipInterval=null;
 }
 // ============================================================
 // FIN BANDEAU PHOTOS ACCUEIL
@@ -1906,6 +1918,7 @@ function applyHomeMode(mode){
   if(mv)mv.style.display=(mode==='video')?'block':'none';
   if(mg)mg.style.display=(mode==='gif')?'block':'none';
   if(mp)mp.style.display=(mode==='photos')?'block':'none';
+  if(mode!=='photos'){stopFlipShow();}
   if(mode==='video'){
     // rien
   } else if(mode==='gif'){
