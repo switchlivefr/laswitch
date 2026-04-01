@@ -1920,9 +1920,8 @@ function fillBandeau(track, photos){
   }
   var bandeau=document.getElementById('home-mode-photos');
   if(bandeau){
-    bandeau.style.height=baseH+'px';
-    bandeau.style.paddingTop=labelH+'px';
-    bandeau.style.boxSizing='border-box';
+    bandeau.style.height=(baseH+labelH)+'px';
+    bandeau.style.paddingTop='0';
   }
   stage.style.cssText='height:'+baseH+'px;overflow:hidden;position:relative;background:#000;border-radius:12px';
   stage.innerHTML='';
