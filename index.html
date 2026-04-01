@@ -149,9 +149,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .cbtns .cno{background:var(--card);border:1px solid var(--border2);color:var(--muted2)}
 .home-gif-wrap{padding:16px 16px 4px;text-align:center}
 @keyframes bandeauLeft{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-@keyframes zoomPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-.bandeau-photo{flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000}
-.bandeau-photo img{display:block;object-fit:contain;animation:zoomPulse 3s ease-in-out infinite}
+.bandeau-photo{flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:transparent}
+.bandeau-photo img{display:block;object-fit:contain}
 .home-gif-label{font-family:'Bebas Neue',sans-serif;font-size:clamp(30px,9.2vw,51px);letter-spacing:3px;background:linear-gradient(90deg,#f2c94c,#e8407a,#34d1c0,#f2c94c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;width:100%;text-align:center;white-space:nowrap}
 .home-gif{width:100%;max-width:420px;border-radius:var(--r);display:block;margin:0 auto}
 .fb-card{background:#242526;border-radius:12px;overflow:hidden;margin:4px 16px 16px;box-shadow:0 2px 12px rgba(0,0,0,.5)}
@@ -1834,13 +1833,14 @@ function fillBandeau(track, photos){
   var stage=document.getElementById('home-photos-stage');
   if(!stage)return;
   var refH=document.querySelector('.fb-card-video');
-  var h=refH?refH.offsetHeight:220;
-  if(h<100)h=220;
+  var baseH=refH?refH.offsetHeight:220;
+  if(baseH<100)baseH=220;
+  // Hauteur du bandeau plus grande (portraits pleine hauteur)
+  var h=Math.round(baseH*1.35);
   var bandeau=document.getElementById('home-mode-photos');
   if(bandeau)bandeau.style.height=h+'px';
   stage.style.cssText='height:'+h+'px;overflow:hidden;position:relative';
 
-  // Créer le track défilant
   var tr=document.createElement('div');
   tr.id='bandeau-scroll-track';
   tr.style.cssText='display:flex;flex-direction:row;align-items:center;height:'+h+'px;gap:6px;will-change:transform';
@@ -1850,16 +1850,19 @@ function fillBandeau(track, photos){
   var list=photos.slice();
   while(list.length<12)list=list.concat(photos);
 
-  // Bloc 1
   list.forEach(function(p, i){
+    var landscape=p.w&&p.h?p.w>p.h:true;
+    // Portrait = pleine hauteur, paysage = 72% de la hauteur
+    var ph=landscape?Math.round(h*0.72):h;
     var ratio=p.w&&p.h?p.w/p.h:1.5;
-    var w=Math.round(h*ratio);
+    var pw=Math.round(ph*ratio);
     var frame=document.createElement('div');
-    frame.style.cssText='flex-shrink:0;width:'+w+'px;height:'+h+'px;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center';
+    frame.style.cssText='flex-shrink:0;width:'+pw+'px;height:'+h+'px;overflow:hidden;background:transparent;display:flex;align-items:center;justify-content:center';
     var img=document.createElement('img');
     img.src=p.url||p.thumb||p.full;
     img.loading='lazy';img.alt='';
-    img.style.cssText='height:'+h+'px;width:auto;max-width:'+w+'px;display:block;object-fit:contain;animation:zoomPulse 3s ease-in-out infinite;animation-delay:'+(i*0.4).toFixed(1)+'s';
+    // Pas d'animation CSS zoom ici — géré par rAF
+    img.style.cssText='height:'+ph+'px;width:auto;max-width:'+pw+'px;display:block;object-fit:contain;transform-origin:center center;transition:transform 0.05s linear';
     frame.appendChild(img);
     tr.appendChild(frame);
   });
@@ -1867,18 +1870,37 @@ function fillBandeau(track, photos){
   var origChildren=Array.prototype.slice.call(tr.children);
   origChildren.forEach(function(c){ tr.appendChild(c.cloneNode(true)); });
 
-  // Calculer animation après rendu
+  // Animation défilement + zoom central via rAF
   setTimeout(function(){
     var halfW=tr.scrollWidth/2;
     var dur=Math.max(5, halfW/80);
-    // Keyframe dynamique en px
     var sid='bscroll-kf';
-    var old=document.getElementById(sid);if(old)old.remove();
+    var oldS=document.getElementById(sid);if(oldS)oldS.remove();
     var s=document.createElement('style');
     s.id=sid;
     s.textContent='@keyframes bscroll{0%{transform:translateX(0)}100%{transform:translateX(-'+halfW+'px)}}';
     document.head.appendChild(s);
     tr.style.animation='bscroll '+dur+'s linear infinite';
+
+    // Zoom central : la photo la plus proche du centre grossit
+    var containerW=stage.offsetWidth;
+    var center=containerW/2;
+    function updateZoom(){
+      if(!document.getElementById('bandeau-scroll-track'))return;
+      var frames=tr.querySelectorAll('div');
+      frames.forEach(function(f){
+        var rect=f.getBoundingClientRect();
+        var stageRect=stage.getBoundingClientRect();
+        var fCenter=rect.left-stageRect.left+rect.width/2;
+        var dist=Math.abs(fCenter-center);
+        var maxDist=center+rect.width;
+        var ratio=Math.max(0,1-dist/maxDist);
+        var scale=1+ratio*0.18; // max +18% au centre
+        f.querySelector('img').style.transform='scale('+scale.toFixed(3)+')';
+      });
+      requestAnimationFrame(updateZoom);
+    }
+    requestAnimationFrame(updateZoom);
   }, 150);
 
   _bandeauLoaded=true;
