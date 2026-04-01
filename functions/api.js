@@ -46,7 +46,7 @@ async function handleRequest(request, env) {
   if (request.method === 'POST' && action === 'setMode') {
     try {
       const body = await request.json();
-      const mode = ['gif','video','photos'].includes(body.mode) ? body.mode : 'video';
+      const mode = ['gif','video','photos','alternance'].includes(body.mode) ? body.mode : 'video';
       await env.LASWITCH_KV.put('home_mode', mode);
       return new Response(JSON.stringify({ ok: true, mode }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
