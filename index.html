@@ -1826,39 +1826,56 @@ function loadBandeau(){
 }
 
 function fillBandeau(track,photos){
-  // Hauteur fixe du bandeau = hauteur du fb-card-video
   var refH=document.querySelector('.fb-card-video');
   var h=refH?refH.offsetHeight:220;
   if(h<100)h=220;
   var bandeau=document.getElementById('home-mode-photos');
   if(bandeau)bandeau.style.height=h+'px';
   track.innerHTML='';
+  track.style.animation='none';
+  track.style.transform='';
+
+  // Construire UNE séquence de photos (pas de duplication ici)
   var list=photos.slice();
-  // Dupliquer pour boucle infinie
-  while(list.length<20)list=list.concat(photos);
-  list=list.concat(list);
+  while(list.length<12)list=list.concat(photos);
+
+  // Créer UN bloc, puis le cloner pour la boucle seamless
+  var block=document.createDocumentFragment();
   list.forEach(function(p){
     var ratio=p.w&&p.h?p.w/p.h:1;
     var w=Math.round(h*ratio);
     var frame=document.createElement('div');
     frame.className='bandeau-photo';
-    frame.style.width=w+'px';
-    frame.style.height=h+'px';
+    frame.style.cssText='width:'+w+'px;height:'+h+'px;flex-shrink:0;overflow:hidden';
     var img=document.createElement('img');
     img.src=p.url||p.thumb||p.full;
-    img.style.width=w+'px';
-    img.style.height=h+'px';
+    img.style.cssText='width:'+w+'px;height:'+h+'px;display:block;object-fit:cover';
     img.loading='lazy';img.alt='';
     frame.appendChild(img);
-    track.appendChild(frame);
+    block.appendChild(frame);
   });
-  // Calculer après rendu pour avoir scrollWidth correct
+  // Ajouter le bloc deux fois pour boucle seamless
+  track.appendChild(block);
+  // Cloner tous les enfants du premier bloc
+  var children=Array.prototype.slice.call(track.children);
+  children.forEach(function(c){ track.appendChild(c.cloneNode(true)); });
+
+  // Calculer durée après rendu
   setTimeout(function(){
-    var totalW=track.scrollWidth/2;
-    var speed=320;
-    var dur=Math.max(5, Math.round(totalW/speed));
-    track.style.animation='bandeauLeft '+dur+'s linear infinite';
-  }, 100);
+    // La moitié de scrollWidth = largeur d'un bloc
+    var halfW=track.scrollWidth/2;
+    var speed=640; // px/seconde
+    var dur=Math.max(3, halfW/speed);
+    // Créer keyframe dynamique avec la vraie valeur px (pas %)
+    var styleId='bandeau-keyframe-style';
+    var old=document.getElementById(styleId);
+    if(old)old.remove();
+    var style=document.createElement('style');
+    style.id=styleId;
+    style.textContent='@keyframes bandeauScroll{0%{transform:translateX(0)}100%{transform:translateX(-'+halfW+'px)}}';
+    document.head.appendChild(style);
+    track.style.animation='bandeauScroll '+dur+'s linear infinite';
+  }, 150);
   _bandeauLoaded=true;
   // Afficher crédit
   var credit=document.getElementById('home-photos-credit');
@@ -1917,9 +1934,7 @@ function secretTap2(){
   _tap2Count++;clearTimeout(_tap2Timer);_tap2Timer=setTimeout(function(){_tap2Count=0;},1500);
   if(_tap2Count>=5){
     _tap2Count=0;
-    // Ne pas toucher au mode photos
-    var curMode=document.getElementById('home-mode-photos').style.display!=='none'?'photos':(_homeGifMode?'gif':'video');
-    if(curMode==='photos')return;
+    if(document.getElementById('home-mode-photos').style.display!=='none')return;
     var nm=_homeGifMode?'video':'gif';applyHomeMode(nm);
     fetch('/api?action=setMode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:nm})});
   }
