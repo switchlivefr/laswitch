@@ -1948,13 +1948,14 @@ function startFlipShow(stage, count){
     out.style.transition='transform 0.55s cubic-bezier(.4,0,.2,1), opacity 0.35s ease-in 0.2s';
     out.style.transform='scale(1.6)';
     out.style.opacity='0';
-    // Entrante : surgit du centre
+    // Entrante : surgit du centre — invisible au départ, visible dès le début du zoom
     ins.style.transition='none';
-    ins.style.transform='scale(0.05)';
-    ins.style.opacity='1';
+    ins.style.transform='scale(0.01)';
+    ins.style.opacity='0';
     setTimeout(function(){
-      ins.style.transition='transform 0.5s cubic-bezier(.34,1.56,.64,1)';
+      ins.style.transition='transform 0.55s cubic-bezier(.25,0,.2,1), opacity 0.15s ease-out';
       ins.style.transform='scale(1)';
+      ins.style.opacity='1';
       // Remettre sortante invisible pour réutilisation
       setTimeout(function(){
         out.style.transition='none';
