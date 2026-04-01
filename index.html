@@ -1521,7 +1521,9 @@ function silentRefresh(){
     .then(function(r){return r.json();})
     .then(function(nd){
       if(!nd)return;RAW=nd;renderHome();renderContactSw();
-      if(nd.homeMode)applyHomeMode(nd.homeMode);if(nd.resaMode)applyResaMode(nd.resaMode);
+      if(nd.resaMode)applyResaMode(nd.resaMode);
+      // Ne pas écraser le mode photos si actif
+      if(nd.homeMode&&document.getElementById('home-mode-photos').style.display==='none')applyHomeMode(nd.homeMode);
       var sy=window.scrollY;
       if(currentPage==='p-switch'){renderSwitch();window.scrollTo(0,sy);}
       if(currentPage==='p-osl')renderOSL();
@@ -1864,7 +1866,7 @@ function fillBandeau(track,photos){
   setTimeout(function(){
     // La moitié de scrollWidth = largeur d'un bloc
     var halfW=track.scrollWidth/2;
-    var speed=640; // px/seconde
+    var speed=320; // px/seconde
     var dur=Math.max(3, halfW/speed);
     // Créer keyframe dynamique avec la vraie valeur px (pas %)
     var styleId='bandeau-keyframe-style';
