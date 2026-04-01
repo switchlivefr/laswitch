@@ -922,6 +922,88 @@ function initPitchPhotos(){
     .catch(function(e){console.log('Pitch photos erreur:',e);});
 }
 // ============================================================
+// CONTROLE TACTILE PHOTOS PITCH
+// Drag haut/bas = accélère/ralentit le défilement
+// ============================================================
+(function(){
+  var BASE_DURATION = 120; // secondes vitesse normale
+  var MIN_DURATION  = 4;   // vitesse max (drag rapide)
+  var currentDuration = BASE_DURATION;
+  var touchStartY = 0;
+  var touchLastY  = 0;
+  var lastVelocity = 0;
+  var animFrame   = null;
+  var returning   = false;
+
+  function setSpeed(dur){
+    currentDuration = Math.max(MIN_DURATION, Math.min(BASE_DURATION, dur));
+    var inner = document.getElementById('m-home-pitch-photos-inner');
+    if(!inner) return;
+    // Conserver la position actuelle
+    var computed = getComputedStyle(inner).transform;
+    var mat = new DOMMatrix(computed);
+    var currentY = mat.m42;
+    // Calculer le pourcentage de progression
+    var totalH = inner.scrollHeight / 2;
+    var pct = totalH > 0 ? ((-currentY % totalH) / totalH) * 100 : 0;
+    if(pct < 0) pct += 100;
+    // Réappliquer l'animation avec la nouvelle durée et delay négatif
+    var delay = -(currentDuration * pct / 100);
+    inner.style.animationDuration = currentDuration + 's';
+    inner.style.animationDelay = delay + 's';
+  }
+
+  function returnToNormal(){
+    returning = true;
+    var step = function(){
+      if(!returning) return;
+      currentDuration += (BASE_DURATION - currentDuration) * 0.04;
+      setSpeed(currentDuration);
+      if(Math.abs(currentDuration - BASE_DURATION) > 0.5){
+        animFrame = requestAnimationFrame(step);
+      } else {
+        setSpeed(BASE_DURATION);
+        returning = false;
+      }
+    };
+    animFrame = requestAnimationFrame(step);
+  }
+
+  function initPitchTouchControl(){
+    var container = document.getElementById('m-home-pitch-photos');
+    if(!container || container._touchInit) return;
+    container._touchInit = true;
+
+    container.addEventListener('touchstart', function(e){
+      cancelAnimationFrame(animFrame);
+      returning = false;
+      touchStartY = e.touches[0].clientY;
+      touchLastY  = touchStartY;
+      lastVelocity = 0;
+    }, {passive:true});
+
+    container.addEventListener('touchmove', function(e){
+      var y = e.touches[0].clientY;
+      var dy = touchLastY - y; // positif = doigt monte = défile plus vite
+      touchLastY = y;
+      lastVelocity = dy;
+      // Plus le geste est rapide, plus on accélère
+      var speed = Math.abs(dy);
+      var newDur = currentDuration - speed * 2.5;
+      if(dy < 0) newDur = currentDuration + speed * 2; // doigt descend = ralentit
+      setSpeed(newDur);
+    }, {passive:true});
+
+    container.addEventListener('touchend', function(){
+      // Retour progressif à la vitesse normale
+      setTimeout(returnToNormal, 150);
+    }, {passive:true});
+  }
+
+  // Lancer quand la modale pitch s'ouvre
+  window._initPitchTouchControl = initPitchTouchControl;
+})();
+// ============================================================
 // FIN PHOTOS PITCH
 // ============================================================
 
@@ -1033,7 +1115,7 @@ function openM(id){
   if(id==='m-reper-osl'){el.classList.add('fadein');}
   if(id==='m-osl')renderOslPitch();
   if(id==='m-home-pitch'||id==='m-renseignements'||id==='m-resa'){muteVideo();_videoMuted=true;}
-  if(id==='m-home-pitch'){initPitchPhotos();}
+  if(id==='m-home-pitch'){initPitchPhotos();if(window._initPitchTouchControl)window._initPitchTouchControl();}
   if(id!=='m-marco'&&id!=='m-pin'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
 }
 function closeM(id){
