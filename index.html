@@ -1889,17 +1889,28 @@ function fillBandeau(track, photos){
   // Aligner EXACTEMENT sur fb-card : mêmes dimensions, mêmes marges
   // Le bas du mode photos = le bas du fb-card
   // -------------------------------------------------------
+  // Mesurer fb-card-video (aspect-ratio 16/9 — toujours dans le DOM même caché)
+  // On le rend temporairement visible pour mesurer
+  var mv=document.getElementById('home-mode-video');
+  var wasHidden=mv&&mv.style.display==='none';
+  if(wasHidden){mv.style.visibility='hidden';mv.style.display='block';}
   var refCard=document.querySelector('.fb-card');
-  var baseH=refCard?refCard.offsetHeight:220;
+  var refVid=document.querySelector('.fb-card-video');
+  var baseH=refVid?refVid.offsetHeight:0;
   var baseW=refCard?refCard.offsetWidth:0;
-  if(baseH<100)baseH=220;
+  if(wasHidden){mv.style.display='none';mv.style.visibility='';}
+  // Fallback : calculer depuis la largeur de la page (aspect 16/9)
+  if(baseH<50){
+    var pw=document.getElementById('home-app-center-wrap')||document.body;
+    baseW=pw.offsetWidth-32; // 16px margin de chaque côté
+    baseH=Math.round(baseW*9/16);
+  }
 
   var bandeau=document.getElementById('home-mode-photos');
   if(bandeau){
-    // Reprendre exactement les mêmes marges que fb-card (4px 16px 14px)
-    bandeau.style.cssText='display:block;position:relative;margin:4px 16px 14px;overflow:hidden;border-radius:12px;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;height:'+baseH+'px;width:'+baseW+'px';
+    bandeau.style.height=baseH+'px';
   }
-  stage.style.cssText='height:'+baseH+'px;width:'+baseW+'px;overflow:hidden;position:relative;background:#000;border-radius:12px';
+  stage.style.cssText='height:'+baseH+'px;overflow:hidden;position:relative;background:#000;border-radius:12px';
   stage.innerHTML='';
 
   // -------------------------------------------------------
