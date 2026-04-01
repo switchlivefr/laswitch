@@ -255,7 +255,7 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
     <div class="fb-card">
       <div class="fb-card-video" style="position:relative" onclick="secretTap3()">
         <video id="fb-video" autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;display:block">
-          <source src="https://raw.githubusercontent.com/switchlivefr/laswitch/main/assets/switch.mp4" type="video/mp4">
+          <source src="" type="video/mp4" id="fb-video-src">
         </video>
         <button id="fb-mute-btn" onclick="event.stopPropagation();toggleVideoSound()" style="position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.6);border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">🔇</button>
       </div>
@@ -1756,12 +1756,20 @@ function loadVideoList(){
     .then(function(r){return r.json();})
     .then(function(files){
       _videoFiles=files.filter(function(f){return f.name.match(/\.mp4$/i);}).map(function(f){return f.download_url;});
-      // Trouver l'index de la vidéo actuellement chargée
+      if(!_videoFiles.length)return;
       var cur=document.querySelector('#fb-video source');
-      if(cur&&_videoFiles.length){
+      var matched=false;
+      if(cur&&cur.src){
         for(var i=0;i<_videoFiles.length;i++){
-          if(_videoFiles[i]===cur.src||_videoFiles[i].indexOf(cur.getAttribute('src').split('/').pop())>-1){_videoIndex=i;break;}
+          if(_videoFiles[i]===cur.src||_videoFiles[i].indexOf(cur.getAttribute('src').split('/').pop())>-1){_videoIndex=i;matched=true;break;}
         }
+      }
+      // Charger le premier teaser si aucun n'est encore chargé
+      if(!matched){
+        _videoIndex=0;
+        var v=document.getElementById('fb-video');
+        var src=v?v.querySelector('source'):null;
+        if(src){src.src=_videoFiles[0];v.load();v.play().catch(function(){});}
       }
     }).catch(function(){});
 }
