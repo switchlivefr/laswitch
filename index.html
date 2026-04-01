@@ -169,6 +169,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 #film-viewer.open #film-viewer-box{transform:scale(1);opacity:1}
 #film-viewer.closing #film-viewer-box{transform:scale(0.05)!important;opacity:0!important;transition:transform .25s ease-in,opacity .2s!important}
 #film-viewer-img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+@keyframes creditBlink{0%,100%{opacity:1}50%{opacity:0.2}}
 #film-viewer-credit{display:none;position:absolute;bottom:8px;right:8px;font-family:'DM Sans',sans-serif;font-size:12px;color:rgba(255,255,255,.9);background:transparent;padding:3px 8px;pointer-events:auto;cursor:pointer;text-shadow:0 1px 4px rgba(0,0,0,1),0 0 8px rgba(0,0,0,.9);opacity:0;transition:opacity 1s ease;z-index:10;white-space:nowrap}
 #scroll-hint-down,#scroll-hint-up{position:fixed;left:50%;transform:translateX(-50%);font-size:19px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:9999}
 #scroll-hint-down{bottom:calc(var(--nh) + 112px);animation:scrollpulse 1.5s ease-in-out infinite}
@@ -211,7 +212,7 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
   .film-frame-wrap{width:102px;height:102px;overflow:hidden;background:#0a0503;flex-shrink:0}
   .film-frame img{width:102px;height:102px;object-fit:cover;display:block;filter:brightness(0.55)}
   /* #film-viewer défini globalement */
-  @keyframes creditBlink{0%,100%{opacity:1}50%{opacity:0.2}}
+  /* creditBlink défini globalement */
   /* #film-viewer-credit défini globalement */
 }
 </style>
