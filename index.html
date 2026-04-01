@@ -1532,16 +1532,12 @@ function silentRefresh(){
     .then(function(nd){
       if(!nd)return;RAW=nd;renderHome();renderContactSw();
       if(nd.resaMode)applyResaMode(nd.resaMode);
-      // Ne pas écraser le mode photos si actif
-      if(nd.homeMode){
-        var mp=document.getElementById('home-mode-photos');
-        var mg=document.getElementById('home-mode-gif');
-        var inGifOrPhotos=(mp&&mp.style.display!=='none')||(mg&&mg.style.display!=='none');
-        // Ne pas interférer si alternance en cours
-        if(!_altInterval){
-          if(nd.homeMode==='alternance'){applySubMode('alternance',false);}
-          else if(!inGifOrPhotos||nd.homeMode==='video'){applyHomeMode(nd.homeMode);}
-        }
+      // Appliquer le mode seulement si différent du mode actuel côté serveur
+      if(nd.homeMode&&nd.homeMode!==_lastKnownServerMode){
+        _lastKnownServerMode=nd.homeMode;
+        if(nd.homeMode==='alternance'){applySubMode('alternance',false);}
+        else if(nd.homeMode==='gif'||nd.homeMode==='photos'){applySubMode(nd.homeMode,false);}
+        else{applyHomeMode(nd.homeMode);}
       }
       var sy=window.scrollY;
       if(currentPage==='p-switch'){renderSwitch();window.scrollTo(0,sy);}
@@ -1816,8 +1812,10 @@ function cycleSub(){
 }
 
 var _currentSubMode='gif';
+var _lastKnownServerMode=null;
 function applySubMode(mode, save){
   _currentSubMode=mode;
+  if(save)_lastKnownServerMode=mode;
   clearInterval(_altInterval);
   if(mode==='gif'){
     applyHomeMode('gif');
@@ -1978,7 +1976,7 @@ function applyHomeMode(mode){
   if(mg)mg.style.display=(mode==='gif')?'block':'none';
   if(mp)mp.style.display=(mode==='photos')?'block':'none';
   if(mode!=='photos'){stopFlipShow();_bandeauLoaded=false;}
-  if(mode==='video'){clearInterval(_altInterval);_altInterval=null;
+  if(mode==='video'){clearInterval(_altInterval);_altInterval=null;_lastKnownServerMode='video';
     // rien
   } else if(mode==='gif'){
     muteVideo();
@@ -2065,7 +2063,9 @@ fetch('/api')
   .then(function(nd){
     RAW=nd;renderHome();renderContactSw();
     if(nd.homeMode){
+      _lastKnownServerMode=nd.homeMode;
       if(nd.homeMode==='alternance'){applySubMode('alternance',false);}
+      else if(nd.homeMode==='gif'||nd.homeMode==='photos'){applySubMode(nd.homeMode,false);}
       else{applyHomeMode(nd.homeMode);}
     }
     if(nd.resaMode)applyResaMode(nd.resaMode);
