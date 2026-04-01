@@ -939,19 +939,23 @@ function initPitchPhotos(){
   }
 
   function pauseAnim(){
+    // Lire la position exacte AVANT de couper l'animation
     var y = getCurrentY();
     totalH = inner.scrollHeight / 2;
-    currentOffset = ((y % totalH) - totalH) % totalH; // négatif
+    // Normaliser dans [-totalH, 0]
+    currentOffset = y % totalH;
+    if(currentOffset > 0) currentOffset -= totalH;
+    // Figer à cette position exacte
     inner.style.animation = 'none';
     inner.style.transform = 'translateY(' + currentOffset + 'px)';
   }
 
   function resumeAnim(){
-    var pct = totalH > 0 ? ((-currentOffset % totalH) / totalH) * 100 : 0;
+    // Calculer le delay pour reprendre depuis currentOffset
+    var pct = totalH > 0 ? (-currentOffset / totalH) : 0;
+    var delay = -(BASE_DUR * pct);
     inner.style.transform = '';
-    inner.style.animationDuration = BASE_DUR + 's';
-    inner.style.animationDelay = -(BASE_DUR * pct / 100) + 's';
-    inner.style.animation = 'pitchPhotoUp ' + BASE_DUR + 's linear infinite';
+    inner.style.animation = 'pitchPhotoUp ' + BASE_DUR + 's ' + delay + 's linear infinite';
   }
 
   function animate(){
