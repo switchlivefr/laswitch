@@ -1771,9 +1771,13 @@ function loadVideoList(){
       window._pitchPhotos=window._allPhotos;
       // Gifs
       window._allGifs=(data.gifs||[]).map(function(f){return f.url;});
-      window._gifIndex=0;
+      if(window._gifIndex===undefined)window._gifIndex=0;
       applyVideos();
-      applyGif(0);
+      // Appliquer le gif seulement si on est en mode gif
+      if(document.getElementById('home-mode-gif').style.display!=='none'){
+        applyGif(window._gifIndex);
+        initGifLongPress();
+      }
     }).catch(function(){});
 }
 function applyVideos(){
