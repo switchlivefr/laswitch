@@ -1785,6 +1785,7 @@ function secretTapGif(){
   if(_gifTapCount>=5){
     _gifTapCount=0;
     applyHomeMode('photos');
+    fetch('/api?action=setMode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'photos'})});
   }
 }
 
@@ -1794,6 +1795,7 @@ function secretTapBandeau(){
   if(_bandeauTapCount>=5){
     _bandeauTapCount=0;
     applyHomeMode('gif');
+    fetch('/api?action=setMode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'gif'})});
   }
 }
 
@@ -1866,7 +1868,7 @@ function fillBandeau(track,photos){
   setTimeout(function(){
     // La moitié de scrollWidth = largeur d'un bloc
     var halfW=track.scrollWidth/2;
-    var speed=320; // px/seconde
+    var speed=160; // px/seconde
     var dur=Math.max(3, halfW/speed);
     // Créer keyframe dynamique avec la vraie valeur px (pas %)
     var styleId='bandeau-keyframe-style';
