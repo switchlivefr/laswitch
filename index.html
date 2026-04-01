@@ -1796,7 +1796,7 @@ var _altPhase='gif'; // phase courante en mode alternance
 // Afficher un toast sous la zone
 function showModeToast(msg){
   var t=document.getElementById('home-mode-toast');
-  if(!t){t=document.createElement('div');t.id='home-mode-toast';t.style.cssText='text-align:center;font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#f2c94c;padding:6px 0;height:28px;overflow:hidden;opacity:0;transition:opacity .3s';var mg=document.getElementById('home-mode-gif');if(mg&&mg.parentNode)mg.parentNode.insertBefore(t,mg.nextSibling);}
+  if(!t){t=document.createElement('div');t.id='home-mode-toast';t.style.cssText='position:fixed;bottom:calc(var(--nh) + 48px);left:50%;transform:translateX(-50%);font-family:Bebas Neue,sans-serif;font-size:18px;letter-spacing:2px;color:#f2c94c;background:rgba(0,0,0,.7);padding:6px 18px;border-radius:20px;opacity:0;transition:opacity .3s;z-index:9999;pointer-events:none;white-space:nowrap';document.body.appendChild(t);}
   t.textContent=msg;t.style.opacity='1';
   clearTimeout(t._timer);t._timer=setTimeout(function(){t.style.opacity='0';},2000);
 }
