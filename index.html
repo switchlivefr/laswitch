@@ -1857,7 +1857,7 @@ function fillBandeau(track, photos){
     var ratio=p.w&&p.h?p.w/p.h:1.5;
     var pw=Math.round(ph*ratio);
     var frame=document.createElement('div');
-    frame.style.cssText='flex-shrink:0;width:'+pw+'px;height:'+h+'px;overflow:visible;background:transparent;display:flex;align-items:center;justify-content:center';
+    frame.style.cssText='flex-shrink:0;width:'+(pw+8)+'px;height:'+h+'px;overflow:hidden;background:transparent;display:flex;align-items:center;justify-content:center;padding:0 4px;box-sizing:border-box';
     frame.addEventListener('contextmenu',function(e){e.preventDefault();});
     var img=document.createElement('img');
     img.src=p.url||p.thumb||p.full;
