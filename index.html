@@ -984,13 +984,18 @@ function initPitchPhotos(){
 
     container.addEventListener('touchmove', function(e){
       var y = e.touches[0].clientY;
-      var dy = touchLastY - y; // positif = doigt monte = défile plus vite
+      var totalDrag = touchStartY - y; // positif = doigt monte = accélère
       touchLastY = y;
-      lastVelocity = dy;
-      // Plus le geste est rapide, plus on accélère
-      var speed = Math.abs(dy);
-      var newDur = currentDuration - speed * 2.5;
-      if(dy < 0) newDur = currentDuration + speed * 2; // doigt descend = ralentit
+      // Proportionne sur 300px de geste = vitesse max
+      var factor = Math.max(-1, Math.min(1, totalDrag / 300));
+      var newDur;
+      if(factor > 0){
+        // Doigt monte : accélère de BASE vers MIN
+        newDur = BASE_DURATION - factor * (BASE_DURATION - MIN_DURATION);
+      } else {
+        // Doigt descend : ralentit jusqu'à x3 plus lent
+        newDur = BASE_DURATION + (-factor) * (BASE_DURATION * 2);
+      }
       setSpeed(newDur);
     }, {passive:true});
 
