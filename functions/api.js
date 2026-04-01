@@ -115,20 +115,24 @@ async function handleRequest(request, env) {
   // GET assets depuis GitHub (photos + videos) — évite rate limiting côté client
   if (request.method === 'GET' && action === 'getAssets') {
     try {
-      const [photosRes, videosRes, gifsRes] = await Promise.all([
+      const [photosRes, videosRes] = await Promise.all([
         fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/photos', {
           headers: { 'User-Agent': 'laswitch-app' }
         }),
         fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets', {
           headers: { 'User-Agent': 'laswitch-app' }
-        }),
-        fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/Gif', {
-          headers: { 'User-Agent': 'laswitch-app' }
         })
       ]);
       const photosData = await photosRes.json();
       const assetsData = await videosRes.json();
-      const gifsData = await gifsRes.json();
+      // Gifs séparément pour ne pas bloquer photos/videos si le dossier n'existe pas
+      let gifsData = [];
+      try {
+        const gifsRes = await fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/Gif', {
+          headers: { 'User-Agent': 'laswitch-app' }
+        });
+        gifsData = await gifsRes.json();
+      } catch(e) { gifsData = []; }
       const photos = Array.isArray(photosData)
         ? photosData.filter(f => f.name.match(/\.(jpg|jpeg|png|webp)$/i) && f.name !== '.gitkeep')
             .map(f => ({ name: f.name, url: f.download_url }))
