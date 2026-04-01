@@ -868,6 +868,18 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
   init();
   var fc=document.querySelector('.fb-card');
   if(fc)_fbCardHeight=fc.offsetHeight;
+  // Mesurer la hauteur du diaporama gif (home-gif-wrap)
+  var mg=document.getElementById('home-mode-gif');
+  var mv=document.getElementById('home-mode-video');
+  // Afficher temporairement le gif pour mesurer
+  if(mg){
+    var prevDisplay=mg.style.display;
+    mg.style.visibility='hidden';mg.style.display='block';
+    var gw=document.querySelector('.home-gif-wrap');
+    if(gw)_gifWrapHeight=gw.offsetHeight;
+    mg.style.display=prevDisplay;mg.style.visibility='';
+  }
+  if(!_gifWrapHeight&&fc)_gifWrapHeight=fc.offsetHeight;
 });
   window.addEventListener('resize',init);
 })();
@@ -1740,6 +1752,7 @@ function toggleVideoSound(){
 
 var _videoFiles=[],_videoIndex=0,_videoTapCount=0,_videoTapTimer=null;
 var _fbCardHeight=0;
+var _gifWrapHeight=0;
 function loadVideoList(){
   // Utilise le cache si déjà chargé
   if(window._assetsLoaded){applyVideos();return;}
@@ -1894,8 +1907,8 @@ function fillBandeau(track, photos){
   // Aligner EXACTEMENT sur fb-card : mêmes dimensions, mêmes marges
   // Le bas du mode photos = le bas du fb-card
   // -------------------------------------------------------
-  // Utiliser la hauteur mémorisée au chargement
-  var baseH=_fbCardHeight||220;
+  // Hauteur = celle du diaporama gif (home-gif-wrap)
+  var baseH=_gifWrapHeight||_fbCardHeight||220;
 
   var bandeau=document.getElementById('home-mode-photos');
   if(bandeau){
