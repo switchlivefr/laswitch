@@ -273,7 +273,7 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
     </div>
   </div>
   <!-- MODE BANDEAU PHOTOS -->
-  <div id="home-mode-photos" style="display:none;position:relative;margin:4px 16px 16px;overflow:hidden;border-radius:12px" onclick="secretTapBandeau()">
+  <div id="home-mode-photos" style="display:none;position:relative;margin:4px 16px 16px;overflow:hidden;border-radius:12px;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none" onclick="secretTapBandeau()">
     <div id="home-photos-stage" style="width:100%;position:relative"></div>
     <div id="home-photos-credit" style="display:none;position:absolute;bottom:8px;right:10px;font-family:'DM Sans',sans-serif;font-size:12px;color:rgba(255,255,255,.9);text-shadow:0 1px 4px rgba(0,0,0,1),0 0 8px rgba(0,0,0,.9);pointer-events:auto;cursor:pointer;z-index:5;animation:creditBlink 2.5s ease-in-out infinite">© Margaux CG</div>
   </div>
@@ -1857,12 +1857,13 @@ function fillBandeau(track, photos){
     var ratio=p.w&&p.h?p.w/p.h:1.5;
     var pw=Math.round(ph*ratio);
     var frame=document.createElement('div');
-    frame.style.cssText='flex-shrink:0;width:'+pw+'px;height:'+h+'px;overflow:hidden;background:transparent;display:flex;align-items:center;justify-content:center';
+    frame.style.cssText='flex-shrink:0;width:'+pw+'px;height:'+h+'px;overflow:visible;background:transparent;display:flex;align-items:center;justify-content:center';
+    frame.addEventListener('contextmenu',function(e){e.preventDefault();});
     var img=document.createElement('img');
     img.src=p.url||p.thumb||p.full;
     img.loading='lazy';img.alt='';
     // Pas d'animation CSS zoom ici — géré par rAF
-    img.style.cssText='height:'+ph+'px;width:auto;max-width:'+pw+'px;display:block;object-fit:contain;transform-origin:center center;transition:transform 0.05s linear';
+    img.style.cssText='height:'+ph+'px;width:'+pw+'px;display:block;object-fit:contain;transform-origin:center center;transition:transform 0.05s linear;-webkit-user-drag:none;user-select:none;pointer-events:none';
     frame.appendChild(img);
     tr.appendChild(frame);
   });
