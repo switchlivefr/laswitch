@@ -1821,14 +1821,14 @@ function applySubMode(mode, save){
   clearInterval(_altInterval);
   if(mode==='gif'){
     applyHomeMode('gif');
-    showModeToast('DIAPORAMA ACTIVÉ');
+    if(save)showModeToast('DIAPORAMA ACTIVÉ');
   } else if(mode==='photos'){
     applyHomeMode('photos');
-    showModeToast('PHOTOS ACTIVÉ');
+    if(save)showModeToast('PHOTOS ACTIVÉ');
   } else if(mode==='alternance'){
     _altPhase='gif';
     applyHomeMode('gif');
-    showModeToast('ALTERNANCE ACTIVÉE');
+    if(save)showModeToast('ALTERNANCE ACTIVÉE');
     _altInterval=setInterval(function(){
       _altPhase=_altPhase==='gif'?'photos':'gif';
       applyHomeMode(_altPhase);
