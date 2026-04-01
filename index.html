@@ -1532,6 +1532,10 @@ function silentRefresh(){
     .then(function(nd){
       if(!nd)return;RAW=nd;renderHome();renderContactSw();
       if(nd.resaMode)applyResaMode(nd.resaMode);
+      // Mettre à jour le gif si changé par quelqu'un d'autre
+      if(nd.gifIndex!==undefined&&nd.gifIndex!==window._gifIndex&&window._allGifs){
+        window._gifIndex=nd.gifIndex;applyGif(nd.gifIndex);
+      }
       // Appliquer le mode seulement si différent du mode actuel côté serveur
       if(nd.homeMode&&nd.homeMode!==_lastKnownServerMode){
         _lastKnownServerMode=nd.homeMode;
@@ -1765,7 +1769,11 @@ function loadVideoList(){
       // Photos
       window._allPhotos=(data.photos||[]).map(function(f){return {url:f.url,thumb:f.url,full:f.url};});
       window._pitchPhotos=window._allPhotos;
+      // Gifs
+      window._allGifs=(data.gifs||[]).map(function(f){return f.url;});
+      window._gifIndex=0;
       applyVideos();
+      applyGif(0);
     }).catch(function(){});
 }
 function applyVideos(){
@@ -1810,6 +1818,39 @@ function secretTap3(){
 // ============================================================
 // BANDEAU PHOTOS ACCUEIL - MODE PHOTOS (gif → photos → gif)
 // ============================================================
+// Applique le gif d'index i et le sauvegarde
+function applyGif(i){
+  if(!window._allGifs||!window._allGifs.length)return;
+  window._gifIndex=i%window._allGifs.length;
+  var img=document.getElementById('home-gif');
+  if(img)img.src=window._allGifs[window._gifIndex];
+}
+
+// Appui long sur le gif = gif suivant pour tous
+var _gifLongTimer=null;
+document.addEventListener('DOMContentLoaded',function(){
+  var gifImg=document.getElementById('home-gif');
+  if(!gifImg)return;
+  function nextGif(){
+    if(!window._allGifs||!window._allGifs.length)return;
+    var next=(window._gifIndex+1)%window._allGifs.length;
+    applyGif(next);
+    fetch('/api?action=setGifIndex',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({index:next})});
+  }
+  // Appui long souris
+  gifImg.addEventListener('mousedown',function(e){
+    _gifLongTimer=setTimeout(nextGif,600);
+  });
+  gifImg.addEventListener('mouseup',function(){clearTimeout(_gifLongTimer);});
+  gifImg.addEventListener('mouseleave',function(){clearTimeout(_gifLongTimer);});
+  // Appui long tactile
+  gifImg.addEventListener('touchstart',function(e){
+    _gifLongTimer=setTimeout(nextGif,600);
+  },{passive:true});
+  gifImg.addEventListener('touchend',function(){clearTimeout(_gifLongTimer);},{passive:true});
+  gifImg.addEventListener('touchmove',function(){clearTimeout(_gifLongTimer);},{passive:true});
+});
+
 var _gifTapCount=0,_gifTapTimer=null;
 var _bandeauTapCount=0,_bandeauTapTimer=null;
 var _bandeauLoaded=false;
@@ -2028,9 +2069,8 @@ function applyHomeMode(mode){
   } else if(mode==='gif'){
     muteVideo();
     var img=document.getElementById('home-gif');
-    if(img&&!img.src){
-      img.src='https://lh3.googleusercontent.com/d/1pqFUrUScxuNj6qM6Em0Nf6X3iuaDMN4O';
-      img.onerror=function(){if(img.src.indexOf('lh3')>-1){img.src='https://drive.google.com/uc?export=view&id=1pqFUrUScxuNj6qM6Em0Nf6X3iuaDMN4O';}else{img.style.display='none';}};
+    if(img&&window._allGifs&&window._allGifs.length){
+      applyGif(window._gifIndex||0);
     }
   } else if(mode==='photos'){
     muteVideo();
@@ -2109,6 +2149,7 @@ fetch('/api')
   .then(function(r){return r.json();})
   .then(function(nd){
     RAW=nd;renderHome();renderContactSw();
+    if(nd.gifIndex!==undefined&&window._allGifs){window._gifIndex=nd.gifIndex;applyGif(nd.gifIndex);}
     if(nd.homeMode){
       _lastKnownServerMode=nd.homeMode;
       if(nd.homeMode==='alternance'){_inVideoMode=false;applySubMode('alternance',false);}
