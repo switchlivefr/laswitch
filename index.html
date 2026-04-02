@@ -36,10 +36,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 @keyframes hintpulse{0%,100%{color:var(--gold);opacity:.1}50%{color:var(--gold);opacity:1}}
 @keyframes rainbow{0%{color:#f2c94c}14%{color:#e8943a}28%{color:#e8407a}42%{color:#c471ed}57%{color:#5b9cf6}71%{color:#34d1c0}85%{color:#a8e063}100%{color:#f2c94c}}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes arrowLeft{0%,100%{transform:translateX(-4px);opacity:.15}50%{transform:translateX(0);opacity:.45}}
-@keyframes arrowRight{0%,100%{transform:translateX(4px);opacity:.15}50%{transform:translateX(0);opacity:.45}}
-.prc-arrow-l{display:inline-block;animation:arrowLeft 1.5s ease-in-out infinite;margin-right:8px;line-height:1}
-.prc-arrow-r{display:inline-block;animation:arrowRight 1.5s ease-in-out infinite;margin-left:8px;line-height:1}
+@keyframes arrowLeft{0%,100%{transform:translateX(-4px)}50%{transform:translateX(0)}}
+@keyframes arrowRight{0%,100%{transform:translateX(4px)}50%{transform:translateX(0)}}
+.prc-arrow-l{display:inline-block;animation:arrowLeft 1.5s ease-in-out infinite;margin-right:14px;line-height:1;opacity:.25}
+.prc-arrow-r{display:inline-block;animation:arrowRight 1.5s ease-in-out infinite;margin-left:8px;line-height:1;opacity:.25}
 @keyframes halo{0%,100%{text-shadow:0 0 4px rgba(255,255,255,.1);transform:scale(1)}50%{text-shadow:0 0 10px #fff,0 0 25px #fff,0 0 50px rgba(255,255,255,.9),0 0 80px rgba(255,255,255,.6),0 0 120px rgba(255,255,255,.3);transform:scale(1.06)}}
 .prc-label{font-size:26px;font-weight:700;letter-spacing:2px;animation:halo 6s ease-in-out infinite;color:#fff}
 @keyframes slideFromLeft{from{transform:translateX(-120vw)}to{transform:translateX(0)}}
