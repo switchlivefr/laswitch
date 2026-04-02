@@ -1635,31 +1635,21 @@ function openMarco(title, ctx, full) {
     // ============================================================
     // TIMING basé sur E2 (date de la SWiTCH)
     // ============================================================
+    // Lire A2 = rows[1][0], format JJ/MM/AAAA
     var switchDate=null;
-    if(RAW.switch&&RAW.switch.rows){
-      var dateStr=String((RAW.switch.rows[1]&&RAW.switch.rows[1][4])||'').trim(); // E2
-      var yearStr=String((RAW.switch.rows[2]&&RAW.switch.rows[2][1])||'').trim(); // B3
-      if(dateStr){
-        // Mois en français
-        var moisFr={'janvier':0,'février':1,'fevrier':1,'mars':2,'avril':3,'mai':4,'juin':5,
-          'juillet':6,'août':7,'aout':7,'septembre':8,'octobre':9,'novembre':10,'décembre':11,'decembre':11};
-        var year=yearStr?parseInt(yearStr):new Date().getFullYear();
-        // Essayer "21 mai" ou "21 mars 2025" etc.
-        var parts=dateStr.toLowerCase().split(/[\s\/\-]+/);
-        var day=parseInt(parts[0]);
-        var monthIdx=-1;
-        if(parts[1]){
-          monthIdx=moisFr[parts[1]];
-          if(monthIdx===undefined)monthIdx=parseInt(parts[1])-1;
-          if(parts[2]&&!yearStr)year=parseInt(parts[2]);
-        }
-        if(!isNaN(day)&&monthIdx>=0&&monthIdx<=11){
-          switchDate=new Date(year,monthIdx,day);
+    if(RAW.switch&&RAW.switch.rows&&RAW.switch.rows[1]){
+      var dateStr=String(RAW.switch.rows[1][0]||'').trim();
+      var dparts=dateStr.split('/');
+      if(dparts.length===3){
+        var dd=parseInt(dparts[0],10);
+        var mm=parseInt(dparts[1],10)-1;
+        var yy=parseInt(dparts[2],10);
+        if(!isNaN(dd)&&!isNaN(mm)&&!isNaN(yy)){
+          switchDate=new Date(yy,mm,dd);
         }
       }
     }
     var now=new Date();
-    var timeSlot=0; // 0=normal, 1=17h-20h30 jour J, 2=après 20h30 jour J OU date passée
     if(switchDate){
       var nowMidnight=new Date(now.getFullYear(),now.getMonth(),now.getDate());
       var switchMidnight=new Date(switchDate.getFullYear(),switchDate.getMonth(),switchDate.getDate());
