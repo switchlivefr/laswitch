@@ -280,7 +280,7 @@ body.modal-open #scroll-hint-down,body.modal-open #scroll-hint-up{opacity:0!impo
     <div id="home-photos-credit" style="display:none;position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-family:'DM Sans',sans-serif;font-size:12px;color:rgba(255,255,255,.9);text-shadow:0 1px 4px rgba(0,0,0,1),0 0 8px rgba(0,0,0,.9);pointer-events:auto;cursor:pointer;z-index:5;animation:creditBlink 2.5s ease-in-out infinite">© Margaux CG</div>
   </div>
   <div class="osl-info-btn pulse-btn" onclick="openM('m-home-pitch')" style="margin-top:8px">
-    <span>💫</span><span>C'est quoi la SWiTCH</span><span>💫</span>
+    <span style="visibility:hidden">💫</span><span>C'est quoi la SWiTCH</span><span>💫</span>
   </div>
   <div class="osl-info-btn" onclick="openM('m-renseignements')" style="margin-top:10px">
     <span style="display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;text-align:center">
@@ -1536,8 +1536,9 @@ function silentRefresh(){
       if(!nd)return;RAW=nd;renderHome();renderContactSw();
       if(nd.resaMode)applyResaMode(nd.resaMode);
       // Mettre à jour le gif si changé par quelqu'un d'autre
-      if(nd.gifIndex!==undefined&&nd.gifIndex!==window._gifIndex&&window._allGifs){
-        window._gifIndex=nd.gifIndex;applyGif(nd.gifIndex);
+      if(nd.gifIndex!==undefined&&nd.gifIndex!==window._gifIndex){
+        window._serverGifIndex=nd.gifIndex;
+        if(window._allGifs&&window._allGifs.length){window._gifIndex=nd.gifIndex;applyGif(nd.gifIndex);}
       }
       // Appliquer le mode seulement si différent du mode actuel côté serveur
       if(nd.homeMode&&nd.homeMode!==_lastKnownServerMode){
@@ -1829,7 +1830,9 @@ function loadVideoList(){
       window._pitchPhotos=window._allPhotos;
       // Gifs
       window._allGifs=(data.gifs||[]).map(function(f){return f.url;});
-      if(window._gifIndex===undefined)window._gifIndex=0;
+      // Appliquer l'index gif reçu du serveur (priorité sur la valeur locale)
+      if(window._serverGifIndex!==undefined){window._gifIndex=window._serverGifIndex;}
+      else if(window._gifIndex===undefined){window._gifIndex=0;}
       applyVideos();
       // Appliquer le gif seulement si on est en mode gif
       if(document.getElementById('home-mode-gif').style.display!=='none'){
@@ -2212,7 +2215,7 @@ fetch('/api')
   .then(function(r){return r.json();})
   .then(function(nd){
     RAW=nd;renderHome();renderContactSw();
-    if(nd.gifIndex!==undefined&&window._allGifs){window._gifIndex=nd.gifIndex;applyGif(nd.gifIndex);}
+    if(nd.gifIndex!==undefined){window._serverGifIndex=nd.gifIndex;} // sera appliqué dans loadVideoList après chargement des gifs
     if(nd.homeMode){
       _lastKnownServerMode=nd.homeMode;
       if(nd.homeMode==='alternance'){_inVideoMode=false;applySubMode('alternance',false);}
