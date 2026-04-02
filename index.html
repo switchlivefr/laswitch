@@ -36,6 +36,12 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 @keyframes hintpulse{0%,100%{color:var(--gold);opacity:.1}50%{color:var(--gold);opacity:1}}
 @keyframes rainbow{0%{color:#f2c94c}14%{color:#e8943a}28%{color:#e8407a}42%{color:#c471ed}57%{color:#5b9cf6}71%{color:#34d1c0}85%{color:#a8e063}100%{color:#f2c94c}}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes slideFromLeft{from{transform:translateX(-120vw);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideFromRight{from{transform:translateX(120vw);opacity:0}to{transform:translateX(0);opacity:1}}
+#home-edition{opacity:0}
+#home-prc-link,#home-lieu-link{opacity:0}
+#home-edition.anim-in{animation:slideFromLeft .5s cubic-bezier(.22,1,.36,1) forwards;opacity:1}
+#home-prc-link.anim-in,#home-lieu-link.anim-in{animation:slideFromRight .5s cubic-bezier(.22,1,.36,1) forwards;opacity:1}
 .page{display:none}.page.active{display:block}
 .page.sliding{display:block;position:fixed;top:0;left:0;width:100%;height:calc(100% - var(--nh));z-index:20;background:var(--bg);overflow-y:auto}
 .home-hero{position:relative;padding:28px 20px 8px;text-align:center;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(242,201,76,.14) 0%,transparent 70%),linear-gradient(180deg,#0d0d1c 0%,var(--bg) 100%)}
@@ -234,17 +240,17 @@ body.modal-open #scroll-hint-down,body.modal-open #scroll-hint-up{opacity:0!impo
   <div class="home-hero">
     <div class="eyebrow">Spectacle Musical Participatif</div>
     <div class="htitle" id="home-title-tap" onclick="secretTap()">SWITCH<span class="hemoji">💫</span></div>
-    <div class="hmeta">
-      <div class="hedition" id="home-edition" onclick="secretTap2()" style="cursor:pointer;position:relative;z-index:10">—</div>
+    <div class="hmeta" style="overflow:hidden;width:100%">
+      <div class="hedition" id="home-edition" onclick="secretTap2()" style="cursor:pointer;position:relative;z-index:10;background:transparent;border-color:transparent;box-shadow:none">—</div>
       <div id="home-prc-link" style="display:none">
-        <div onclick="openM('m-prc')" style="background:var(--card);border:1px solid var(--border2);border-radius:var(--rs);padding:6px 18px;font-size:21px;font-weight:600;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:8px;position:relative">
+        <div onclick="openM('m-prc')" style="background:transparent;border:none;border-radius:var(--rs);padding:6px 18px;font-size:21px;font-weight:600;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:8px;position:relative">
           <span style="visibility:hidden;font-size:16px">🔗</span>
           PRO RACE CAFE
           <span style="font-size:16px">🔗</span>
         </div>
       </div>
       <div id="home-lieu-link" style="display:none">
-        <div id="home-lieu-btn" onclick="openM('m-lieu')" style="background:var(--card);border:1px solid var(--border2);border-radius:var(--rs);padding:6px 18px;font-size:21px;font-weight:600;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:8px;position:relative">
+        <div id="home-lieu-btn" onclick="openM('m-lieu')" style="background:transparent;border:none;border-radius:var(--rs);padding:6px 18px;font-size:21px;font-weight:600;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:8px;position:relative">
           <span style="visibility:hidden;font-size:16px">🔗</span>
           <span id="home-lieu-txt">LIEU</span>
           <span style="font-size:16px">🔗</span>
@@ -2232,6 +2238,17 @@ fetch('/api')
     var loader=document.getElementById('app-loader');
     if(loader){loader.style.transition='opacity .4s';loader.style.opacity='0';setTimeout(function(){loader.style.display='none';},400);}
     document.querySelector('.bnav').classList.remove('nav-disabled');
+    // Animation d'entrée des boutons home-hero (une seule fois au lancement)
+    setTimeout(function(){
+      var ed=document.getElementById('home-edition');
+      if(ed)ed.classList.add('anim-in');
+    },1000);
+    setTimeout(function(){
+      var prc=document.getElementById('home-prc-link');
+      var lieu=document.getElementById('home-lieu-link');
+      if(prc&&prc.style.display!=='none')prc.classList.add('anim-in');
+      if(lieu&&lieu.style.display!=='none')lieu.classList.add('anim-in');
+    },1500);
   });
 </script>
 <div id="app-loader">
