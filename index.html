@@ -1636,30 +1636,42 @@ function openMarco(title, ctx, full) {
     // TIMING basé sur E2 (date de la SWiTCH)
     // ============================================================
     var switchDate=null;
-    if(RAW.switch&&RAW.switch.rows&&RAW.switch.rows[1]){
-      var dateStr=String(RAW.switch.rows[1][4]||'').trim(); // E2 = row 1, col 4
+    if(RAW.switch&&RAW.switch.rows){
+      var dateStr=String((RAW.switch.rows[1]&&RAW.switch.rows[1][4])||'').trim(); // E2
+      var yearStr=String((RAW.switch.rows[2]&&RAW.switch.rows[2][1])||'').trim(); // B3
       if(dateStr){
-        var currentYear=new Date().getFullYear();
-        // Formats possibles : "21 mai", "21/05", "21 mai 2025" etc.
-        var parsed=new Date(dateStr+' '+currentYear);
-        if(isNaN(parsed.getTime())){
-          // Essayer avec l'année intégrée
-          parsed=new Date(dateStr);
+        // Mois en français
+        var moisFr={'janvier':0,'février':1,'fevrier':1,'mars':2,'avril':3,'mai':4,'juin':5,
+          'juillet':6,'août':7,'aout':7,'septembre':8,'octobre':9,'novembre':10,'décembre':11,'decembre':11};
+        var year=yearStr?parseInt(yearStr):new Date().getFullYear();
+        // Essayer "21 mai" ou "21 mars 2025" etc.
+        var parts=dateStr.toLowerCase().split(/[\s\/\-]+/);
+        var day=parseInt(parts[0]);
+        var monthIdx=-1;
+        if(parts[1]){
+          monthIdx=moisFr[parts[1]];
+          if(monthIdx===undefined)monthIdx=parseInt(parts[1])-1;
+          if(parts[2]&&!yearStr)year=parseInt(parts[2]);
         }
-        if(!isNaN(parsed.getTime()))switchDate=parsed;
+        if(!isNaN(day)&&monthIdx>=0&&monthIdx<=11){
+          switchDate=new Date(year,monthIdx,day);
+        }
       }
     }
     var now=new Date();
-    var timeSlot=0; // 0=normal, 1=19h30-20h30, 2=après 20h30
+    var timeSlot=0; // 0=normal, 1=17h-20h30 jour J, 2=après 20h30 jour J OU date passée
     if(switchDate){
-      var sameDay=now.getFullYear()===switchDate.getFullYear()&&
-                  now.getMonth()===switchDate.getMonth()&&
-                  now.getDate()===switchDate.getDate();
+      var nowMidnight=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+      var switchMidnight=new Date(switchDate.getFullYear(),switchDate.getMonth(),switchDate.getDate());
+      var sameDay=nowMidnight.getTime()===switchMidnight.getTime();
+      var pastDay=nowMidnight.getTime()>switchMidnight.getTime();
       if(sameDay){
         var h=now.getHours(),m=now.getMinutes();
         var mins=h*60+m;
         if(mins>=17*60&&mins<20*60+30) timeSlot=1;
         else if(mins>=20*60+30) timeSlot=2;
+      } else if(pastDay){
+        timeSlot=2; // Date passée = inscriptions closes
       }
     }
 
