@@ -1953,11 +1953,11 @@ function applySubMode(mode, save){
     applyHomeMode('photos');
     if(save)showModeToast('PHOTOS ACTIVÉ');
   } else if(mode==='alternance'){
-    _altPhase='gif';
-    applyHomeMode('gif');
+    _altPhase='photos';
+    applyHomeMode('photos');
     if(save)showModeToast('ALTERNANCE ACTIVÉE');
     _altInterval=setInterval(function(){
-      _altPhase=_altPhase==='gif'?'photos':'gif';
+      _altPhase=_altPhase==='photos'?'gif':'photos';
       applyHomeMode(_altPhase);
     }, 90000); // 1min30
   }
