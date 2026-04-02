@@ -188,7 +188,7 @@ body.modal-open #scroll-hint-down,body.modal-open #scroll-hint-up{opacity:0!impo
 .mbody-hint{position:sticky;font-size:19px;opacity:0;pointer-events:none;transition:opacity .3s;display:block;height:0;overflow:visible;line-height:0;text-align:center}
 .mbody-hint-down.visible{opacity:1}
 .mbody-hint-up{opacity:0 !important}
-.mbody-hint-down{bottom:4px;animation:mbodypulse 1.5s ease-in-out infinite}
+.mbody-hint-down{bottom:18px;animation:mbodypulse 1.5s ease-in-out infinite}
 .mbody-hint-up{top:0px;animation:scrollpulse-up 1.5s ease-in-out infinite}
 .hint-bar{position:fixed;bottom:calc(var(--nh) + env(safe-area-inset-bottom));left:0;right:0;z-index:150;text-align:center;padding:8px 12px;background:var(--bg);border-top:1px solid var(--border);font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;color:var(--gold);opacity:0;pointer-events:none}
 .hint-bar.pulsing{animation:hintpulse 3s ease-in-out 3;pointer-events:auto}
@@ -682,7 +682,7 @@ function nav(id,direction){
   },200);}}
   if(id==='p-osl'){renderOSL();_reperShown=true;}
   if(id==='p-rules'){renderRules();hideHint();var shdR=document.getElementById('scroll-hint-down');if(shdR)shdR.style.bottom='calc(var(--nh) + 16px)';setTimeout(initScrollHints,400);}
-  if(id==='p-resa'){renderInfo();hideHint();var shdI=document.getElementById('scroll-hint-down');if(shdI)shdI.style.bottom='calc(var(--nh) + 112px)';setTimeout(initScrollHints,400);}
+  if(id==='p-resa'){renderInfo();hideHint();var shdI=document.getElementById('scroll-hint-down');if(shdI){shdI.classList.remove('visible');shdI.style.bottom='calc(var(--nh) + 112px)';}setTimeout(initScrollHints,400);}
   if(id==='p-home'){hideHint();hideScrollHints();}
   if(id==='p-switch'||id==='p-osl')hideScrollHints();
 }
@@ -2010,8 +2010,8 @@ function fillBandeau(track, photos){
   if(!stage)return;
 
   // Filtrer UNIQUEMENT les photos paysage
-  var landscape=photos.filter(function(p){ return p.w&&p.h ? p.w>=p.h : true; });
-  if(!landscape.length) landscape=photos.slice(); // fallback : toutes les photos
+  var landscape=photos.filter(function(p){ return p.w&&p.h ? p.w>p.h : false; });
+  if(!landscape.length) return; // Rien à afficher si aucune photo paysage
 
   // Hauteur = largeur disponible × ratio moyen des photos paysage
   // La largeur disponible = largeur de home-mode-photos (déjà dans le DOM avec margin:4px 16px 14px)
