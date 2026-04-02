@@ -123,7 +123,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .pitch-photo-frame img{width:130px;height:130px;object-fit:cover;display:block;filter:brightness(0.65);transition:filter .2s}
 .pitch-photo-frame:hover img,.pitch-photo-frame:active img{filter:brightness(0.9)}
 #m-home-pitch .mbody{flex:1;overflow-y:auto;min-height:0}
-#m-home-pitch-hint{position:absolute;bottom:50px;left:65px;transform:translateX(-50%);pointer-events:none;opacity:0;transition:opacity .3s;z-index:2}
+#m-home-pitch-hint{position:absolute;bottom:60px;left:65px;transform:translateX(-50%);pointer-events:none;opacity:0;transition:opacity .3s;z-index:2}
 .mhead{padding:16px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .mhead h3{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--cyan)}
 .mhead h3.amber{color:var(--amber)}
@@ -279,7 +279,7 @@ body.coverlay-open #scroll-hint-down,body.coverlay-open #scroll-hint-up{opacity:
     <div id="home-photos-credit" style="display:none;position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-family:'DM Sans',sans-serif;font-size:12px;color:rgba(255,255,255,.9);text-shadow:0 1px 4px rgba(0,0,0,1),0 0 8px rgba(0,0,0,.9);pointer-events:auto;cursor:pointer;z-index:5;animation:creditBlink 2.5s ease-in-out infinite">© Margaux CG</div>
   </div>
   <div class="osl-info-btn pulse-btn" onclick="openM('m-home-pitch')" style="margin-top:8px">
-    <span>💫</span><span>C'est quoi la SWiTCH ?</span>
+    <span>C'est quoi la SWiTCH</span><span>💫</span>
   </div>
   <div class="osl-info-btn" onclick="openM('m-renseignements')" style="margin-top:10px">
     <span style="display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;text-align:center">
@@ -681,7 +681,7 @@ function nav(id,direction){
   },200);}}
   if(id==='p-osl'){renderOSL();_reperShown=true;}
   if(id==='p-rules'){renderRules();hideHint();var shdR=document.getElementById('scroll-hint-down');if(shdR)shdR.style.bottom='calc(var(--nh) + 16px)';setTimeout(initScrollHints,400);}
-  if(id==='p-resa'){renderInfo();hideHint();var shdI=document.getElementById('scroll-hint-down');if(shdI)shdI.style.bottom='calc(var(--nh) + 112px)';setTimeout(initScrollHints,400);}
+  if(id==='p-resa'){renderInfo();hideHint();var shdI=document.getElementById('scroll-hint-down');if(shdI){shdI.classList.remove('visible');shdI.style.bottom='calc(var(--nh) + 112px)';}setTimeout(initScrollHints,400);}
   if(id==='p-home'){hideHint();hideScrollHints();}
   if(id==='p-switch'||id==='p-osl')hideScrollHints();
 }
