@@ -1636,9 +1636,10 @@ function openMarco(title, ctx, full) {
     // TIMING basé sur E2 (date de la SWiTCH)
     // ============================================================
     // Lire A2 = rows[1][0], format JJ/MM/AAAA
+    var timeSlot=0;
     var switchDate=null;
     if(RAW.switch&&RAW.switch.rows&&RAW.switch.rows[1]){
-      var dateStr=String(RAW.switch.rows[1][0]||'').trim();
+      var dateStr=String(RAW.switch.rows[1][4]||'').trim(); // E2 = row 1, col 4
       var dparts=dateStr.split('/');
       if(dparts.length===3){
         var dd=parseInt(dparts[0],10);
