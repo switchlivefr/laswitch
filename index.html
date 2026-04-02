@@ -38,8 +38,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes arrowLeft{0%,100%{transform:translateX(-4px)}50%{transform:translateX(0)}}
 @keyframes arrowRight{0%,100%{transform:translateX(4px)}50%{transform:translateX(0)}}
-.prc-arrow-l{display:inline-block;margin-right:8px;line-height:1;opacity:.25}
-.prc-arrow-r{display:inline-block;margin-left:8px;line-height:1;opacity:.25}
+.prc-arrow-l{display:inline-block;margin-right:10px;line-height:1;opacity:0;transition:opacity .3s}
+.prc-arrow-r{display:inline-block;margin-left:8px;line-height:1;opacity:0;transition:opacity .3s}
+.arrows-visible .prc-arrow-l,.arrows-visible .prc-arrow-r{opacity:.25}
 @keyframes halo{0%,100%{text-shadow:0 0 4px rgba(255,255,255,.1);transform:scale(1)}50%{text-shadow:0 0 10px #fff,0 0 25px #fff,0 0 50px rgba(255,255,255,.9),0 0 80px rgba(255,255,255,.6),0 0 120px rgba(255,255,255,.3);transform:scale(1.06)}}
 .prc-label{font-size:26px;font-weight:700;letter-spacing:2px;animation:halo 6s ease-in-out infinite;color:#fff}
 @keyframes slideFromLeft{from{transform:translateX(-120vw)}to{transform:translateX(0)}}
@@ -2245,6 +2246,11 @@ fetch('/api')
       var lieu=document.getElementById('home-lieu-link');
       if(prc&&prc.style.display!=='none')prc.classList.add('anim-in');
       if(lieu&&lieu.style.display!=='none')lieu.classList.add('anim-in');
+      // Flèches apparaissent une fois l'animation de glissement terminée (500ms)
+      setTimeout(function(){
+        if(prc)prc.classList.add('arrows-visible');
+        if(lieu)lieu.classList.add('arrows-visible');
+      },500);
     },1500);
   })
   .catch(function(){renderHome();setInterval(silentRefresh,30000);})
