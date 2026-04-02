@@ -2232,13 +2232,8 @@ fetch('/api')
     if(nd.videoUrl)applyVideoUrl(nd.videoUrl);
     loadVideoList();
     setInterval(silentRefresh,30000);
-  })
-  .catch(function(){renderHome();setInterval(silentRefresh,30000);})
-  .finally(function(){
-    var loader=document.getElementById('app-loader');
-    if(loader){loader.style.transition='opacity .4s';loader.style.opacity='0';setTimeout(function(){loader.style.display='none';},400);}
-    document.querySelector('.bnav').classList.remove('nav-disabled');
     // Animation d'entrée des boutons home-hero (une seule fois au lancement)
+    // Déclenché ici pour garantir qu'applyResaMode a déjà montré le bon bouton
     setTimeout(function(){
       var ed=document.getElementById('home-edition');
       if(ed)ed.classList.add('anim-in');
@@ -2249,6 +2244,13 @@ fetch('/api')
       if(prc&&prc.style.display!=='none')prc.classList.add('anim-in');
       if(lieu&&lieu.style.display!=='none')lieu.classList.add('anim-in');
     },1500);
+  })
+  .catch(function(){renderHome();setInterval(silentRefresh,30000);})
+  .finally(function(){
+    var loader=document.getElementById('app-loader');
+    if(loader){loader.style.transition='opacity .4s';loader.style.opacity='0';setTimeout(function(){loader.style.display='none';},400);}
+    document.querySelector('.bnav').classList.remove('nav-disabled');
+
   });
 </script>
 <div id="app-loader">
