@@ -1979,29 +1979,48 @@ function loadBandeau(){
   if(_bandeauLoaded)return;
   var track=document.getElementById('home-photos-stage');
   if(!track)return;
-  // Utiliser les photos déjà chargées si disponibles
-  var photos=window._pitchPhotos||[];
-  if(photos.length){
-    fillBandeau(track,photos);
+  var cached=window._pitchPhotos||[];
+  var hasDim=cached.length&&cached[0]&&(cached[0].w>0)&&(cached[0].h>0);
+  if(hasDim){
+    // Photos en cache avec dimensions : afficher directement
+    fillBandeau(track,cached);
     return;
   }
-  // Via Cloudflare (pas de rate limit)
+  // Fonction qui mesure les dimensions et remplit le bandeau
+  function measureAndFill(urls){
+    var loaded=0,withDim=[];
+    if(!urls.length)return;
+    urls.forEach(function(u){
+      var url=u.url||u.thumb||u.full||u;
+      var img=new Image();
+      img.onload=function(){
+        withDim.push({url:url,thumb:url,full:url,w:this.naturalWidth,h:this.naturalHeight});
+        loaded++;
+        if(loaded===urls.length){
+          window._allPhotos=withDim;window._pitchPhotos=withDim;
+          fillBandeau(track,withDim);
+        }
+      };
+      img.onerror=function(){
+        withDim.push({url:url,thumb:url,full:url,w:16,h:9});
+        loaded++;
+        if(loaded===urls.length&&withDim.length)fillBandeau(track,withDim);
+      };
+      img.src=url;
+    });
+  }
+  if(cached.length){
+    // Photos en cache mais sans dimensions : mesurer
+    measureAndFill(cached);
+    return;
+  }
+  // Rien en cache : fetch
   fetch('/api?action=getAssets')
     .then(function(r){return r.json();})
     .then(function(data){
       var imgs=data.photos||[];
       if(!imgs.length)return;
-      var loaded=0,photos=[];
-      imgs.forEach(function(f){
-        var img=new Image();
-        img.onload=function(){
-          photos.push({url:f.url,thumb:f.url,full:f.url,w:this.naturalWidth,h:this.naturalHeight});
-          loaded++;
-          if(loaded===imgs.length){window._allPhotos=photos;window._pitchPhotos=photos;fillBandeau(track,photos);}
-        };
-        img.onerror=function(){loaded++;if(loaded===imgs.length&&photos.length)fillBandeau(track,photos);};
-        img.src=f.url;
-      });
+      measureAndFill(imgs.map(function(f){return {url:f.url,thumb:f.url,full:f.url};}));
     }).catch(function(){});
 }
 
@@ -2009,9 +2028,9 @@ function fillBandeau(track, photos){
   var stage=document.getElementById('home-photos-stage');
   if(!stage)return;
 
-  // Filtrer UNIQUEMENT les photos paysage
-  var landscape=photos.filter(function(p){ return p.w&&p.h ? p.w>p.h : false; });
-  if(!landscape.length) return; // Rien à afficher si aucune photo paysage
+  // Filtrer UNIQUEMENT les photos paysage (si pas de dimensions, considérer comme paysage)
+  var landscape=photos.filter(function(p){ return p.w&&p.h ? p.w>=p.h : true; });
+  if(!landscape.length) landscape=photos; // Fallback : utiliser toutes les photos
 
   // Hauteur = largeur disponible × ratio moyen des photos paysage
   // La largeur disponible = largeur de home-mode-photos (déjà dans le DOM avec margin:4px 16px 14px)
@@ -2128,7 +2147,7 @@ function applyHomeMode(mode){
   if(mv)mv.style.display=(mode==='video')?'block':'none';
   if(mg)mg.style.display=(mode==='gif')?'block':'none';
   if(mp)mp.style.display=(mode==='photos')?'block':'none';
-  if(mode!=='photos'){stopFlipShow();_bandeauLoaded=false;}
+  if(mode!=='photos'){stopFlipShow();} // Ne pas reset _bandeauLoaded pour éviter re-fetch inutile en alternance
   if(mode==='video'){clearInterval(_altInterval);_altInterval=null;_lastKnownServerMode='video';
     // rien
   } else if(mode==='gif'){
