@@ -1676,16 +1676,19 @@ function openMarco(title, ctx, full) {
     }
 
     if(timeSlot===1){
-      // Fenetre inscription directe 19h30-20h30
+      // Fenetre 19h30-20h30 : titre chanson masqué
+      var titleEl1=document.getElementById('m-marco-title');
+      if(titleEl1){titleEl1.style.display='none';}
       var mh=document.getElementById('m-marco-head');
       if(mh){mh.textContent="INSCRIS-TOI AUPRÈS DE MARCO";mh.style.color='var(--gold)';}
-      var hEl=document.getElementById('m-marco-horaires');
       var htxt=document.getElementById('m-marco-horaires-txt');
       if(htxt)htxt.textContent='DE 19H30 À 20H30';
       document.getElementById('m-marco-normal').style.display='none';
       openM('m-marco');
     } else if(timeSlot===2){
-      // Inscriptions closes après 20h30
+      // Fenetre inscriptions closes : titre chanson masqué
+      var titleEl2=document.getElementById('m-marco-title');
+      if(titleEl2){titleEl2.style.display='none';}
       var mh2=document.getElementById('m-marco-head');
       if(mh2){mh2.textContent='INSCRIPTIONS CLOSES';mh2.style.color='var(--gold)';}
       var hEl2=document.getElementById('m-marco-horaires');
@@ -1694,6 +1697,8 @@ function openMarco(title, ctx, full) {
       openM('m-marco');
     } else {
       // Fenetre normale
+      var titleEl3=document.getElementById('m-marco-title');
+      if(titleEl3){titleEl3.style.display='';}
       document.getElementById('m-marco-normal').style.display='block';
       var mh3=document.getElementById('m-marco-head');
       if(mh3){mh3.textContent="CONTACTE MARCO POUR T'INSCRIRE";mh3.style.color='var(--gold)';}
