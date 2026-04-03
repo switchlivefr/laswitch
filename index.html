@@ -908,10 +908,10 @@ function fillPitchPhotos(photos){
   if(!inner)return;
   inner.innerHTML='';
   inner.style.animation='none'; // stopper pendant le chargement
-  var list=photos.slice();
-  while(list.length<8)list=list.concat(photos);
-  if(list.length>16)list=list.slice(0,16);
-  list=list.concat(list);
+  // Seulement 6 photos uniques max pour limiter les requêtes réseau
+  var list=photos.slice(0,6);
+  if(list.length<3)list=list.concat(photos).slice(0,6);
+  list=list.concat(list); // doubler pour boucle seamless = 12 frames max
   var total=list.length, loaded=0;
   function onLoad(){
     loaded++;
