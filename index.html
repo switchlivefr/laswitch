@@ -132,11 +132,12 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 #m-home-pitch .mbox{max-width:680px;flex-direction:column}
 #m-home-pitch .mbox-inner{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
 #m-home-pitch-photos{width:100px;flex-shrink:0;overflow:hidden;position:relative;background:var(--card)}
-#m-home-pitch-photos-inner{display:flex;flex-direction:column;will-change:transform;animation:none}
+#m-home-pitch-photos-inner{display:flex;flex-direction:column;will-change:transform;transform:translateZ(0);animation:none}
 @keyframes pitchPhotoUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
-.pitch-photo-frame{width:100px;height:100px;overflow:hidden;cursor:pointer;flex-shrink:0;contain:strict}
-.pitch-photo-frame img{width:100px;height:100px;object-fit:cover;display:block;filter:brightness(0.65);transition:filter .2s;decoding:async}
-.pitch-photo-frame:hover img,.pitch-photo-frame:active img{filter:brightness(0.9)}
+.pitch-photo-frame{width:100px;height:100px;overflow:hidden;cursor:pointer;flex-shrink:0;position:relative}
+.pitch-photo-frame img{width:100px;height:100px;object-fit:cover;display:block}
+.pitch-photo-frame::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.35);pointer-events:none;transition:opacity .2s}
+.pitch-photo-frame:hover::after,.pitch-photo-frame:active::after{opacity:0}
 #m-home-pitch .mbody{flex:1;overflow-y:auto;min-height:0}
 #m-home-pitch-hint{position:absolute;bottom:60px;left:50px;transform:translateX(-50%);pointer-events:none;opacity:0;transition:opacity .3s;z-index:2}
 .mhead{padding:16px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
