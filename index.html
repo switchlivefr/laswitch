@@ -131,14 +131,14 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 /* Modale pitch : layout avec colonne photos gauche */
 #m-home-pitch .mbox{max-width:680px;flex-direction:column}
 #m-home-pitch .mbox-inner{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
-#m-home-pitch-photos{width:130px;flex-shrink:0;overflow:hidden;position:relative;background:var(--card)}
+#m-home-pitch-photos{width:100px;flex-shrink:0;overflow:hidden;position:relative;background:var(--card)}
 #m-home-pitch-photos-inner{display:flex;flex-direction:column;will-change:transform;animation:pitchPhotoUp 120s linear infinite}
 @keyframes pitchPhotoUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
-.pitch-photo-frame{width:130px;height:130px;overflow:hidden;cursor:pointer;flex-shrink:0}
-.pitch-photo-frame img{width:130px;height:130px;object-fit:cover;display:block;filter:brightness(0.65);transition:filter .2s}
+.pitch-photo-frame{width:100px;height:100px;overflow:hidden;cursor:pointer;flex-shrink:0;contain:strict}
+.pitch-photo-frame img{width:100px;height:100px;object-fit:cover;display:block;filter:brightness(0.65);transition:filter .2s;decoding:async}
 .pitch-photo-frame:hover img,.pitch-photo-frame:active img{filter:brightness(0.9)}
 #m-home-pitch .mbody{flex:1;overflow-y:auto;min-height:0}
-#m-home-pitch-hint{position:absolute;bottom:60px;left:65px;transform:translateX(-50%);pointer-events:none;opacity:0;transition:opacity .3s;z-index:2}
+#m-home-pitch-hint{position:absolute;bottom:60px;left:50px;transform:translateX(-50%);pointer-events:none;opacity:0;transition:opacity .3s;z-index:2}
 .mhead{padding:16px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .mhead h3{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--cyan)}
 .mhead h3.amber{color:var(--amber)}
@@ -906,16 +906,17 @@ function fillPitchPhotos(photos){
   var inner=document.getElementById('m-home-pitch-photos-inner');
   if(!inner)return;
   inner.innerHTML='';
+  // Limiter à 16 frames max (8 visibles + 8 en avance) pour alléger le DOM sur mobile
   var list=photos.slice();
-  while(list.length<12)list=list.concat(photos);
-  list=list.concat(list);
+  while(list.length<8)list=list.concat(photos);
+  if(list.length>16)list=list.slice(0,16);
+  list=list.concat(list); // doubler pour boucle CSS seamless
   list.forEach(function(p){
     var frame=document.createElement('div');
     frame.className='pitch-photo-frame';
     var img=document.createElement('img');
-    // Compatibilité : thumb ou url ou full
     img.src=p.thumb||p.url||p.full;
-    img.loading='lazy';img.alt='';
+    img.loading='lazy';img.decoding='async';img.alt='';
     frame.appendChild(img);
     var _src=p.full||p.url||p.thumb;
     frame.addEventListener('click',function(){ window.openViewer(_src); });
