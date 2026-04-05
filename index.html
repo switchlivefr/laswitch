@@ -904,7 +904,7 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
 // Virtual scroller pour la colonne photos pitch
 // Seulement 10 <img> dans le DOM, sources swappées au fur et à mesure
 var _pitchVScroll = null;
-function stopPitchVScroll(){ if(_pitchVScroll){clearInterval(_pitchVScroll);_pitchVScroll=null;} }
+function stopPitchVScroll(){ if(_pitchVScroll){_pitchVScroll.stop();_pitchVScroll=null;} }
 
 function fillPitchPhotos(photos){
   var inner=document.getElementById('m-home-pitch-photos-inner');
@@ -947,16 +947,18 @@ function fillPitchPhotos(photos){
     frames.push(frame);
   }
 
-  // Défilement : toutes les 50ms on avance de 0.6px
-  var PX_PER_TICK = 0.6;
-  var TICK_MS = 50;
+  // Défilement via requestAnimationFrame — synchronisé avec le refresh écran
+  var PX_PER_SEC = 22; // pixels par seconde (équivalent à l'ancienne animation CSS 120s)
+  var lastTime = null;
+  var rafId = null;
 
-  _pitchVScroll = setInterval(function(){
-    offset += PX_PER_TICK;
-    // Quand on a défilé d'une hauteur de frame, on recycle le premier frame en bas
+  function tick(now){
+    if(!lastTime) lastTime = now;
+    var dt = Math.min(now - lastTime, 50); // cap à 50ms pour éviter les sauts
+    lastTime = now;
+    offset += PX_PER_SEC * dt / 1000;
     if(offset >= FRAME_H){
       offset -= FRAME_H;
-      // Recycler le premier frame : le mettre en bas avec la prochaine photo
       var recycled = frames.shift();
       photoIndex = (photoIndex + 1) % totalPhotos;
       var nextIdx = (photoIndex + VISIBLE - 1) % totalPhotos;
@@ -969,7 +971,10 @@ function fillPitchPhotos(photos){
       frames.push(recycled);
     }
     inner.style.transform = 'translateY(-'+offset+'px)';
-  }, TICK_MS);
+    rafId = requestAnimationFrame(tick);
+  }
+  rafId = requestAnimationFrame(tick);
+  _pitchVScroll = { stop: function(){ if(rafId){ cancelAnimationFrame(rafId); rafId=null; } } };
 }
 
 function initPitchPhotos(){
