@@ -132,8 +132,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 #m-home-pitch .mbox{max-width:680px;flex-direction:column}
 #m-home-pitch .mbox-inner{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
 #m-home-pitch-photos{width:110px;flex-shrink:0;overflow:hidden;position:relative;background:var(--card)}
-#m-home-pitch-photos-inner{display:flex;flex-direction:column;will-change:transform;animation:pitchPhotoUp 120s linear infinite}
-@keyframes pitchPhotoUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
+#m-home-pitch-photos-inner{display:flex;flex-direction:column;will-change:transform}
 .pitch-photo-frame{width:110px;height:110px;overflow:hidden;cursor:pointer;flex-shrink:0;contain:strict}
 .pitch-photo-frame img{width:110px;height:110px;object-fit:cover;display:block;filter:brightness(0.65);transition:filter .2s;decoding:async}
 .pitch-photo-frame:hover img,.pitch-photo-frame:active img{filter:brightness(0.9)}
@@ -902,31 +901,75 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
 // PHOTOS COLONNE GAUCHE - FENETRE "C'EST QUOI LA SWITCH"
 // Même photos que pellicule, même viewer, sans pellicule
 // ============================================================
+// Virtual scroller pour la colonne photos pitch
+// Seulement 10 <img> dans le DOM, sources swappées au fur et à mesure
+var _pitchVScroll = null;
+function stopPitchVScroll(){ if(_pitchVScroll){clearInterval(_pitchVScroll);_pitchVScroll=null;} }
+
 function fillPitchPhotos(photos){
   var inner=document.getElementById('m-home-pitch-photos-inner');
   if(!inner)return;
+  stopPitchVScroll();
   inner.innerHTML='';
-  // Limiter à 16 frames max (8 visibles + 8 en avance) pour alléger le DOM sur mobile
-  var list=photos.slice();
-  // Utiliser toutes les photos disponibles, doubler pour boucle CSS seamless
-  list=list.concat(list);
-  list.forEach(function(p){
+  inner.style.transform='translateY(0)';
+
+  if(!photos||!photos.length)return;
+
+  var VISIBLE = 10; // nombre de <img> dans le DOM
+  var FRAME_H = 110; // hauteur d'une photo en px
+  var photoList = photos.slice(); // toutes les photos
+  var totalPhotos = photoList.length;
+  var offset = 0; // position courante en px (défile vers le bas)
+  var photoIndex = 0; // index de la première photo affichée
+
+  // Créer les VISIBLE frames
+  var frames = [];
+  for(var i=0;i<VISIBLE;i++){
     var frame=document.createElement('div');
     frame.className='pitch-photo-frame';
+    frame.style.flexShrink='0';
     var img=document.createElement('img');
-    img.src=p.thumb||p.url||p.full;
-    img.loading='lazy';img.decoding='async';img.alt='';
+    img.width=110;img.height=110;img.decoding='async';img.alt='';
+    var p=photoList[i%totalPhotos];
+    img.src=p.url||p.thumb||p.full;
     frame.appendChild(img);
-    var _src=p.full||p.url||p.thumb;
-    frame.addEventListener('click',function(){ window.openViewer(_src); });
+    // Stocker la src full pour le viewer
+    frame._full=p.full||p.url||p.thumb;
+    frame._idx=i%totalPhotos;
     var _touchMoved=false;
-    frame.addEventListener('touchstart',function(){ _touchMoved=false; },{passive:true});
-    frame.addEventListener('touchmove',function(){ _touchMoved=true; },{passive:true});
-    frame.addEventListener('touchend',function(e){
-      if(!_touchMoved){ e.preventDefault(); window.openViewer(_src); }
-    },{passive:false});
+    (function(fr){
+      fr.addEventListener('click',function(){window.openViewer(fr._full);});
+      fr.addEventListener('touchstart',function(){_touchMoved=false;},{passive:true});
+      fr.addEventListener('touchmove',function(){_touchMoved=true;},{passive:true});
+      fr.addEventListener('touchend',function(e){if(!_touchMoved){e.preventDefault();window.openViewer(fr._full);}},{passive:false});
+    })(frame);
     inner.appendChild(frame);
-  });
+    frames.push(frame);
+  }
+
+  // Défilement : toutes les 50ms on avance de 0.6px
+  var PX_PER_TICK = 0.6;
+  var TICK_MS = 50;
+
+  _pitchVScroll = setInterval(function(){
+    offset += PX_PER_TICK;
+    // Quand on a défilé d'une hauteur de frame, on recycle le premier frame en bas
+    if(offset >= FRAME_H){
+      offset -= FRAME_H;
+      // Recycler le premier frame : le mettre en bas avec la prochaine photo
+      var recycled = frames.shift();
+      photoIndex = (photoIndex + 1) % totalPhotos;
+      var nextIdx = (photoIndex + VISIBLE - 1) % totalPhotos;
+      var p = photoList[nextIdx];
+      recycled._full = p.full||p.url||p.thumb;
+      recycled._idx = nextIdx;
+      var img = recycled.querySelector('img');
+      if(img) img.src = p.url||p.thumb||p.full;
+      inner.appendChild(recycled);
+      frames.push(recycled);
+    }
+    inner.style.transform = 'translateY(-'+offset+'px)';
+  }, TICK_MS);
 }
 
 function initPitchPhotos(){
@@ -1162,6 +1205,7 @@ function closeM(id){
   hideScrollHints();
   document.body.classList.remove('coverlay-open');
   document.getElementById(id).classList.remove('open');
+  if(id==='m-home-pitch')stopPitchVScroll();
   if(!document.querySelector('.moverlay.open')&&!document.querySelector('.coverlay.open')){
     document.body.style.overflow='';
     document.body.classList.remove('modal-open');
