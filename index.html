@@ -974,7 +974,39 @@ function fillPitchPhotos(photos){
     rafId = requestAnimationFrame(tick);
   }
   rafId = requestAnimationFrame(tick);
-  _pitchVScroll = { stop: function(){ if(rafId){ cancelAnimationFrame(rafId); rafId=null; } } };
+  var paused = false;
+  _pitchVScroll = {
+    stop:   function(){ if(rafId){cancelAnimationFrame(rafId);rafId=null;} },
+    pause:  function(){ paused=true; if(rafId){cancelAnimationFrame(rafId);rafId=null;} },
+    resume: function(){ if(paused){paused=false;lastTime=null;rafId=requestAnimationFrame(tick);} },
+    nudge:  function(dy){
+      offset += dy;
+      // Recycler si nécessaire
+      while(offset >= FRAME_H){
+        offset -= FRAME_H;
+        var recycled=frames.shift();
+        photoIndex=(photoIndex+1)%totalPhotos;
+        var nextIdx=(photoIndex+VISIBLE-1)%totalPhotos;
+        var p=photoList[nextIdx];
+        recycled._full=p.full||p.url||p.thumb;
+        var img=recycled.querySelector('img');
+        if(img)img.src=p.url||p.thumb||p.full;
+        inner.appendChild(recycled);frames.push(recycled);
+      }
+      while(offset < 0){
+        offset += FRAME_H;
+        var recycled=frames.pop();
+        photoIndex=(photoIndex-1+totalPhotos)%totalPhotos;
+        var prevIdx=photoIndex;
+        var p=photoList[prevIdx];
+        recycled._full=p.full||p.url||p.thumb;
+        var img=recycled.querySelector('img');
+        if(img)img.src=p.url||p.thumb||p.full;
+        inner.prepend(recycled);frames.unshift(recycled);
+      }
+      inner.style.transform='translateY(-'+offset+'px)';
+    }
+  };
 }
 
 function initPitchPhotos(){
@@ -998,93 +1030,48 @@ function initPitchPhotos(){
 // Impulsion douce : swipe = légère accélération puis retour naturel
 // ============================================================
 (function(){
-  var BASE_DUR = 120;
-  var inner, totalH, currentOffset, raf, lastT;
-  var dragging = false;
-  var touchStartY, touchLastY, velocity;
-
-  function getInner(){ return document.getElementById('m-home-pitch-photos-inner'); }
-
-  function getCurrentY(){
-    var mat = new DOMMatrix(getComputedStyle(inner).transform);
-    return mat.m42;
-  }
-
-  function pauseAnim(){
-    // Lire la position exacte AVANT de couper l'animation
-    var y = getCurrentY();
-    totalH = inner.scrollHeight / 2;
-    // Normaliser dans [-totalH, 0]
-    currentOffset = y % totalH;
-    if(currentOffset > 0) currentOffset -= totalH;
-    // Figer à cette position exacte
-    inner.style.animation = 'none';
-    inner.style.transform = 'translateY(' + currentOffset + 'px)';
-  }
-
-  function resumeAnim(){
-    // Calculer le delay pour reprendre depuis currentOffset
-    var pct = totalH > 0 ? (-currentOffset / totalH) : 0;
-    var delay = -(BASE_DUR * pct);
-    inner.style.transform = '';
-    inner.style.animation = 'pitchPhotoUp ' + BASE_DUR + 's ' + delay + 's linear infinite';
-  }
-
-  function animate(){
-    if(!dragging){
-      // Décélération progressive
-      velocity *= 0.88;
-      currentOffset += velocity;
-      // Boucle
-      if(currentOffset < -totalH) currentOffset += totalH;
-      if(currentOffset > 0) currentOffset -= totalH;
-      inner.style.transform = 'translateY(' + currentOffset + 'px)';
-      if(Math.abs(velocity) > 0.3){
-        raf = requestAnimationFrame(animate);
-      } else {
-        resumeAnim();
-      }
-    }
-  }
+  // Touch control adapté au virtual scroller
+  // Le scroller expose _pitchScrollOffset et _pitchScrollPause/_pitchScrollResume
+  var touchStartY, touchLastY, velocity, lastT, dragging=false, decayRaf=null;
 
   function initPitchTouchControl(){
     var container = document.getElementById('m-home-pitch-photos');
     if(!container || container._touchInit) return;
     container._touchInit = true;
-    inner = getInner();
 
     container.addEventListener('touchstart', function(e){
-      inner = getInner(); if(!inner) return;
-      cancelAnimationFrame(raf);
+      if(decayRaf){cancelAnimationFrame(decayRaf);decayRaf=null;}
       touchStartY = e.touches[0].clientY;
       touchLastY = touchStartY;
-      velocity = 0;
-      lastT = Date.now();
-      dragging = true;
-      totalH = inner.scrollHeight / 2;
-      pauseAnim();
+      velocity = 0; lastT = Date.now(); dragging = true;
+      // Suspendre le RAF automatique
+      if(window._pitchVScroll) window._pitchVScroll.pause();
     }, {passive:true});
 
     container.addEventListener('touchmove', function(e){
-      if(!dragging || !inner) return;
+      if(!dragging) return;
       var y = e.touches[0].clientY;
-      var dy = y - touchLastY; // positif = doigt descend = photos descendent
-      var dt = Math.max(1, Date.now() - lastT);
-      velocity = dy / dt * 16; // px/frame
-      touchLastY = y;
-      lastT = Date.now();
-      currentOffset += dy;
-      if(currentOffset < -totalH) currentOffset += totalH;
-      if(currentOffset > 0) currentOffset -= totalH;
-      inner.style.transform = 'translateY(' + currentOffset + 'px)';
+      var dt = Math.max(1, Date.now()-lastT);
+      var dy = touchLastY - y; // positif = doigt monte = photos montent
+      velocity = dy/dt*16;
+      touchLastY = y; lastT = Date.now();
+      // Avancer/reculer le scroller
+      if(window._pitchVScroll) window._pitchVScroll.nudge(dy);
     }, {passive:true});
 
     container.addEventListener('touchend', function(){
       if(!dragging) return;
       dragging = false;
-      // Inverser velocity si sens inversé (doigt descend = animer vers le haut)
-      // On ne fait rien de spécial, animate() gère la décélération
-      raf = requestAnimationFrame(animate);
+      // Décélération puis reprise auto
+      (function decay(){
+        if(Math.abs(velocity)<0.1){
+          if(window._pitchVScroll) window._pitchVScroll.resume();
+          return;
+        }
+        velocity *= 0.88;
+        if(window._pitchVScroll) window._pitchVScroll.nudge(velocity);
+        decayRaf = requestAnimationFrame(decay);
+      })();
     }, {passive:true});
   }
 
