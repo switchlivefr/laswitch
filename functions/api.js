@@ -122,8 +122,7 @@ async function handleRequest(request, env) {
         .map(obj => {
           const name = obj.key.split('/').pop();
           const fullUrl = `${R2_PUBLIC_BASE}/${encodeURIComponent(name)}`;
-          const thumbUrl = `https://wsrv.nl/?url=${encodeURIComponent('www.laswitch.net/photos/switch/' + name)}&w=220&q=70&output=jpg`;
-          return { name, url: thumbUrl, full: fullUrl };
+          return { name, url: fullUrl, full: fullUrl };
         });
 
       // Videos et Gifs depuis GitHub (inchangé)
