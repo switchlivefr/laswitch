@@ -908,9 +908,8 @@ function fillPitchPhotos(photos){
   inner.innerHTML='';
   // Limiter à 16 frames max (8 visibles + 8 en avance) pour alléger le DOM sur mobile
   var list=photos.slice();
-  while(list.length<8)list=list.concat(photos);
-  if(list.length>16)list=list.slice(0,16);
-  list=list.concat(list); // doubler pour boucle CSS seamless
+  // Utiliser toutes les photos disponibles, doubler pour boucle CSS seamless
+  list=list.concat(list);
   list.forEach(function(p){
     var frame=document.createElement('div');
     frame.className='pitch-photo-frame';
