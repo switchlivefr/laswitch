@@ -13,6 +13,9 @@ const SHEETS = {
 };
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRxLRh2URcPDRhMKC9mQwDsToEBTGCkrRrULgAFqYSvaldTh2wWRZGP7vbZa9eMYWP/exec';
 
+// Base URL des photos sur R2 (pub dev URL — à remplacer par assets.laswitch.net si tu crées ce sous-domaine)
+const R2_PHOTOS_BASE = 'https://www.laswitch.net/photos/switch';
+
 async function getHiddenRows(sheetTitle) {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?key=${API_KEY}&fields=sheets(properties(title),data(rowMetadata(hiddenByUser)))&includeGridData=false`;
   const r = await fetch(url);
@@ -31,6 +34,26 @@ async function readSheet(name) {
   const allRows = (data.values || []).map(row => row.map(cell => String(cell || '').trim().replace(/[`\u2018\u2019\u201A\u201B]/g, "'")));
   const hiddenRows = await getHiddenRows(name);
   return { rows: allRows.filter((_, i) => !hiddenRows[i]), sheetName: name };
+}
+
+// Lister les photos depuis R2 via l'API S3 list objects (XML)
+async function listR2Photos() {
+  try {
+    const listUrl = `https://www.laswitch.net/?prefix=photos/switch/&delimiter=/`;
+    const r = await fetch(listUrl);
+    if (!r.ok) throw new Error('R2 list error: ' + r.status);
+    const xml = await r.text();
+    // Parser le XML S3 pour extraire les noms de fichiers
+    const keys = [...xml.matchAll(/<Key>([^<]+)<\/Key>/g)]
+      .map(m => m[1])
+      .filter(k => k.match(/\.(jpg|jpeg|png|webp)$/i) && !k.endsWith('/'));
+    return keys.map(k => ({
+      name: k.split('/').pop(),
+      url: `${R2_PHOTOS_BASE}/${encodeURIComponent(k.split('/').pop())}`
+    }));
+  } catch(e) {
+    return [];
+  }
 }
 
 async function handleRequest(request, env) {
@@ -112,31 +135,24 @@ async function handleRequest(request, env) {
     }
   }
 
-  // GET assets depuis GitHub (photos + videos) — évite rate limiting côté client
+  // GET assets : photos depuis R2, videos et gifs depuis GitHub
   if (request.method === 'GET' && action === 'getAssets') {
     try {
-      const [photosRes, videosRes] = await Promise.all([
-        fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/photos', {
-          headers: { 'User-Agent': 'laswitch-app' }
-        }),
+      const [r2Photos, videosRes, gifsRes] = await Promise.all([
+        listR2Photos(),
         fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets', {
           headers: { 'User-Agent': 'laswitch-app' }
-        })
-      ]);
-      const photosData = await photosRes.json();
-      const assetsData = await videosRes.json();
-      // Gifs séparément pour ne pas bloquer photos/videos si le dossier n'existe pas
-      let gifsData = [];
-      try {
-        const gifsRes = await fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/Gif', {
+        }),
+        fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/Gif', {
           headers: { 'User-Agent': 'laswitch-app' }
-        });
-        gifsData = await gifsRes.json();
-      } catch(e) { gifsData = []; }
-      const photos = Array.isArray(photosData)
-        ? photosData.filter(f => f.name.match(/\.(jpg|jpeg|png|webp)$/i) && f.name !== '.gitkeep')
-            .map(f => ({ name: f.name, url: f.download_url }))
-        : [];
+        }).catch(() => ({ json: async () => [] }))
+      ]);
+
+      const assetsData = await videosRes.json();
+      const gifsData = await gifsRes.json().catch(() => []);
+
+      const photos = r2Photos; // photos depuis R2
+
       const videos = Array.isArray(assetsData)
         ? assetsData.filter(f => f.name.match(/\.mp4$/i))
             .map(f => ({ name: f.name, url: f.download_url }))
@@ -145,15 +161,16 @@ async function handleRequest(request, env) {
         ? gifsData.filter(f => f.name.match(/\.(gif|jpg|jpeg|png|webp)$/i) && f.name !== '.gitkeep')
             .map(f => ({ name: f.name, url: f.download_url }))
         : [];
+
       return new Response(JSON.stringify({ photos, videos, gifs }), {
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
-          'Cache-Control': 'max-age=300' // cache 5min
+          'Cache-Control': 'max-age=300'
         }
       });
     } catch(e) {
-      return new Response(JSON.stringify({ photos: [], videos: [], error: e.message }), {
+      return new Response(JSON.stringify({ photos: [], videos: [], gifs: [], error: e.message }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
     }
