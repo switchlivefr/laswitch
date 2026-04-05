@@ -939,7 +939,7 @@ function initPitchPhotos(){
   fetch('/api?action=getAssets')
     .then(function(r){return r.json();})
     .then(function(data){
-      var photos=(data.photos||[]).map(function(f){return {url:f.url,thumb:f.url,full:f.url};});
+      var photos=(data.photos||[]).map(function(f){return {url:f.url,thumb:f.url,full:f.full||f.url};});
       window._allPhotos=photos; window._pitchPhotos=photos;
       fillPitchPhotos(photos);
     })
@@ -1837,7 +1837,7 @@ function loadVideoList(){
       // Videos
       window._allVideos=(data.videos||[]).map(function(f){return f.url;});
       // Photos
-      window._allPhotos=(data.photos||[]).map(function(f){return {url:f.url,thumb:f.url,full:f.url};});
+      window._allPhotos=(data.photos||[]).map(function(f){return {url:f.url,thumb:f.url,full:f.full||f.url};});
       window._pitchPhotos=window._allPhotos;
       // Gifs
       window._allGifs=(data.gifs||[]).map(function(f){return f.url;});
@@ -2009,7 +2009,7 @@ function loadBandeau(){
       imgs.forEach(function(f){
         var img=new Image();
         img.onload=function(){
-          photos.push({url:f.url,thumb:f.url,full:f.url,w:this.naturalWidth,h:this.naturalHeight});
+          photos.push({url:f.url,thumb:f.url,full:f.full||f.url,w:this.naturalWidth,h:this.naturalHeight});
           loaded++;
           if(loaded===imgs.length){window._allPhotos=photos;window._pitchPhotos=photos;fillBandeau(track,photos);}
         };
