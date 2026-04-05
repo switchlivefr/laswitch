@@ -131,10 +131,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 /* Modale pitch : layout avec colonne photos gauche */
 #m-home-pitch .mbox{max-width:680px;flex-direction:column}
 #m-home-pitch .mbox-inner{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
-#m-home-pitch-photos{width:110px;flex-shrink:0;overflow:hidden;position:relative;background:var(--card)}
-#m-home-pitch-photos-inner{display:flex;flex-direction:column;will-change:transform}
-.pitch-photo-frame{width:110px;height:110px;overflow:hidden;cursor:pointer;flex-shrink:0;contain:strict}
-.pitch-photo-frame img{width:110px;height:110px;object-fit:cover;display:block;filter:brightness(0.65);transition:filter .2s;decoding:async}
+#m-home-pitch-photos{width:100px;flex-shrink:0;overflow:hidden;position:relative;background:var(--card)}
+#m-home-pitch-photos-inner{display:flex;flex-direction:column;will-change:transform;animation:pitchPhotoUp 120s linear infinite}
+@keyframes pitchPhotoUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
+.pitch-photo-frame{width:100px;height:100px;overflow:hidden;cursor:pointer;flex-shrink:0;contain:strict}
+.pitch-photo-frame img{width:100px;height:100px;object-fit:cover;display:block;filter:brightness(0.65);transition:filter .2s;decoding:async}
 .pitch-photo-frame:hover img,.pitch-photo-frame:active img{filter:brightness(0.9)}
 #m-home-pitch .mbody{flex:1;overflow-y:auto;min-height:0}
 #m-home-pitch-hint{position:absolute;bottom:60px;left:50px;transform:translateX(-50%);pointer-events:none;opacity:0;transition:opacity .3s;z-index:2}
@@ -901,112 +902,32 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
 // PHOTOS COLONNE GAUCHE - FENETRE "C'EST QUOI LA SWITCH"
 // Même photos que pellicule, même viewer, sans pellicule
 // ============================================================
-// Virtual scroller pour la colonne photos pitch
-// Seulement 10 <img> dans le DOM, sources swappées au fur et à mesure
-var _pitchVScroll = null;
-function stopPitchVScroll(){ if(_pitchVScroll){_pitchVScroll.stop();_pitchVScroll=null;} }
-
 function fillPitchPhotos(photos){
   var inner=document.getElementById('m-home-pitch-photos-inner');
   if(!inner)return;
-  stopPitchVScroll();
   inner.innerHTML='';
-  inner.style.transform='translateY(0)';
-
-  if(!photos||!photos.length)return;
-
-  var VISIBLE = 10; // nombre de <img> dans le DOM
-  var FRAME_H = 110; // hauteur d'une photo en px
-  var photoList = photos.slice(); // toutes les photos
-  var totalPhotos = photoList.length;
-  var offset = 0; // position courante en px (défile vers le bas)
-  var photoIndex = 0; // index de la première photo affichée
-
-  // Créer les VISIBLE frames
-  var frames = [];
-  for(var i=0;i<VISIBLE;i++){
+  // Limiter à 16 frames max (8 visibles + 8 en avance) pour alléger le DOM sur mobile
+  var list=photos.slice();
+  while(list.length<8)list=list.concat(photos);
+  if(list.length>16)list=list.slice(0,16);
+  list=list.concat(list); // doubler pour boucle CSS seamless
+  list.forEach(function(p){
     var frame=document.createElement('div');
     frame.className='pitch-photo-frame';
-    frame.style.flexShrink='0';
     var img=document.createElement('img');
-    img.width=110;img.height=110;img.decoding='async';img.alt='';
-    var p=photoList[i%totalPhotos];
-    img.src=p.url||p.thumb||p.full;
+    img.src=p.thumb||p.url||p.full;
+    img.loading='lazy';img.decoding='async';img.alt='';
     frame.appendChild(img);
-    // Stocker la src full pour le viewer
-    frame._full=p.full||p.url||p.thumb;
-    frame._idx=i%totalPhotos;
+    var _src=p.full||p.url||p.thumb;
+    frame.addEventListener('click',function(){ window.openViewer(_src); });
     var _touchMoved=false;
-    (function(fr){
-      fr.addEventListener('click',function(){window.openViewer(fr._full);});
-      fr.addEventListener('touchstart',function(){_touchMoved=false;},{passive:true});
-      fr.addEventListener('touchmove',function(){_touchMoved=true;},{passive:true});
-      fr.addEventListener('touchend',function(e){if(!_touchMoved){e.preventDefault();window.openViewer(fr._full);}},{passive:false});
-    })(frame);
+    frame.addEventListener('touchstart',function(){ _touchMoved=false; },{passive:true});
+    frame.addEventListener('touchmove',function(){ _touchMoved=true; },{passive:true});
+    frame.addEventListener('touchend',function(e){
+      if(!_touchMoved){ e.preventDefault(); window.openViewer(_src); }
+    },{passive:false});
     inner.appendChild(frame);
-    frames.push(frame);
-  }
-
-  // Défilement via requestAnimationFrame — synchronisé avec le refresh écran
-  var PX_PER_SEC = 22; // pixels par seconde (équivalent à l'ancienne animation CSS 120s)
-  var lastTime = null;
-  var rafId = null;
-
-  function tick(now){
-    if(!lastTime) lastTime = now;
-    var dt = Math.min(now - lastTime, 50); // cap à 50ms pour éviter les sauts
-    lastTime = now;
-    offset += PX_PER_SEC * dt / 1000;
-    if(offset >= FRAME_H){
-      offset -= FRAME_H;
-      var recycled = frames.shift();
-      photoIndex = (photoIndex + 1) % totalPhotos;
-      var nextIdx = (photoIndex + VISIBLE - 1) % totalPhotos;
-      var p = photoList[nextIdx];
-      recycled._full = p.full||p.url||p.thumb;
-      recycled._idx = nextIdx;
-      var img = recycled.querySelector('img');
-      if(img) img.src = p.url||p.thumb||p.full;
-      inner.appendChild(recycled);
-      frames.push(recycled);
-    }
-    inner.style.transform = 'translateY(-'+offset+'px)';
-    rafId = requestAnimationFrame(tick);
-  }
-  rafId = requestAnimationFrame(tick);
-  var paused = false;
-  _pitchVScroll = {
-    stop:   function(){ if(rafId){cancelAnimationFrame(rafId);rafId=null;} },
-    pause:  function(){ paused=true; if(rafId){cancelAnimationFrame(rafId);rafId=null;} },
-    resume: function(){ if(paused){paused=false;lastTime=null;rafId=requestAnimationFrame(tick);} },
-    nudge:  function(dy){
-      offset += dy;
-      // Recycler si nécessaire
-      while(offset >= FRAME_H){
-        offset -= FRAME_H;
-        var recycled=frames.shift();
-        photoIndex=(photoIndex+1)%totalPhotos;
-        var nextIdx=(photoIndex+VISIBLE-1)%totalPhotos;
-        var p=photoList[nextIdx];
-        recycled._full=p.full||p.url||p.thumb;
-        var img=recycled.querySelector('img');
-        if(img)img.src=p.url||p.thumb||p.full;
-        inner.appendChild(recycled);frames.push(recycled);
-      }
-      while(offset < 0){
-        offset += FRAME_H;
-        var recycled=frames.pop();
-        photoIndex=(photoIndex-1+totalPhotos)%totalPhotos;
-        var prevIdx=photoIndex;
-        var p=photoList[prevIdx];
-        recycled._full=p.full||p.url||p.thumb;
-        var img=recycled.querySelector('img');
-        if(img)img.src=p.url||p.thumb||p.full;
-        inner.prepend(recycled);frames.unshift(recycled);
-      }
-      inner.style.transform='translateY(-'+offset+'px)';
-    }
-  };
+  });
 }
 
 function initPitchPhotos(){
@@ -1019,7 +940,7 @@ function initPitchPhotos(){
   fetch('/api?action=getAssets')
     .then(function(r){return r.json();})
     .then(function(data){
-      var photos=(data.photos||[]).map(function(f){return {url:f.url,thumb:f.url,full:f.full||f.url};});
+      var photos=(data.photos||[]).map(function(f){return {url:f.url,thumb:f.url,full:f.url};});
       window._allPhotos=photos; window._pitchPhotos=photos;
       fillPitchPhotos(photos);
     })
@@ -1030,48 +951,93 @@ function initPitchPhotos(){
 // Impulsion douce : swipe = légère accélération puis retour naturel
 // ============================================================
 (function(){
-  // Touch control adapté au virtual scroller
-  // Le scroller expose _pitchScrollOffset et _pitchScrollPause/_pitchScrollResume
-  var touchStartY, touchLastY, velocity, lastT, dragging=false, decayRaf=null;
+  var BASE_DUR = 120;
+  var inner, totalH, currentOffset, raf, lastT;
+  var dragging = false;
+  var touchStartY, touchLastY, velocity;
+
+  function getInner(){ return document.getElementById('m-home-pitch-photos-inner'); }
+
+  function getCurrentY(){
+    var mat = new DOMMatrix(getComputedStyle(inner).transform);
+    return mat.m42;
+  }
+
+  function pauseAnim(){
+    // Lire la position exacte AVANT de couper l'animation
+    var y = getCurrentY();
+    totalH = inner.scrollHeight / 2;
+    // Normaliser dans [-totalH, 0]
+    currentOffset = y % totalH;
+    if(currentOffset > 0) currentOffset -= totalH;
+    // Figer à cette position exacte
+    inner.style.animation = 'none';
+    inner.style.transform = 'translateY(' + currentOffset + 'px)';
+  }
+
+  function resumeAnim(){
+    // Calculer le delay pour reprendre depuis currentOffset
+    var pct = totalH > 0 ? (-currentOffset / totalH) : 0;
+    var delay = -(BASE_DUR * pct);
+    inner.style.transform = '';
+    inner.style.animation = 'pitchPhotoUp ' + BASE_DUR + 's ' + delay + 's linear infinite';
+  }
+
+  function animate(){
+    if(!dragging){
+      // Décélération progressive
+      velocity *= 0.88;
+      currentOffset += velocity;
+      // Boucle
+      if(currentOffset < -totalH) currentOffset += totalH;
+      if(currentOffset > 0) currentOffset -= totalH;
+      inner.style.transform = 'translateY(' + currentOffset + 'px)';
+      if(Math.abs(velocity) > 0.3){
+        raf = requestAnimationFrame(animate);
+      } else {
+        resumeAnim();
+      }
+    }
+  }
 
   function initPitchTouchControl(){
     var container = document.getElementById('m-home-pitch-photos');
     if(!container || container._touchInit) return;
     container._touchInit = true;
+    inner = getInner();
 
     container.addEventListener('touchstart', function(e){
-      if(decayRaf){cancelAnimationFrame(decayRaf);decayRaf=null;}
+      inner = getInner(); if(!inner) return;
+      cancelAnimationFrame(raf);
       touchStartY = e.touches[0].clientY;
       touchLastY = touchStartY;
-      velocity = 0; lastT = Date.now(); dragging = true;
-      // Suspendre le RAF automatique
-      if(window._pitchVScroll) window._pitchVScroll.pause();
+      velocity = 0;
+      lastT = Date.now();
+      dragging = true;
+      totalH = inner.scrollHeight / 2;
+      pauseAnim();
     }, {passive:true});
 
     container.addEventListener('touchmove', function(e){
-      if(!dragging) return;
+      if(!dragging || !inner) return;
       var y = e.touches[0].clientY;
-      var dt = Math.max(1, Date.now()-lastT);
-      var dy = touchLastY - y; // positif = doigt monte = photos montent
-      velocity = dy/dt*16;
-      touchLastY = y; lastT = Date.now();
-      // Avancer/reculer le scroller
-      if(window._pitchVScroll) window._pitchVScroll.nudge(dy);
+      var dy = y - touchLastY; // positif = doigt descend = photos descendent
+      var dt = Math.max(1, Date.now() - lastT);
+      velocity = dy / dt * 16; // px/frame
+      touchLastY = y;
+      lastT = Date.now();
+      currentOffset += dy;
+      if(currentOffset < -totalH) currentOffset += totalH;
+      if(currentOffset > 0) currentOffset -= totalH;
+      inner.style.transform = 'translateY(' + currentOffset + 'px)';
     }, {passive:true});
 
     container.addEventListener('touchend', function(){
       if(!dragging) return;
       dragging = false;
-      // Décélération puis reprise auto
-      (function decay(){
-        if(Math.abs(velocity)<0.1){
-          if(window._pitchVScroll) window._pitchVScroll.resume();
-          return;
-        }
-        velocity *= 0.88;
-        if(window._pitchVScroll) window._pitchVScroll.nudge(velocity);
-        decayRaf = requestAnimationFrame(decay);
-      })();
+      // Inverser velocity si sens inversé (doigt descend = animer vers le haut)
+      // On ne fait rien de spécial, animate() gère la décélération
+      raf = requestAnimationFrame(animate);
     }, {passive:true});
   }
 
@@ -1197,7 +1163,6 @@ function closeM(id){
   hideScrollHints();
   document.body.classList.remove('coverlay-open');
   document.getElementById(id).classList.remove('open');
-  if(id==='m-home-pitch')stopPitchVScroll();
   if(!document.querySelector('.moverlay.open')&&!document.querySelector('.coverlay.open')){
     document.body.style.overflow='';
     document.body.classList.remove('modal-open');
@@ -1873,7 +1838,7 @@ function loadVideoList(){
       // Videos
       window._allVideos=(data.videos||[]).map(function(f){return f.url;});
       // Photos
-      window._allPhotos=(data.photos||[]).map(function(f){return {url:f.url,thumb:f.url,full:f.full||f.url};});
+      window._allPhotos=(data.photos||[]).map(function(f){return {url:f.url,thumb:f.url,full:f.url};});
       window._pitchPhotos=window._allPhotos;
       // Gifs
       window._allGifs=(data.gifs||[]).map(function(f){return f.url;});
@@ -2045,7 +2010,7 @@ function loadBandeau(){
       imgs.forEach(function(f){
         var img=new Image();
         img.onload=function(){
-          photos.push({url:f.url,thumb:f.url,full:f.full||f.url,w:this.naturalWidth,h:this.naturalHeight});
+          photos.push({url:f.url,thumb:f.url,full:f.url,w:this.naturalWidth,h:this.naturalHeight});
           loaded++;
           if(loaded===imgs.length){window._allPhotos=photos;window._pitchPhotos=photos;fillBandeau(track,photos);}
         };
