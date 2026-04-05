@@ -13,8 +13,7 @@ const SHEETS = {
 };
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRxLRh2URcPDRhMKC9mQwDsToEBTGCkrRrULgAFqYSvaldTh2wWRZGP7vbZa9eMYWP/exec';
 
-// Base URL des photos sur R2 (pub dev URL — à remplacer par assets.laswitch.net si tu crées ce sous-domaine)
-const R2_PHOTOS_BASE = 'https://www.laswitch.net/photos/switch';
+const R2_PUBLIC_BASE = 'https://www.laswitch.net/photos/switch';
 
 async function getHiddenRows(sheetTitle) {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?key=${API_KEY}&fields=sheets(properties(title),data(rowMetadata(hiddenByUser)))&includeGridData=false`;
@@ -36,30 +35,9 @@ async function readSheet(name) {
   return { rows: allRows.filter((_, i) => !hiddenRows[i]), sheetName: name };
 }
 
-// Lister les photos depuis R2 via l'API S3 list objects (XML)
-async function listR2Photos() {
-  try {
-    const listUrl = `https://www.laswitch.net/?prefix=photos/switch/&delimiter=/`;
-    const r = await fetch(listUrl);
-    if (!r.ok) throw new Error('R2 list error: ' + r.status);
-    const xml = await r.text();
-    // Parser le XML S3 pour extraire les noms de fichiers
-    const keys = [...xml.matchAll(/<Key>([^<]+)<\/Key>/g)]
-      .map(m => m[1])
-      .filter(k => k.match(/\.(jpg|jpeg|png|webp)$/i) && !k.endsWith('/'));
-    return keys.map(k => ({
-      name: k.split('/').pop(),
-      url: `${R2_PHOTOS_BASE}/${encodeURIComponent(k.split('/').pop())}`
-    }));
-  } catch(e) {
-    return [];
-  }
-}
-
 async function handleRequest(request, env) {
   const url = new URL(request.url);
 
-  // Tout ce qui n'est pas /api → assets statiques
   if (url.pathname !== '/api') {
     return env.ASSETS.fetch(request);
   }
@@ -121,7 +99,6 @@ async function handleRequest(request, env) {
     }
   }
 
-  // POST : sauvegarder l'index du gif courant
   if (request.method === 'POST' && action === 'setGifIndex') {
     try {
       const body = await request.json();
@@ -135,23 +112,35 @@ async function handleRequest(request, env) {
     }
   }
 
-  // GET assets : photos depuis R2, videos et gifs depuis GitHub
+  // GET assets : photos listées depuis R2 directement via env.R2_BUCKET, videos/gifs depuis GitHub
   if (request.method === 'GET' && action === 'getAssets') {
     try {
-      const [r2Photos, videosRes, gifsRes] = await Promise.all([
-        listR2Photos(),
+      // Lister les photos directement depuis le bucket R2 — pas de GitHub, pas de HTTP
+      const listed = await env.R2_BUCKET.list({ prefix: 'photos/switch/', delimiter: '/' });
+      const photos = listed.objects
+        .filter(obj => obj.key.match(/\.(jpg|jpeg|png|webp)$/i))
+        .map(obj => {
+          const name = obj.key.split('/').pop();
+          const fullUrl = `${R2_PUBLIC_BASE}/${encodeURIComponent(name)}`;
+          const thumbUrl = `https://wsrv.nl/?url=${encodeURIComponent('www.laswitch.net/photos/switch/' + name)}&w=220&q=70&output=jpg`;
+          return { name, url: thumbUrl, full: fullUrl };
+        });
+
+      // Videos et Gifs depuis GitHub (inchangé)
+      const [videosRes] = await Promise.all([
         fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets', {
           headers: { 'User-Agent': 'laswitch-app' }
-        }),
-        fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/Gif', {
-          headers: { 'User-Agent': 'laswitch-app' }
-        }).catch(() => ({ json: async () => [] }))
+        })
       ]);
-
       const assetsData = await videosRes.json();
-      const gifsData = await gifsRes.json().catch(() => []);
 
-      const photos = r2Photos; // photos depuis R2
+      let gifsData = [];
+      try {
+        const gifsRes = await fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/Gif', {
+          headers: { 'User-Agent': 'laswitch-app' }
+        });
+        gifsData = await gifsRes.json();
+      } catch(e) { gifsData = []; }
 
       const videos = Array.isArray(assetsData)
         ? assetsData.filter(f => f.name.match(/\.mp4$/i))
@@ -176,7 +165,7 @@ async function handleRequest(request, env) {
     }
   }
 
-  // GET photos depuis Google Drive (sans CORS côté client)
+  // GET photos depuis Google Drive
   if (request.method === 'GET' && action === 'getPhotos') {
     try {
       const folderId = '1UCSMq48CuBEFWWgTUB7QoxY7Fzgf2xW2';
