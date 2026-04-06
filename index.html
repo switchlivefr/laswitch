@@ -2189,7 +2189,7 @@ function secretTap2(){
 var _tapCount=0,_tapTimer=null;
 function applyResaMode(mode){
   _resaOff=(mode==='off');
-  if(_resaOff){_reperShown=true;}else{_reperShown=false;}
+  if(_resaOff){_reperShown=true;} // en resa_on on ne touche pas _reperShown
   var horaires=document.getElementById('m-marco-horaires');if(horaires)horaires.style.display=_resaOff?'none':'block';
   var btn=document.getElementById('bn-resa');if(!btn)return;
   var bnIco=document.getElementById('bn-resa-ico');
