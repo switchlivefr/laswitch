@@ -1189,9 +1189,31 @@ function applyPitchMode(mode){
     if(pitchGif && window._allGifs && window._allGifs.length){
       pitchGif.src = window._allGifs[window._gifIndex||0] + '?r=' + Date.now();
     }
+    // Copier le texte pitch en excluant le titre T de B2 (1ère ligne du sheets)
     var gbody = document.getElementById('m-pitch-gif-body');
     var nbody = document.getElementById('m-home-pitch-body');
-    if(gbody && nbody) gbody.innerHTML = nbody.innerHTML;
+    if(gbody && nbody){
+      var pd=RAW.pitchSw; gbody.innerHTML='';
+      if(pd&&pd.rows){
+        var prows=pd.rows; var skippedFirst=false;
+        for(var gi=0;gi<prows.length;gi++){
+          var gcode=(prows[gi][0]||'').trim().toUpperCase();
+          var gtxt=(prows[gi][1]||'').trim();
+          if(gcode==='X')continue;
+          if(gtxt.charCodeAt(0)===9658)continue;
+          // Sauter le premier T (B2)
+          if(gcode==='T'&&!skippedFirst){skippedFirst=true;continue;}
+          if(!gtxt){var gsp=document.createElement('div');gsp.style.height='10px';gbody.appendChild(gsp);continue;}
+          if(gcode==='T'){var gt=document.createElement('div');gt.className='sec-osl-t';gt.textContent=gtxt;gbody.appendChild(gt);}
+          else if(gcode==='H'){var gh=document.createElement('div');gh.className='sec-osl-h';gh.textContent=gtxt;gbody.appendChild(gh);}
+          else if(gcode==='S'){var gs=document.createElement('div');gs.className='sec-osl-s';gs.textContent=gtxt;gbody.appendChild(gs);}
+          else if(gcode==='K'){var gls=gtxt.split(/[
+]+/);for(var gli=0;gli<gls.length;gli++){var gll=gls[gli].trim();if(!gll)continue;var gp=document.createElement('p');gp.textContent=gll;gbody.appendChild(gp);}}
+          else{var gls2=gtxt.split(/[
+]+/);for(var gli2=0;gli2<gls2.length;gli2++){var gll2=gls2[gli2].trim();if(!gll2)continue;var gp2=document.createElement('p');gp2.textContent=gll2;gbody.appendChild(gp2);}}
+        }
+      }
+    }
     setTimeout(function(){ initScrollHintsModal(document.getElementById('m-pitch-gif-body')); }, 100);
   } else {
     if(gif) gif.style.display = 'none';
