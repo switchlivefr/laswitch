@@ -1191,7 +1191,25 @@ function applyPitchMode(mode){
     }
     var gbody = document.getElementById('m-pitch-gif-body');
     var nbody = document.getElementById('m-home-pitch-body');
-    if(gbody && nbody) gbody.innerHTML = nbody.innerHTML;
+    if(gbody){
+      gbody.innerHTML='';
+      var pd=RAW.pitchSw;
+      if(pd&&pd.rows){
+        var firstT=false;
+        for(var i=0;i<pd.rows.length;i++){
+          var c=(pd.rows[i][0]||'').trim().toUpperCase();
+          var t=(pd.rows[i][1]||'').trim();
+          if(c==='X')continue;
+          if(t&&t.charCodeAt(0)===9658)continue;
+          if(!t){var sp=document.createElement('div');sp.style.height='10px';gbody.appendChild(sp);continue;}
+          if(c==='T'&&!firstT){firstT=true;continue;}
+          if(c==='T'){var el=document.createElement('div');el.className='sec-osl-t';el.textContent=t;gbody.appendChild(el);}
+          else if(c==='H'){var el=document.createElement('div');el.className='sec-osl-h';el.textContent=t;gbody.appendChild(el);}
+          else if(c==='S'){var el=document.createElement('div');el.className='sec-osl-s';el.textContent=t;gbody.appendChild(el);}
+          else{var el=document.createElement('p');el.textContent=t;gbody.appendChild(el);}
+        }
+      }
+    }
     setTimeout(function(){ initScrollHintsModal(document.getElementById('m-pitch-gif-body')); }, 100);
   } else {
     if(gif) gif.style.display = 'none';
