@@ -443,7 +443,7 @@ body.modal-open #scroll-hint-down,body.modal-open #scroll-hint-up{opacity:0!impo
         <div class="home-gif-label">PRENDS LEUR PLACE</div>
         <img id="m-pitch-gif" style="width:100%;max-width:380px;border-radius:var(--r);display:block;margin:0 auto" alt="">
       </div>
-      <div class="mbody" id="m-pitch-gif-body" onclick="pitchSecretTap()"></div>
+      <div class="mbody" id="m-pitch-gif-body" onclick="pitchSecretTap()" style="padding-top:14px;border-top:1px solid var(--border);margin-top:8px"></div>
     </div>
     <div class="mfoot" id="m-pitch-foot"><button class="mbtn sec" onclick="closeM('m-home-pitch')">Fermer</button></div>
   </div>
@@ -1184,12 +1184,10 @@ function applyPitchMode(mode){
   if(mode === 'gif'){
     if(normal) normal.style.display = 'none';
     if(gif) gif.style.display = 'flex';
-    // Sync gif actuel
     var pitchGif = document.getElementById('m-pitch-gif');
     if(pitchGif && window._allGifs && window._allGifs.length){
       pitchGif.src = window._allGifs[window._gifIndex||0] + '?r=' + Date.now();
     }
-    // Copier le texte pitch
     var gbody = document.getElementById('m-pitch-gif-body');
     var nbody = document.getElementById('m-home-pitch-body');
     if(gbody && nbody) gbody.innerHTML = nbody.innerHTML;
@@ -1199,6 +1197,8 @@ function applyPitchMode(mode){
     if(normal) normal.style.display = '';
     setTimeout(function(){ initScrollHintsModal(document.getElementById('m-home-pitch-body')); }, 100);
   }
+  // Sauvegarder pour tout le monde
+  fetch('/api?action=setPitchMode', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({mode:mode})}).catch(function(){});
 }
 // ============================================================
 
@@ -2280,6 +2280,7 @@ fetch('/api')
   .then(function(r){return r.json();})
   .then(function(nd){
     RAW=nd;renderHome();renderContactSw();
+    if(nd.pitchMode){_pitchMode=nd.pitchMode;}
     if(nd.gifIndex!==undefined){window._serverGifIndex=nd.gifIndex;} // sera appliqué dans loadVideoList après chargement des gifs
     if(nd.homeMode){
       _lastKnownServerMode=nd.homeMode;
