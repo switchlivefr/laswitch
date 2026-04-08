@@ -430,28 +430,22 @@ body.modal-open #scroll-hint-down,body.modal-open #scroll-hint-up{opacity:0!impo
 <!-- MODALE : C'est quoi la SWiTCH -->
 <div class="moverlay" id="m-home-pitch" onclick="if(event.target===this)closeM('m-home-pitch')">
   <div class="mbox">
-
-    <!-- MODE NORMAL : photos + texte -->
-    <div id="m-pitch-mode-normal" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden">
-      <div class="mbox-inner" style="flex:1;min-height:0">
-        <div id="m-home-pitch-photos">
-          <div id="m-home-pitch-photos-inner"></div>
-        </div>
-        <div class="mbody" id="m-home-pitch-body" onclick="pitchSecretTap()"></div>
+    <!-- MODE NORMAL : structure originale intacte -->
+    <div class="mbox-inner" id="m-pitch-mode-normal">
+      <div id="m-home-pitch-photos">
+        <div id="m-home-pitch-photos-inner"></div>
       </div>
-      <div class="mfoot"><button class="mbtn sec" onclick="closeM('m-home-pitch')">Fermer</button></div>
+      <div class="mbody" id="m-home-pitch-body" onclick="pitchSecretTap()"></div>
     </div>
-
-    <!-- MODE GIF : diaporama -->
-    <div id="m-pitch-mode-gif" style="display:none;flex-direction:column;flex:1;overflow:hidden">
-      <div style="padding:14px 16px 6px;text-align:center;flex-shrink:0">
+    <!-- MODE GIF : même structure, caché par défaut -->
+    <div id="m-pitch-mode-gif" style="display:none;flex:1;overflow:hidden;flex-direction:column;min-height:0">
+      <div style="padding:14px 16px 4px;text-align:center;flex-shrink:0">
         <div class="home-gif-label">PRENDS LEUR PLACE</div>
-        <img id="m-pitch-gif" style="width:100%;max-width:420px;border-radius:var(--r);display:block;margin:0 auto" alt="Prends leur place sur scene" onclick="pitchSecretTap()">
+        <img id="m-pitch-gif" style="width:100%;max-width:380px;border-radius:var(--r);display:block;margin:0 auto" alt="" onclick="pitchSecretTap()">
       </div>
-      <div class="mbody" id="m-pitch-gif-body" style="flex:1;overflow-y:auto" onclick="pitchSecretTap()"></div>
-      <div class="mfoot"><button class="mbtn sec" onclick="closeM('m-home-pitch')">Fermer</button></div>
+      <div class="mbody" id="m-pitch-gif-body" onclick="pitchSecretTap()"></div>
     </div>
-
+    <div class="mfoot" id="m-pitch-foot"><button class="mbtn sec" onclick="closeM('m-home-pitch')">Fermer</button></div>
   </div>
 </div>
 
@@ -1191,22 +1185,20 @@ function applyPitchMode(mode){
   var gif = document.getElementById('m-pitch-mode-gif');
   if(mode === 'gif'){
     if(normal) normal.style.display = 'none';
-    if(gif){ gif.style.display = 'flex'; }
-    // Sync gif
+    if(gif) gif.style.display = 'flex';
+    // Sync gif actuel
     var pitchGif = document.getElementById('m-pitch-gif');
     if(pitchGif && window._allGifs && window._allGifs.length){
-      var idx = window._gifIndex || 0;
-      pitchGif.src = window._allGifs[idx] + '?r=' + Date.now();
+      pitchGif.src = window._allGifs[window._gifIndex||0] + '?r=' + Date.now();
     }
-    // Sync texte pitch dans la zone gif
-    var body = document.getElementById('m-pitch-gif-body');
-    var src = document.getElementById('m-home-pitch-body');
-    if(body && src) body.innerHTML = src.innerHTML;
-    // Init scroll hints
+    // Copier le texte pitch
+    var gbody = document.getElementById('m-pitch-gif-body');
+    var nbody = document.getElementById('m-home-pitch-body');
+    if(gbody && nbody) gbody.innerHTML = nbody.innerHTML;
     setTimeout(function(){ initScrollHintsModal(document.getElementById('m-pitch-gif-body')); }, 100);
   } else {
-    if(normal) normal.style.display = '';
     if(gif) gif.style.display = 'none';
+    if(normal) normal.style.display = '';
     setTimeout(function(){ initScrollHintsModal(document.getElementById('m-home-pitch-body')); }, 100);
   }
 }
