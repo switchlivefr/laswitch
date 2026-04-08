@@ -432,10 +432,10 @@ body.modal-open #scroll-hint-down,body.modal-open #scroll-hint-up{opacity:0!impo
   <div class="mbox">
     <!-- MODE NORMAL : structure originale intacte -->
     <div class="mbox-inner" id="m-pitch-mode-normal">
-      <div id="m-home-pitch-photos" onclick="pitchSecretTap()">
+      <div id="m-home-pitch-photos" onclick="pitchSecretTap(event)">
         <div id="m-home-pitch-photos-inner"></div>
       </div>
-      <div class="mbody" id="m-home-pitch-body" onclick="pitchSecretTap()"></div>
+      <div class="mbody" id="m-home-pitch-body" onclick="pitchSecretTap(event)"></div>
     </div>
     <!-- MODE GIF : même structure, caché par défaut -->
     <div id="m-pitch-mode-gif" style="display:none;flex:1;overflow:hidden;flex-direction:column;min-height:0">
@@ -443,7 +443,7 @@ body.modal-open #scroll-hint-down,body.modal-open #scroll-hint-up{opacity:0!impo
         <div class="home-gif-label">PRENDS LEUR PLACE</div>
         <img id="m-pitch-gif" style="width:100%;max-width:380px;border-radius:var(--r);display:block;margin:0 auto" alt="">
       </div>
-      <div class="mbody" id="m-pitch-gif-body" onclick="pitchSecretTap()" style="padding-top:14px;border-top:1px solid var(--border);margin-top:8px"></div>
+      <div class="mbody" id="m-pitch-gif-body" onclick="pitchSecretTap(event)" style="padding-top:14px;border-top:1px solid var(--border);margin-top:8px"></div>
     </div>
     <div class="mfoot" id="m-pitch-foot"><button class="mbtn sec" onclick="closeM('m-home-pitch')">Fermer</button></div>
   </div>
@@ -1167,7 +1167,8 @@ function pinInput(idx,el){
 var _pitchMode = 'normal'; // 'normal' ou 'gif'
 var _pitchTapCount = 0, _pitchTapTimer = null;
 
-function pitchSecretTap(){
+function pitchSecretTap(e){
+  if(e && e.stopPropagation) e.stopPropagation();
   _pitchTapCount++;
   clearTimeout(_pitchTapTimer);
   _pitchTapTimer = setTimeout(function(){ _pitchTapCount = 0; }, 1500);
@@ -1209,7 +1210,7 @@ function openM(id){
   if(id==='m-reper-osl'){el.classList.add('fadein');}
   if(id==='m-osl')renderOslPitch();
   if(id==='m-home-pitch'||id==='m-renseignements'||id==='m-resa'){muteVideo();_videoMuted=true;}
-  if(id==='m-home-pitch'){initPitchPhotos();if(window._initPitchTouchControl)window._initPitchTouchControl();}
+  if(id==='m-home-pitch'){initPitchPhotos();if(window._initPitchTouchControl)window._initPitchTouchControl();applyPitchMode(_pitchMode);}
   if(id!=='m-marco'&&id!=='m-pin'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
 }
 function closeM(id){
