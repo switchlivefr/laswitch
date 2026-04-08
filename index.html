@@ -445,7 +445,7 @@ body.modal-open #scroll-hint-down,body.modal-open #scroll-hint-up{opacity:0!impo
       </div>
       <div class="mbody" id="m-pitch-gif-body" onclick="pitchSecretTap(event)" style="padding-top:14px;border-top:1px solid var(--border);margin-top:8px"></div>
     </div>
-    <div class="mfoot" id="m-pitch-foot" style="gap:8px"><button class="mbtn osl-info-btn pulse-btn" onclick="openM('m-pitch-big')" style="flex:1;padding:10px 8px;margin:0;font-size:15px;font-weight:700;animation:btnpulse 3s ease-in-out infinite"><span style="visibility:hidden;font-size:15px">💫</span><span style="font-size:15px">En savoir plus</span><span style="font-size:15px">💫</span></button><button class="mbtn sec" onclick="closeM('m-home-pitch')" style="flex:1">Fermer</button></div>
+    <div class="mfoot" id="m-pitch-foot" style="gap:8px"><button class="mbtn osl-info-btn pulse-btn" onclick="openM('m-pitch-big')" style="flex:1;padding:10px 8px;margin:0;font-size:15px;font-weight:700;animation:btnpulse 3s ease-in-out infinite">En savoir plus</button><button class="mbtn sec" onclick="closeM('m-home-pitch')" style="flex:1">Fermer</button></div>
   </div>
 </div>
 
@@ -453,7 +453,7 @@ body.modal-open #scroll-hint-down,body.modal-open #scroll-hint-up{opacity:0!impo
 <div class="moverlay" id="m-pitch-big" onclick="if(event.target===this)closeM('m-pitch-big')" style="z-index:550">
   <div class="mbox">
     <div class="mbody" id="m-pitch-big-body"></div>
-    <div class="mfoot"><button class="mbtn sec" onclick="closeM('m-pitch-big')">Fermer</button></div>
+    <div class="mfoot"><button class="mbtn sec" onclick="closeM('m-pitch-big');closeM('m-home-pitch')">Fermer</button></div>
   </div>
 </div>
 
