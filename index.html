@@ -63,7 +63,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .hemoji{display:none}
 .home-hero::before{content:'💫';position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);font-size:clamp(160px,50vw,280px);pointer-events:none;z-index:0;line-height:1;animation:starPulse 3s ease-in-out infinite}
 .hslogan{position:relative;z-index:1;margin-top:-6px;margin-bottom:32px}
-.hslogan-l1{display:block;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:700;letter-spacing:0px;color:var(--gold);line-height:1.15;animation:sloganPulse 3s ease-in-out infinite}
+.hslogan-l1{display:block;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;color:var(--gold);line-height:1.15;animation:sloganPulse 3s ease-in-out infinite}
 .hslogan-l2{display:block;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:700;letter-spacing:0px;color:var(--gold);line-height:1.15;animation:sloganPulse 3s ease-in-out infinite}
 .hmeta{margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:3px}
 .hedition{background:transparent;border:none;border-radius:var(--rs);padding:8px 18px;font-size:21px;font-weight:600;animation:rainbow .6s linear infinite}
@@ -255,7 +255,7 @@ body.modal-open #scroll-hint-down,body.modal-open #scroll-hint-up{opacity:0!impo
   <div class="home-hero">
     <div class="eyebrow">Spectacle Musical Participatif</div>
     <div class="htitle" id="home-title-tap" onclick="secretTap()" style="position:relative;z-index:1">SWITCH</div>
-    <div class="hslogan"><span class="hslogan-l1">Le tour de manège où tu</span><span class="hslogan-l2">t'éclates avec tes ami.es</span></div>
+    <div class="hslogan"><span class="hslogan-l1">L<span style="text-transform:lowercase">e tour de manège</span></span><span class="hslogan-l2">à vivre entre ami.es</span></div>
     <div class="hmeta" style="overflow:hidden;width:100%;position:relative;z-index:1">
       <div class="hedition" id="home-edition" onclick="secretTap2()" style="cursor:pointer;position:relative;z-index:10">—</div>
       <div id="home-prc-link" style="display:none">
@@ -1191,25 +1191,7 @@ function applyPitchMode(mode){
     }
     var gbody = document.getElementById('m-pitch-gif-body');
     var nbody = document.getElementById('m-home-pitch-body');
-    if(gbody){
-      gbody.innerHTML='';
-      var pd=RAW.pitchSw;
-      if(pd&&pd.rows){
-        var firstT=false;
-        for(var i=0;i<pd.rows.length;i++){
-          var c=(pd.rows[i][0]||'').trim().toUpperCase();
-          var t=(pd.rows[i][1]||'').trim();
-          if(c==='X')continue;
-          if(t&&t.charCodeAt(0)===9658)continue;
-          if(!t){var sp=document.createElement('div');sp.style.height='10px';gbody.appendChild(sp);continue;}
-          if(c==='T'&&!firstT){firstT=true;continue;}
-          if(c==='T'){var el=document.createElement('div');el.className='sec-osl-t';el.textContent=t;gbody.appendChild(el);}
-          else if(c==='H'){var el=document.createElement('div');el.className='sec-osl-h';el.textContent=t;gbody.appendChild(el);}
-          else if(c==='S'){var el=document.createElement('div');el.className='sec-osl-s';el.textContent=t;gbody.appendChild(el);}
-          else{var el=document.createElement('p');el.textContent=t;gbody.appendChild(el);}
-        }
-      }
-    }
+    if(gbody && nbody) gbody.innerHTML = nbody.innerHTML;
     setTimeout(function(){ initScrollHintsModal(document.getElementById('m-pitch-gif-body')); }, 100);
   } else {
     if(gif) gif.style.display = 'none';
