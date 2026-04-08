@@ -9,7 +9,8 @@ const SHEETS = {
   'inscriptions':    'INSCRIPTIONS',
   'contactSw':       'CONTACT SWiTCH',
   'information':     'INFORMATION',
-  'informationLieu': 'INFORMATION LIEU'
+  'informationLieu': 'INFORMATION LIEU',
+  'pitchSwBig':    'PITCH SWiTCH BIG'
 };
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRxLRh2URcPDRhMKC9mQwDsToEBTGCkrRrULgAFqYSvaldTh2wWRZGP7vbZa9eMYWP/exec';
 
