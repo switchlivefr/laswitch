@@ -112,18 +112,43 @@ async function handleRequest(request, env) {
     }
   }
 
+  if (request.method === 'POST' && action === 'setPitchMode') {
+    try {
+      const body = await request.json();
+      const mode = body.mode === 'gif' ? 'gif' : 'normal';
+      await env.LASWITCH_KV.put('pitch_mode', mode);
+      return new Response(JSON.stringify({ ok: true, mode }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    } catch(e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    }
+  }
+
   // GET assets : photos listées depuis R2 directement via env.R2_BUCKET, videos/gifs depuis GitHub
   if (request.method === 'GET' && action === 'getAssets') {
     try {
-      // Lister les photos directement depuis le bucket R2 — pas de GitHub, pas de HTTP
-      const listed = await env.R2_BUCKET.list({ prefix: 'photos/switch/', delimiter: '/' });
-      const photos = listed.objects
-        .filter(obj => obj.key.match(/\.(jpg|jpeg|png|webp)$/i))
-        .map(obj => {
-          const name = obj.key.split('/').pop();
-          const fullUrl = `${R2_PUBLIC_BASE}/${encodeURIComponent(name)}`;
-          return { name, url: fullUrl, full: fullUrl };
-        });
+      // Photos : R2 si dispo, fallback GitHub
+      let photos = [];
+      if (env.R2_BUCKET) {
+        try {
+          const listed = await env.R2_BUCKET.list({ prefix: 'photos/switch/', delimiter: '/' });
+          photos = listed.objects
+            .filter(obj => obj.key.match(/\.(jpg|jpeg|png|webp)$/i))
+            .map(obj => {
+              const name = obj.key.split('/').pop();
+              const fullUrl = `${R2_PUBLIC_BASE}/${encodeURIComponent(name)}`;
+              return { name, url: fullUrl, full: fullUrl };
+            });
+        } catch(e) { photos = []; }
+      }
+      if (!photos.length) {
+        try {
+          const ghRes = await fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/photos', { headers: { 'User-Agent': 'laswitch-app' } });
+          const ghData = await ghRes.json();
+          if (Array.isArray(ghData)) photos = ghData.filter(f => f.name.match(/\.(jpg|jpeg|png|webp)$/i) && f.name !== '.gitkeep').map(f => ({ name: f.name, url: f.download_url, full: f.download_url }));
+        } catch(e) { photos = []; }
+      }
 
       // Videos et Gifs depuis GitHub (inchangé)
       const [videosRes] = await Promise.all([
@@ -204,6 +229,8 @@ async function handleRequest(request, env) {
     const gifIndex = await env.LASWITCH_KV.get('gif_index');
     result.gifIndex = parseInt(gifIndex) || 0;
     result.resaMode = resaMode || 'on';
+    const pitchMode = await env.LASWITCH_KV.get('pitch_mode');
+    result.pitchMode = pitchMode || 'normal';
     if (videoUrl) result.videoUrl = videoUrl;
     return new Response(JSON.stringify(result), {
       headers: {
