@@ -430,15 +430,28 @@ body.modal-open #scroll-hint-down,body.modal-open #scroll-hint-up{opacity:0!impo
 <!-- MODALE : C'est quoi la SWiTCH -->
 <div class="moverlay" id="m-home-pitch" onclick="if(event.target===this)closeM('m-home-pitch')">
   <div class="mbox">
-    <div class="mbox-inner">
-      <!-- Colonne photos gauche -->
-      <div id="m-home-pitch-photos">
-        <div id="m-home-pitch-photos-inner"></div>
+
+    <!-- MODE NORMAL : photos + texte -->
+    <div id="m-pitch-mode-normal">
+      <div class="mbox-inner">
+        <div id="m-home-pitch-photos">
+          <div id="m-home-pitch-photos-inner"></div>
+        </div>
+        <div class="mbody" id="m-home-pitch-body" onclick="pitchSecretTap()"></div>
       </div>
-      <!-- Contenu texte -->
-      <div class="mbody" id="m-home-pitch-body"></div>
+      <div class="mfoot"><button class="mbtn sec" onclick="closeM('m-home-pitch')">Fermer</button></div>
     </div>
-    <div class="mfoot"><button class="mbtn sec" onclick="closeM('m-home-pitch')">Fermer</button></div>
+
+    <!-- MODE GIF : diaporama -->
+    <div id="m-pitch-mode-gif" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+      <div style="padding:14px 16px 6px;text-align:center;flex-shrink:0">
+        <div class="home-gif-label">PRENDS LEUR PLACE</div>
+        <img id="m-pitch-gif" style="width:100%;max-width:420px;border-radius:var(--r);display:block;margin:0 auto" alt="Prends leur place sur scene" onclick="pitchSecretTap()">
+      </div>
+      <div class="mbody" id="m-pitch-gif-body" style="flex:1;overflow-y:auto" onclick="pitchSecretTap()"></div>
+      <div class="mfoot"><button class="mbtn sec" onclick="closeM('m-home-pitch')">Fermer</button></div>
+    </div>
+
   </div>
 </div>
 
@@ -1153,6 +1166,51 @@ function pinInput(idx,el){
     }
   }
 }
+
+// ============================================================
+// MODALE PITCH : secret tap pour basculer mode normal <-> gif
+// ============================================================
+var _pitchMode = 'normal'; // 'normal' ou 'gif'
+var _pitchTapCount = 0, _pitchTapTimer = null;
+
+function pitchSecretTap(){
+  _pitchTapCount++;
+  clearTimeout(_pitchTapTimer);
+  _pitchTapTimer = setTimeout(function(){ _pitchTapCount = 0; }, 1500);
+  if(_pitchTapCount >= 5){
+    _pitchTapCount = 0;
+    _pitchMode = (_pitchMode === 'normal') ? 'gif' : 'normal';
+    applyPitchMode(_pitchMode);
+    // Sauvegarder pour tous
+    fetch('/api?action=setMode', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({mode: _pitchMode === 'gif' ? 'pitch_gif' : 'pitch_normal'})}).catch(function(){});
+  }
+}
+
+function applyPitchMode(mode){
+  var normal = document.getElementById('m-pitch-mode-normal');
+  var gif = document.getElementById('m-pitch-mode-gif');
+  if(mode === 'gif'){
+    if(normal) normal.style.display = 'none';
+    if(gif){ gif.style.display = 'flex'; }
+    // Sync gif
+    var pitchGif = document.getElementById('m-pitch-gif');
+    if(pitchGif && window._allGifs && window._allGifs.length){
+      var idx = window._gifIndex || 0;
+      pitchGif.src = window._allGifs[idx] + '?r=' + Date.now();
+    }
+    // Sync texte pitch dans la zone gif
+    var body = document.getElementById('m-pitch-gif-body');
+    var src = document.getElementById('m-home-pitch-body');
+    if(body && src) body.innerHTML = src.innerHTML;
+    // Init scroll hints
+    setTimeout(function(){ initScrollHintsModal(document.getElementById('m-pitch-gif-body')); }, 100);
+  } else {
+    if(normal) normal.style.display = '';
+    if(gif) gif.style.display = 'none';
+    setTimeout(function(){ initScrollHintsModal(document.getElementById('m-home-pitch-body')); }, 100);
+  }
+}
+// ============================================================
 
 function openM(id){
   var el=document.getElementById(id);el.classList.add('open');
