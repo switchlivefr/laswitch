@@ -432,18 +432,18 @@ body.modal-open #scroll-hint-down,body.modal-open #scroll-hint-up{opacity:0!impo
   <div class="mbox">
     <!-- MODE NORMAL : structure originale intacte -->
     <div class="mbox-inner" id="m-pitch-mode-normal">
-      <div id="m-home-pitch-photos">
+      <div id="m-home-pitch-photos" onclick="pitchSecretTap()">
         <div id="m-home-pitch-photos-inner"></div>
       </div>
-      <div class="mbody" id="m-home-pitch-body" onclick="pitchSecretTap()"></div>
+      <div class="mbody" id="m-home-pitch-body"></div>
     </div>
     <!-- MODE GIF : même structure, caché par défaut -->
     <div id="m-pitch-mode-gif" style="display:none;flex:1;overflow:hidden;flex-direction:column;min-height:0">
       <div style="padding:14px 16px 4px;text-align:center;flex-shrink:0">
         <div class="home-gif-label">PRENDS LEUR PLACE</div>
-        <img id="m-pitch-gif" style="width:100%;max-width:380px;border-radius:var(--r);display:block;margin:0 auto" alt="" onclick="pitchSecretTap()">
+        <img id="m-pitch-gif" style="width:100%;max-width:380px;border-radius:var(--r);display:block;margin:0 auto" alt="">
       </div>
-      <div class="mbody" id="m-pitch-gif-body" onclick="pitchSecretTap()"></div>
+      <div class="mbody" id="m-pitch-gif-body"></div>
     </div>
     <div class="mfoot" id="m-pitch-foot"><button class="mbtn sec" onclick="closeM('m-home-pitch')">Fermer</button></div>
   </div>
@@ -1175,8 +1175,6 @@ function pitchSecretTap(){
     _pitchTapCount = 0;
     _pitchMode = (_pitchMode === 'normal') ? 'gif' : 'normal';
     applyPitchMode(_pitchMode);
-    // Sauvegarder pour tous
-    fetch('/api?action=setMode', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({mode: _pitchMode === 'gif' ? 'pitch_gif' : 'pitch_normal'})}).catch(function(){});
   }
 }
 
