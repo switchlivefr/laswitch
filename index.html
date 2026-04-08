@@ -63,7 +63,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .hemoji{display:none}
 .home-hero::before{content:'💫';position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);font-size:clamp(160px,50vw,280px);pointer-events:none;z-index:0;line-height:1;animation:starPulse 3s ease-in-out infinite}
 .hslogan{position:relative;z-index:1;margin-top:-6px;margin-bottom:32px}
-.hslogan-l1{display:block;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;color:var(--gold);line-height:1.15;animation:sloganPulse 3s ease-in-out infinite}
+.hslogan-l1{display:block;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:700;letter-spacing:0px;color:var(--gold);line-height:1.15;animation:sloganPulse 3s ease-in-out infinite}
 .hslogan-l2{display:block;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:700;letter-spacing:0px;color:var(--gold);line-height:1.15;animation:sloganPulse 3s ease-in-out infinite}
 .hmeta{margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:3px}
 .hedition{background:transparent;border:none;border-radius:var(--rs);padding:8px 18px;font-size:21px;font-weight:600;animation:rainbow .6s linear infinite}
@@ -255,7 +255,7 @@ body.modal-open #scroll-hint-down,body.modal-open #scroll-hint-up{opacity:0!impo
   <div class="home-hero">
     <div class="eyebrow">Spectacle Musical Participatif</div>
     <div class="htitle" id="home-title-tap" onclick="secretTap()" style="position:relative;z-index:1">SWITCH</div>
-    <div class="hslogan"><span class="hslogan-l1">L<span style="text-transform:lowercase">e tour de manège</span></span><span class="hslogan-l2">à vivre entre ami.es</span></div>
+    <div class="hslogan"><span class="hslogan-l1">Le tour de manège où tu</span><span class="hslogan-l2">t'éclates avec tes ami.es</span></div>
     <div class="hmeta" style="overflow:hidden;width:100%;position:relative;z-index:1">
       <div class="hedition" id="home-edition" onclick="secretTap2()" style="cursor:pointer;position:relative;z-index:10">—</div>
       <div id="home-prc-link" style="display:none">
@@ -445,7 +445,15 @@ body.modal-open #scroll-hint-down,body.modal-open #scroll-hint-up{opacity:0!impo
       </div>
       <div class="mbody" id="m-pitch-gif-body" onclick="pitchSecretTap(event)" style="padding-top:14px;border-top:1px solid var(--border);margin-top:8px"></div>
     </div>
-    <div class="mfoot" id="m-pitch-foot"><button class="mbtn sec" onclick="closeM('m-home-pitch')">Fermer</button></div>
+    <div class="mfoot" id="m-pitch-foot" style="gap:8px"><button class="mbtn osl-info-btn pulse-btn" onclick="openM('m-pitch-big')" style="flex:1;padding:10px 8px;margin:0;font-size:15px;font-weight:700;animation:btnpulse 3s ease-in-out infinite"><span style="visibility:hidden;font-size:15px">💫</span><span style="font-size:15px">En savoir plus</span><span style="font-size:15px">💫</span></button><button class="mbtn sec" onclick="closeM('m-home-pitch')" style="flex:1">Fermer</button></div>
+  </div>
+</div>
+
+<!-- MODALE : En savoir plus (PITCH SWiTCH BIG) -->
+<div class="moverlay" id="m-pitch-big" onclick="if(event.target===this)closeM('m-pitch-big')" style="z-index:550">
+  <div class="mbox">
+    <div class="mbody" id="m-pitch-big-body"></div>
+    <div class="mfoot"><button class="mbtn sec" onclick="closeM('m-pitch-big')">Fermer</button></div>
   </div>
 </div>
 
@@ -1164,6 +1172,25 @@ function pinInput(idx,el){
 // ============================================================
 // MODALE PITCH : secret tap pour basculer mode normal <-> gif
 // ============================================================
+function renderPitchBig(){
+  var el=document.getElementById('m-pitch-big-body');
+  if(!el)return;
+  el.innerHTML='';
+  var pd=RAW.pitchSwBig;if(!pd||pd.error)return;
+  var rows=pd.rows;
+  for(var i=0;i<rows.length;i++){
+    var code=(rows[i][0]||'').trim().toUpperCase();
+    var txt=(rows[i][1]||'').trim();
+    if(code==='X')continue;
+    if(txt&&txt.charCodeAt(0)===9658)continue;
+    if(!txt){var sp=document.createElement('div');sp.style.height='10px';el.appendChild(sp);continue;}
+    if(code==='T'){var t=document.createElement('div');t.className='sec-osl-t';t.textContent=txt;el.appendChild(t);}
+    else if(code==='H'){var h=document.createElement('div');h.className='sec-osl-h';h.textContent=txt;el.appendChild(h);}
+    else if(code==='S'){var s=document.createElement('div');s.className='sec-osl-s';s.textContent=txt;el.appendChild(s);}
+    else{var ls=txt.split('\n');for(var j=0;j<ls.length;j++){var l=ls[j].trim();if(!l)continue;var p=document.createElement('p');p.textContent=l;el.appendChild(p);}}
+  }
+}
+
 var _pitchMode = 'normal'; // 'normal' ou 'gif'
 var _pitchTapCount = 0, _pitchTapTimer = null;
 
@@ -1227,6 +1254,7 @@ function openM(id){
   document.body.classList.add('modal-open');
   if(id==='m-reper-osl'){el.classList.add('fadein');}
   if(id==='m-osl')renderOslPitch();
+  if(id==='m-pitch-big')renderPitchBig();
   if(id==='m-home-pitch'||id==='m-renseignements'||id==='m-resa'){muteVideo();_videoMuted=true;}
   if(id==='m-home-pitch'){initPitchPhotos();if(window._initPitchTouchControl)window._initPitchTouchControl();setTimeout(function(){applyPitchMode(_pitchMode);},50);}
   if(id!=='m-marco'&&id!=='m-pin'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
