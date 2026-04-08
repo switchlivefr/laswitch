@@ -58,7 +58,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .eyebrow{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--cyan);border:1px solid rgba(52,209,192,.25);border-radius:20px;padding:5px 14px;margin-bottom:32px}
 .eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:blink 1.8s ease infinite}
 .htitle{font-family:'Bebas Neue',sans-serif;font-size:clamp(78px,25vw,120px);letter-spacing:6px;line-height:.95;color:var(--gold);text-shadow:0 0 60px var(--gglo)}
-.hemoji{display:block;font-size:clamp(36px,11vw,58px);margin-top:8px;margin-bottom:10px;filter:drop-shadow(0 0 14px rgba(242,201,76,.5))}
+.hemoji{display:none}
+.home-hero::before{content:'💫';position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);font-size:clamp(160px,50vw,280px);opacity:.12;pointer-events:none;z-index:0;line-height:1}
+.hslogan{position:relative;z-index:1;margin-top:-6px;margin-bottom:4px}
+.hslogan-l1{display:block;font-family:'DM Sans',sans-serif;font-size:26px;font-weight:700;letter-spacing:2px;color:var(--gold);text-shadow:0 0 20px var(--gglo);line-height:1.15}
+.hslogan-l2{display:block;font-family:'DM Sans',sans-serif;font-size:24px;font-weight:700;letter-spacing:2px;color:var(--gold);opacity:.85;text-shadow:0 0 15px var(--gglo);line-height:1.15}
 .hmeta{margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:3px}
 .hedition{background:transparent;border:none;border-radius:var(--rs);padding:8px 18px;font-size:21px;font-weight:600;animation:rainbow .6s linear infinite}
 .sub-hero{position:relative;padding:34px 20px 22px;text-align:center;overflow:hidden}
@@ -248,8 +252,9 @@ body.modal-open #scroll-hint-down,body.modal-open #scroll-hint-up{opacity:0!impo
   <div id="home-app-center-wrap">
   <div class="home-hero">
     <div class="eyebrow">Spectacle Musical Participatif</div>
-    <div class="htitle" id="home-title-tap" onclick="secretTap()">SWITCH<span class="hemoji">💫</span></div>
-    <div class="hmeta" style="overflow:hidden;width:100%">
+    <div class="htitle" id="home-title-tap" onclick="secretTap()" style="position:relative;z-index:1">SWITCH</div>
+    <div class="hslogan"><span class="hslogan-l1">Le Tour de Manège</span><span class="hslogan-l2">à vivre entre ami.es</span></div>
+    <div class="hmeta" style="overflow:hidden;width:100%;position:relative;z-index:1">
       <div class="hedition" id="home-edition" onclick="secretTap2()" style="cursor:pointer;position:relative;z-index:10">—</div>
       <div id="home-prc-link" style="display:none">
         <div onclick="openM('m-prc')" style="background:transparent;border:none;padding:6px 18px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;position:relative">
