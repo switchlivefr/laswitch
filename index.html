@@ -1210,7 +1210,7 @@ function openM(id){
   if(id==='m-reper-osl'){el.classList.add('fadein');}
   if(id==='m-osl')renderOslPitch();
   if(id==='m-home-pitch'||id==='m-renseignements'||id==='m-resa'){muteVideo();_videoMuted=true;}
-  if(id==='m-home-pitch'){initPitchPhotos();if(window._initPitchTouchControl)window._initPitchTouchControl();applyPitchMode(_pitchMode);}
+  if(id==='m-home-pitch'){initPitchPhotos();if(window._initPitchTouchControl)window._initPitchTouchControl();setTimeout(function(){applyPitchMode(_pitchMode);},50);}
   if(id!=='m-marco'&&id!=='m-pin'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
 }
 function closeM(id){
@@ -1601,6 +1601,7 @@ function silentRefresh(){
     .then(function(nd){
       if(!nd)return;RAW=nd;renderHome();renderContactSw();
       if(nd.resaMode)applyResaMode(nd.resaMode);
+      if(nd.pitchMode&&nd.pitchMode!==_pitchMode){_pitchMode=nd.pitchMode;}
       // Mettre à jour le gif si changé par quelqu'un d'autre
       if(nd.gifIndex!==undefined&&nd.gifIndex!==window._gifIndex){
         window._serverGifIndex=nd.gifIndex;
