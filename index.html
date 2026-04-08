@@ -37,6 +37,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 @keyframes rainbow{0%{color:#f2c94c}14%{color:#e8943a}28%{color:#e8407a}42%{color:#c471ed}57%{color:#5b9cf6}71%{color:#34d1c0}85%{color:#a8e063}100%{color:#f2c94c}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes starPulse{0%,100%{opacity:.08;filter:brightness(1.5)}50%{opacity:.35;filter:brightness(3)}}
+@keyframes sloganPulse{0%,100%{opacity:.5}50%{opacity:1}}
 
 .prc-arrow-l{display:inline-block;margin-right:10px;line-height:1;opacity:0}
 .prc-arrow-r{display:inline-block;margin-left:8px;line-height:1;opacity:0}
@@ -58,12 +59,12 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .home-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent)}
 .eyebrow{display:inline-flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--cyan);border:1px solid rgba(52,209,192,.25);border-radius:20px;padding:5px 14px;margin-bottom:32px}
 .eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:blink 1.8s ease infinite}
-.htitle{font-family:'Bebas Neue',sans-serif;font-size:clamp(78px,25vw,120px);letter-spacing:6px;line-height:.95;color:var(--gold);text-shadow:0 0 60px var(--gglo),0 0 20px rgba(242,201,76,.6),0 0 40px rgba(242,201,76,.3)}
+.htitle{font-family:'Bebas Neue',sans-serif;font-size:clamp(78px,25vw,120px);letter-spacing:6px;line-height:.95;color:var(--gold);text-shadow:0 0 60px var(--gglo)}
 .hemoji{display:none}
 .home-hero::before{content:'💫';position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);font-size:clamp(160px,50vw,280px);pointer-events:none;z-index:0;line-height:1;animation:starPulse 3s ease-in-out infinite}
 .hslogan{position:relative;z-index:1;margin-top:-6px;margin-bottom:32px}
-.hslogan-l1{display:block;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;color:var(--gold);text-shadow:0 0 12px rgba(242,201,76,.8),0 0 28px rgba(242,201,76,.4);line-height:1.15}
-.hslogan-l2{display:block;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:700;letter-spacing:0px;color:var(--gold);opacity:.85;text-shadow:0 0 12px rgba(242,201,76,.8),0 0 28px rgba(242,201,76,.4);line-height:1.15}
+.hslogan-l1{display:block;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;color:var(--gold);text-shadow:0 0 12px rgba(242,201,76,.8),0 0 28px rgba(242,201,76,.4);line-height:1.15;animation:sloganPulse 3s ease-in-out infinite}
+.hslogan-l2{display:block;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:700;letter-spacing:0px;color:var(--gold);text-shadow:0 0 12px rgba(242,201,76,.8),0 0 28px rgba(242,201,76,.4);line-height:1.15;animation:sloganPulse 3s ease-in-out infinite}
 .hmeta{margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:3px}
 .hedition{background:transparent;border:none;border-radius:var(--rs);padding:8px 18px;font-size:21px;font-weight:600;animation:rainbow .6s linear infinite}
 .sub-hero{position:relative;padding:34px 20px 22px;text-align:center;overflow:hidden}
