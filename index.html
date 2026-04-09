@@ -2361,16 +2361,7 @@ fetch('/api')
   .then(function(r){return r.json();})
   .then(function(nd){
     RAW=nd;renderHome();renderContactSw();applyOslLabel();
-    if(nd.pitchMode){
-      _pitchMode=nd.pitchMode;
-      // Pré-configurer le display des modes pour éviter le flash à l'ouverture
-      if(_pitchMode==='gif'){
-        var _mn=document.getElementById('m-pitch-mode-normal');
-        var _mg=document.getElementById('m-pitch-mode-gif');
-        if(_mn)_mn.style.display='none';
-        if(_mg)_mg.style.display='flex';
-      }
-    }
+    if(nd.pitchMode){_pitchMode=nd.pitchMode;}
     if(nd.gifIndex!==undefined){window._serverGifIndex=nd.gifIndex;} // sera appliqué dans loadVideoList après chargement des gifs
     if(nd.homeMode){
       _lastKnownServerMode=nd.homeMode;
