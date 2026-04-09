@@ -427,7 +427,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 <div class="moverlay" id="m-home-pitch" onclick="if(event.target===this)closeM('m-home-pitch')">
   <div class="mbox">
     <!-- MODE NORMAL : structure originale intacte -->
-    <div class="mbox-inner" id="m-pitch-mode-normal">
+    <div class="mbox-inner" id="m-pitch-mode-normal" style="display:none">
       <div id="m-home-pitch-photos" onclick="pitchSecretTap(event)">
         <div id="m-home-pitch-photos-inner"></div>
       </div>
@@ -1252,13 +1252,20 @@ function applyPitchMode(mode){
 // ============================================================
 
 function openM(id){
+  // Pour la modale pitch : appliquer le mode AVANT l'ajout de 'open'
+  if(id==='m-home-pitch'){
+    var _mn=document.getElementById('m-pitch-mode-normal');
+    var _mg=document.getElementById('m-pitch-mode-gif');
+    if(_pitchMode==='gif'){if(_mn)_mn.style.display='none';if(_mg)_mg.style.display='flex';}
+    else{if(_mg)_mg.style.display='none';if(_mn)_mn.style.display='';}
+  }
   var el=document.getElementById(id);el.classList.add('open');
   document.body.style.overflow='hidden';
   document.body.classList.add('modal-open');
   if(id==='m-osl')renderOslPitch();
   if(id==='m-pitch-big')renderPitchBig();
   if(id==='m-home-pitch'||id==='m-renseignements'||id==='m-resa'){muteVideo();_videoMuted=true;}
-  if(id==='m-home-pitch'){initPitchPhotos();if(window._initPitchTouchControl)window._initPitchTouchControl();setTimeout(function(){applyPitchMode(_pitchMode);},50);}
+  if(id==='m-home-pitch'){initPitchPhotos();if(window._initPitchTouchControl)window._initPitchTouchControl();setTimeout(function(){applyPitchMode(_pitchMode);},80);}
   if(id!=='m-marco'&&id!=='m-pin'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
 }
 function closeM(id){
