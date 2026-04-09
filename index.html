@@ -382,7 +382,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
     <div class="sht sht-amber">INSCRIPTION</div>
   </div>
   <div id="rules-content"><div class="empty">Chargement…</div></div>
-  <div class="spacer" style="height:16px"></div>
+  <div class="spacer" id="rules-spacer" style="height:70px"></div>
 </div>
 <div id="rules-more-btn" style="display:none">
   <button id="rules-more-btn-inner" onclick="toggleRulesBig()">Plus de détails</button>
@@ -1751,6 +1751,9 @@ function renderRules(){
     card.appendChild(marcoP);
   }
   wrap.appendChild(card);re.appendChild(wrap);
+  // Ajuster spacer : en mode normal resa_on, juste le lien Marco suffit
+  var sp=document.getElementById('rules-spacer');
+  if(sp)sp.style.height=_rulesBigMode?'70px':'16px';
 }
 
 function bnResaClick(){
