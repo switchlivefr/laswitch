@@ -702,7 +702,7 @@ function nav(id,direction){
         var j1val='';
         if(RAW.osl&&RAW.osl.rows&&RAW.osl.rows[0])j1val=(RAW.osl.rows[0][9]||'').trim().toLowerCase();
         var label=document.getElementById('reper-side-hint-label');
-        if(label)label.textContent=(j1val==='true'||j1val==='vrai')?'One Shot LIVE':'Special KIF';
+        if(label)label.textContent=(j1val==='true'||j1val==='vrai')?'One Shot LIVE':'Special KIFF';
         var el=document.getElementById('reper-side-hint');
         if(el)el.classList.add('visible');
       },10000);
@@ -1465,9 +1465,9 @@ function applyOslLabel(){
   var j1val=(g(RAW.osl.rows,0,9)||'').trim().toLowerCase();
   var isOSL=(j1val==='true'||j1val==='vrai');
   var bnlbl=document.getElementById('osl-bn-label');
-  if(bnlbl)bnlbl.textContent=isOSL?'One Shot Live':'Special KIF';
+  if(bnlbl)bnlbl.textContent=isOSL?'One Shot Live':'Special KIFF';
   var ttxt=document.getElementById('osl-page-title-txt');
-  if(ttxt)ttxt.textContent=isOSL?'ONE SHOT LIVE':'SPECIAL KIF';
+  if(ttxt)ttxt.textContent=isOSL?'ONE SHOT LIVE':'SPECIAL KIFF';
   var btn=document.getElementById('osl-info-btn-wrap');
   if(btn)btn.style.display=isOSL?'':'none';
 }
@@ -1481,8 +1481,8 @@ function renderOSL(){
   // J1 = index 9 : détermine le nom affiché
   var j1val=(g(rows,0,9)||'').trim().toLowerCase();
   var isOSL=(j1val==='true'||j1val==='vrai');
-  var oslName=isOSL?'ONE SHOT LIVE':'SPECIAL KIF';
-  var oslNameNav=isOSL?'One Shot Live':'Special KIF';
+  var oslName=isOSL?'ONE SHOT LIVE':'SPECIAL KIFF';
+  var oslNameNav=isOSL?'One Shot Live':'Special KIFF';
   var ttxt=document.getElementById('osl-page-title-txt');if(ttxt)ttxt.textContent=oslName;
   var bnlbl=document.getElementById('osl-bn-label');if(bnlbl)bnlbl.textContent=oslNameNav;
   var noChoice="Aucun choix possible pour l'instant";
