@@ -361,7 +361,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 
 <div class="page" id="p-osl">
   <div class="sub-hero sh-cyan">
-    <div class="sht sht-cyan"><span style="font-size:0.7em">✨</span> ONE SHOT LIVE <span style="font-size:0.7em">✨</span></div>
+    <div class="sht sht-cyan" id="osl-page-title"><span style="font-size:0.7em">✨</span> <span id="osl-page-title-txt">ONE SHOT LIVE</span> <span style="font-size:0.7em">✨</span></div>
   </div>
   <div id="osl-status-wrap" style="padding:10px 16px 4px;text-align:center"><span id="osl-status" style="font-weight:700;font-size:19px;animation:rainbow 3s linear infinite">—</span></div>
   <div class="osl-info-btn pulse-btn" onclick="openM('m-osl')" style="margin-top:14px"><span id="osl-info-lbl">Ta prestation au ✨One Shot LIVE✨</span></div>
@@ -391,7 +391,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 <nav class="bnav">
   <button class="bn active" id="bn-home" onclick="nav('p-home')"><span class="ico">🏠</span><span>Accueil</span></button>
   <button class="bn" id="bn-switch" onclick="nav('p-switch')"><span class="ico" style="filter:hue-rotate(140deg) saturate(3) brightness(1.2)">🎵</span><span>Répertoire</span></button>
-  <button class="bn" id="bn-osl" onclick="nav('p-osl')"><span class="ico">✨</span><span>One Shot Live</span></button>
+  <button class="bn" id="bn-osl" onclick="nav('p-osl')"><span class="ico">✨</span><span id="osl-bn-label">One Shot Live</span></button>
   <button class="bn" id="bn-rules" onclick="nav('p-rules')"><span class="ico">📋</span><span>Inscription</span></button>
   <button class="bn" id="bn-resa" onclick="bnResaClick()"><span class="ico" id="bn-resa-ico">🍽️</span><span id="bn-resa-lbl">Réservation</span></button>
 </nav>
@@ -1467,6 +1467,13 @@ function renderOSL(){
   var rows=RAW.osl.rows;
   var edition=g(rows,0,2),statusTxt=g(rows,2,2),i1val=g(rows,0,8);
   var isTimed=i1val.toLowerCase()==='vrai'||i1val.toLowerCase()==='true';
+  // J1 = index 9 : détermine le nom affiché
+  var j1val=(g(rows,0,9)||'').trim().toLowerCase();
+  var isOSL=(j1val==='true'||j1val==='vrai');
+  var oslName=isOSL?'ONE SHOT LIVE':'SPECIAL KIF';
+  var oslNameNav=isOSL?'One Shot Live':'Special KIF';
+  var ttxt=document.getElementById('osl-page-title-txt');if(ttxt)ttxt.textContent=oslName;
+  var bnlbl=document.getElementById('osl-bn-label');if(bnlbl)bnlbl.textContent=oslNameNav;
   var noChoice="Aucun choix possible pour l'instant";
   var ss=document.getElementById('osl-shsub');if(ss&&edition)ss.textContent=edition;
   document.getElementById('osl-status').textContent=statusTxt||noChoice;
