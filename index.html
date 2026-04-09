@@ -364,7 +364,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
     <div class="sht sht-cyan" id="osl-page-title"><span style="font-size:0.7em">✨</span> <span id="osl-page-title-txt">ONE SHOT LIVE</span> <span style="font-size:0.7em">✨</span></div>
   </div>
   <div id="osl-status-wrap" style="padding:10px 16px 4px;text-align:center"><span id="osl-status" style="font-weight:700;font-size:19px;animation:rainbow 3s linear infinite">—</span></div>
-  <div class="osl-info-btn pulse-btn" onclick="openM('m-osl')" style="margin-top:14px"><span id="osl-info-lbl">Ta prestation au ✨One Shot LIVE✨</span></div>
+  <div id="osl-info-btn-wrap" class="osl-info-btn pulse-btn" onclick="openM('m-osl')" style="margin-top:14px"><span id="osl-info-lbl">Ta prestation au ✨One Shot LIVE✨</span></div>
   <div id="osl-edition-wrap" style="padding:6px 16px 2px;text-align:center"><span id="osl-shsub" style="font-weight:700;color:var(--gold);font-size:16px">—</span></div>
   <div id="osl-content"><div class="empty">Chargement…</div></div>
   <div class="spacer"></div>
@@ -1469,6 +1469,8 @@ function applyOslLabel(){
   if(bnlbl)bnlbl.textContent=isOSL?'One Shot Live':'Special KIF';
   var ttxt=document.getElementById('osl-page-title-txt');
   if(ttxt)ttxt.textContent=isOSL?'ONE SHOT LIVE':'SPECIAL KIF';
+  var btn=document.getElementById('osl-info-btn-wrap');
+  if(btn)btn.style.display=isOSL?'':'none';
 }
 
 function renderOSL(){
