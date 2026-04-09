@@ -1260,7 +1260,16 @@ function openM(id){
   if(id==='m-osl')renderOslPitch();
   if(id==='m-pitch-big')renderPitchBig();
   if(id==='m-home-pitch'||id==='m-renseignements'||id==='m-resa'){muteVideo();_videoMuted=true;}
-  if(id==='m-home-pitch'){applyPitchMode(_pitchMode);initPitchPhotos();if(window._initPitchTouchControl)window._initPitchTouchControl();}
+  if(id==='m-home-pitch'){
+    // Masquer immédiatement le mauvais mode avant que la modale soit visible
+    var _mn=document.getElementById('m-pitch-mode-normal');
+    var _mg=document.getElementById('m-pitch-mode-gif');
+    if(_pitchMode==='gif'){if(_mn)_mn.style.display='none';if(_mg)_mg.style.display='flex';}
+    else{if(_mg)_mg.style.display='none';if(_mn)_mn.style.display='';}
+    initPitchPhotos();
+    if(window._initPitchTouchControl)window._initPitchTouchControl();
+    setTimeout(function(){applyPitchMode(_pitchMode);},80);
+  }
   if(id!=='m-marco'&&id!=='m-pin'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
 }
 function closeM(id){
