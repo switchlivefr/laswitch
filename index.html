@@ -1736,6 +1736,20 @@ function renderRules(){
       }
     }
   }
+  // En mode resa_on, ajouter le lien Marco Kiff Ton SWiTCH en bas
+  if(!_resaOff){
+    var marcoP=document.createElement('p');
+    marcoP.style.marginTop='16px';
+    var marcoA=document.createElement('a');
+    marcoA.href='#';
+    marcoA.style.color='#1877f2';
+    marcoA.style.fontWeight='700';
+    marcoA.style.textDecoration='none';
+    marcoA.textContent='Marco Kiff Ton SWiTCH';
+    marcoA.onclick=function(e){e.preventDefault();document.getElementById('c-marco-fb').classList.add('open');document.body.classList.add('coverlay-open');};
+    marcoP.appendChild(marcoA);
+    card.appendChild(marcoP);
+  }
   wrap.appendChild(card);re.appendChild(wrap);
 }
 
