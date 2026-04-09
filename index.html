@@ -1992,6 +1992,11 @@ function loadVideoList(){
         applyGif(window._gifIndex);
         initGifLongPress();
       }
+      // Précharger le gif dans la modale pitch pour affichage instantané
+      var pitchGifEl=document.getElementById('m-pitch-gif');
+      if(pitchGifEl&&window._allGifs.length){
+        pitchGifEl.src=window._allGifs[window._gifIndex||0];
+      }
     }).catch(function(){});
 }
 function applyVideos(){
