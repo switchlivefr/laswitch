@@ -1031,11 +1031,11 @@ function initPitchPhotos(){
     }
   }
 
-  function initPitchTouchControl(containerId, innerId){
-    var container = document.getElementById(containerId||'m-home-pitch-photos');
+  function initPitchTouchControl(){
+    var container = document.getElementById('m-home-pitch-photos');
     if(!container || container._touchInit) return;
     container._touchInit = true;
-    inner = document.getElementById(innerId||'m-home-pitch-photos-inner')||getInner();
+    inner = getInner();
 
     container.addEventListener('touchstart', function(e){
       inner = getInner(); if(!inner) return;
@@ -1073,6 +1073,89 @@ function initPitchPhotos(){
   }
 
   window._initPitchTouchControl = initPitchTouchControl;
+})();
+
+// Touch control pour m-pitch-big-photos — closure séparée
+(function(){
+  var BASE_DUR = 120;
+  var inner2, totalH2, currentOffset2, raf2, lastT2;
+  var dragging2 = false;
+  var touchStartY2, touchLastY2, velocity2;
+
+  function getInner2(){ return document.getElementById('m-pitch-big-photos-inner'); }
+
+  function getCurrentY2(){
+    var mat = new DOMMatrix(getComputedStyle(inner2).transform);
+    return mat.m42;
+  }
+
+  function pauseAnim2(){
+    var y = getCurrentY2();
+    totalH2 = inner2.scrollHeight / 2;
+    currentOffset2 = y % totalH2;
+    if(currentOffset2 > 0) currentOffset2 -= totalH2;
+    inner2.style.animation = 'none';
+    inner2.style.transform = 'translateY(' + currentOffset2 + 'px)';
+  }
+
+  function resumeAnim2(){
+    var pct = totalH2 > 0 ? (-currentOffset2 / totalH2) : 0;
+    var delay = -(BASE_DUR * pct);
+    inner2.style.transform = '';
+    inner2.style.animation = 'pitchPhotoUp ' + BASE_DUR + 's ' + delay + 's linear infinite';
+  }
+
+  function animate2(){
+    if(!dragging2){
+      velocity2 *= 0.88;
+      currentOffset2 += velocity2;
+      if(currentOffset2 < -totalH2) currentOffset2 += totalH2;
+      if(currentOffset2 > 0) currentOffset2 -= totalH2;
+      inner2.style.transform = 'translateY(' + currentOffset2 + 'px)';
+      if(Math.abs(velocity2) > 0.3){ raf2 = requestAnimationFrame(animate2); }
+      else{ resumeAnim2(); }
+    }
+  }
+
+  function initPitchBigTouchControl(){
+    var container = document.getElementById('m-pitch-big-photos');
+    if(!container || container._touchInit) return;
+    container._touchInit = true;
+    inner2 = getInner2();
+
+    container.addEventListener('touchstart', function(e){
+      inner2 = getInner2(); if(!inner2) return;
+      cancelAnimationFrame(raf2);
+      touchStartY2 = e.touches[0].clientY;
+      touchLastY2 = touchStartY2;
+      velocity2 = 0; lastT2 = Date.now(); dragging2 = true;
+      totalH2 = inner2.scrollHeight / 2;
+      pauseAnim2();
+    }, {passive:true});
+
+    container.addEventListener('touchmove', function(e){
+      if(!dragging2 || !inner2) return;
+      var y = e.touches[0].clientY;
+      var dt = Math.max(1, Date.now() - lastT2);
+      velocity2 = (y - touchLastY2) / dt * 16;
+      touchLastY2 = y; lastT2 = Date.now();
+      currentOffset2 += (y - touchLastY2 + velocity2 * dt / 16);
+      currentOffset2 = touchLastY2 !== y ? currentOffset2 : currentOffset2;
+      var dy = e.touches[0].clientY - touchLastY2 + velocity2*dt/16;
+      currentOffset2 += dy;
+      if(currentOffset2 < -totalH2) currentOffset2 += totalH2;
+      if(currentOffset2 > 0) currentOffset2 -= totalH2;
+      inner2.style.transform = 'translateY(' + currentOffset2 + 'px)';
+    }, {passive:true});
+
+    container.addEventListener('touchend', function(){
+      if(!dragging2) return;
+      dragging2 = false;
+      raf2 = requestAnimationFrame(animate2);
+    }, {passive:true});
+  }
+
+  window._initPitchBigTouchControl = initPitchBigTouchControl;
 })();
 // ============================================================
 // FIN PHOTOS PITCH
@@ -1326,7 +1409,7 @@ function openM(id){
   document.body.style.overflow='hidden';
   document.body.classList.add('modal-open');
   if(id==='m-osl')renderOslPitch();
-  if(id==='m-pitch-big'){renderPitchBig();initPitchBigPhotos();if(window._initPitchTouchControl)window._initPitchTouchControl('m-pitch-big-photos','m-pitch-big-photos-inner');}
+  if(id==='m-pitch-big'){renderPitchBig();initPitchBigPhotos();if(window._initPitchBigTouchControl)window._initPitchBigTouchControl();}
   if(id==='m-home-pitch'||id==='m-renseignements'||id==='m-resa'){muteVideo();_videoMuted=true;}
   if(id==='m-home-pitch'){initPitchPhotos();if(window._initPitchTouchControl)window._initPitchTouchControl();setTimeout(function(){applyPitchMode(_pitchMode);},80);}
   if(id!=='m-marco'&&id!=='m-pin'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
