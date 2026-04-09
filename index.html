@@ -36,6 +36,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 @keyframes hintpulse{0%,100%{color:var(--gold);opacity:.1}50%{color:var(--gold);opacity:1}}
 @keyframes rainbow{0%{color:#f2c94c}14%{color:#e8943a}28%{color:#e8407a}42%{color:#c471ed}57%{color:#5b9cf6}71%{color:#34d1c0}85%{color:#a8e063}100%{color:#f2c94c}}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes btnpulse-amber{0%,100%{background:rgba(232,148,58,.07);border-color:rgba(232,148,58,.22)}50%{background:rgba(232,148,58,.35);border-color:rgba(232,148,58,.7)}}
+#rules-more-btn{position:fixed;bottom:calc(var(--nh) + env(safe-area-inset-bottom));left:0;right:0;z-index:150;padding:8px 16px;background:var(--bg);border-top:1px solid var(--border)}
+#rules-more-btn button{display:flex;align-items:center;justify-content:center;width:100%;background:rgba(232,148,58,.07);border:1px solid rgba(232,148,58,.22);border-radius:var(--r);padding:12px 16px;cursor:pointer;font-size:15px;font-weight:600;color:var(--amber);animation:btnpulse-amber 3s ease-in-out infinite}
+@media(min-width:600px){#rules-more-btn{max-width:480px;left:50%;transform:translateX(-50%);right:auto;width:480px}}
 @keyframes reperHintPulse{0%,100%{opacity:0}50%{opacity:1}}
 #reper-side-hint{position:fixed;right:8px;top:50%;transform:translateY(-50%);z-index:9999;pointer-events:none;opacity:0;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:0px;color:var(--gold);line-height:1.3;white-space:nowrap;transition:opacity .5s;background:rgba(8,8,16,.55);border:1px solid rgba(242,201,76,.2);border-radius:12px;padding:14px 12px}
 #reper-side-hint.visible{opacity:1;pointer-events:auto}
@@ -377,8 +381,11 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
   <div class="sub-hero sh-amber">
     <div class="sht sht-amber">INSCRIPTION</div>
   </div>
-  <div id="rules-content"><div class="empty">Chargement…</div></div>
+  <div id="rules-content" style="padding-bottom:70px"><div class="empty">Chargement…</div></div>
   <div class="spacer"></div>
+</div>
+<div id="rules-more-btn" style="display:none">
+  <button id="rules-more-btn-inner" onclick="toggleRulesBig()">Plus de détails</button>
 </div>
 
 <div class="page" id="p-resa">
@@ -717,9 +724,20 @@ function nav(id,direction){
     }
 }
   if(id==='p-osl'){renderOSL();reperHintDismiss();}
-  if(id==='p-rules'){renderRules();hideHint();var shdR=document.getElementById('scroll-hint-down');if(shdR)shdR.style.bottom='calc(var(--nh) + 16px)';setTimeout(initScrollHints,400);}
+  if(id==='p-rules'){
+    _rulesBigMode=false;
+    var moreBtn=document.getElementById('rules-more-btn');
+    if(moreBtn)moreBtn.style.display='block';
+    var moreBtnInner=document.getElementById('rules-more-btn-inner');
+    if(moreBtnInner)moreBtnInner.textContent='Plus de détails';
+    renderRules();hideHint();
+    var shdR=document.getElementById('scroll-hint-down');
+    if(shdR)shdR.style.bottom='calc(var(--nh) + 70px)';
+    setTimeout(initScrollHints,400);
+  }
   if(id==='p-resa'){renderInfo();hideHint();var shdI=document.getElementById('scroll-hint-down');if(shdI){shdI.classList.remove('visible');shdI.style.bottom='calc(var(--nh) + 112px)';}setTimeout(initScrollHints,400);}
   if(id==='p-home'){hideHint();hideScrollHints();}
+  if(id!=='p-rules'){var moreBtn=document.getElementById('rules-more-btn');if(moreBtn)moreBtn.style.display='none';}
   // Bandeau répertoire : visible seulement sur p-switch si pas encore dismissed
   (function(){
     var sh=document.getElementById('reper-side-hint');
@@ -1673,9 +1691,19 @@ function isRH(t){var tu=t.toUpperCase().trim();for(var i=0;i<RULE_HEADERS.length
 function isRS(t){for(var i=0;i<RULE_SUBHEADERS.length;i++){if(t.indexOf(RULE_SUBHEADERS[i])>-1)return true;}return false;}
 function isRK(t){for(var i=0;i<RULE_SKIP.length;i++){if(t.indexOf(RULE_SKIP[i])>-1)return true;}return false;}
 
+var _rulesBigMode = false;
+
+function toggleRulesBig(){
+  _rulesBigMode = !_rulesBigMode;
+  var btn = document.getElementById('rules-more-btn-inner');
+  if(btn) btn.textContent = _rulesBigMode ? 'Moins de détails' : 'Plus de détails';
+  renderRules();
+}
+
 function renderRules(){
   var re=document.getElementById('rules-content');
-  var d=RAW.regles;if(!d||d.error){re.textContent='Donnees indisponibles';return;}
+  var d=_rulesBigMode?(RAW.reglesBig||RAW.regles):RAW.regles;
+  if(!d||d.error){re.textContent='Donnees indisponibles';return;}
   var rows=d.rows;re.innerHTML='';
   var wrap=document.createElement('div');wrap.className='cc-wrap';
   var card=document.createElement('div');card.className='cc';
