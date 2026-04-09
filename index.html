@@ -1415,18 +1415,14 @@ function openM(id){
     initPitchPhotos();
     if(window._initPitchTouchControl)window._initPitchTouchControl();
     setTimeout(function(){applyPitchMode(_pitchMode);},80);
-    // Précharger les photos de la 2e fenetre en arrière-plan
+    // Copier les photos déjà rendues dans la 1ere fenetre vers la 2e
     setTimeout(function(){
-      var photos=window._pitchPhotos||[];
-      if(!photos.length)return;
-      // Forcer le navigateur à charger les images en mémoire
-      photos.forEach(function(p){
-        var img=new Image();
-        img.src=p.url||p.thumb||p.full;
-      });
-      // Remplir le DOM en même temps
-      fillPitchBigPhotos(photos);
-    },500);
+      var src=document.getElementById('m-home-pitch-photos-inner');
+      var dst=document.getElementById('m-pitch-big-photos-inner');
+      if(src&&dst&&src.children.length>0&&dst.children.length===0){
+        dst.innerHTML=src.innerHTML;
+      }
+    },300);
   }
   if(id!=='m-marco'&&id!=='m-pin'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
 }
