@@ -1736,8 +1736,8 @@ function renderRules(){
       }
     }
   }
-  // En mode resa_on, ajouter le lien Marco Kiff Ton SWiTCH en bas
-  if(!_resaOff){
+  // En mode resa_on et REGLES (pas REGLES BIG), ajouter le lien Marco en bas
+  if(!_resaOff && !_rulesBigMode){
     var marcoP=document.createElement('p');
     marcoP.style.marginTop='16px';
     var marcoA=document.createElement('a');
