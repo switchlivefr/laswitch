@@ -1216,8 +1216,24 @@ function applyPitchMode(mode){
     if(normal) normal.style.display = 'none';
     if(gif) gif.style.display = 'flex';
     var pitchGif = document.getElementById('m-pitch-gif');
-    if(pitchGif && window._allGifs && window._allGifs.length){
-      pitchGif.src = window._allGifs[window._gifIndex||0] + '?r=' + Date.now();
+    function _setPitchGifSrc(){
+      if(pitchGif && window._allGifs && window._allGifs.length){
+        var url = window._allGifs[window._gifIndex||0];
+        if(pitchGif.src !== url) pitchGif.src = url;
+      }
+    }
+    if(window._allGifs && window._allGifs.length){
+      _setPitchGifSrc();
+    } else {
+      // Attendre que loadVideoList ait chargé les gifs
+      var _gifWait = setInterval(function(){
+        if(window._allGifs && window._allGifs.length){
+          clearInterval(_gifWait);
+          _setPitchGifSrc();
+        }
+      }, 100);
+      // Forcer le chargement si pas encore fait
+      if(!window._assetsLoaded) loadVideoList();
     }
     var gbody = document.getElementById('m-pitch-gif-body');
     var nbody = document.getElementById('m-home-pitch-body');
