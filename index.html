@@ -419,19 +419,6 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 </div>
 
 <!-- MODALE : Consulte OSL en priorité -->
-<div class="moverlay" id="m-reper-osl" style="pointer-events:all;opacity:0">
-  <div class="mbox" style="text-align:center">
-    <div class="mbody" style="padding:28px 24px 20px;text-align:center">
-      <div style="font-family:'DM Sans',sans-serif;font-weight:700;font-size:19px;color:var(--cyan);line-height:1.35;margin-bottom:4px">Tu as l'habitude de la SWiTCH !</div>
-      <div style="font-family:'DM Sans',sans-serif;font-weight:700;font-size:19px;color:var(--cyan);line-height:1.35;margin-bottom:14px">Consulte d'abord la shortlist du</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:2px;line-height:1;color:var(--cyan)">✨ ONE SHOT LIVE ✨</div>
-    </div>
-    <div class="mfoot" style="gap:8px">
-      <button class="mbtn sec" onclick="closeM('m-reper-osl');showHint()">Annuler</button>
-      <button class="mbtn" style="background:var(--cyan);color:#000" onclick="closeM('m-reper-osl');nav('p-osl')">Valider</button>
-    </div>
-  </div>
-</div>
 
 <!-- MODALE : C'est quoi la SWiTCH -->
 <div class="moverlay" id="m-home-pitch" onclick="if(event.target===this)closeM('m-home-pitch')">
@@ -668,7 +655,6 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 var RAW = {};
 var T = document.createElement('div');
 var currentPage = 'p-home';
-var _reperShown = false;
 var _resaOff = false;
 var searchQuery = '';
 var allSongs = [];
@@ -718,20 +704,8 @@ function nav(id,direction){
         if(el)el.classList.add('visible');
       },10000);
     }
-    if(!_reperShown){_reperShown=true;setTimeout(function(){
-    // Vérifier qu'il y a des titres dans OSL avant d'ouvrir la modale
-    var hasSongs=false;
-    if(RAW.osl&&RAW.osl.rows){
-      var oslRows=RAW.osl.rows;
-      for(var oi=4;oi<oslRows.length;oi++){
-        var oa=(oslRows[oi][0]||'').trim(),ot=(oslRows[oi][2]||'').trim();
-        if(oa==='FIN'||ot==='fin'||ot.toLowerCase()==='zzz')break;
-        if(oa&&ot){hasSongs=true;break;}
-      }
-    }
-    if(hasSongs)openM('m-reper-osl');
-  },200);}}
-  if(id==='p-osl'){renderOSL();_reperShown=true;reperHintDismiss();}
+}
+  if(id==='p-osl'){renderOSL();reperHintDismiss();}
   if(id==='p-rules'){renderRules();hideHint();var shdR=document.getElementById('scroll-hint-down');if(shdR)shdR.style.bottom='calc(var(--nh) + 16px)';setTimeout(initScrollHints,400);}
   if(id==='p-resa'){renderInfo();hideHint();var shdI=document.getElementById('scroll-hint-down');if(shdI){shdI.classList.remove('visible');shdI.style.bottom='calc(var(--nh) + 112px)';}setTimeout(initScrollHints,400);}
   if(id==='p-home'){hideHint();hideScrollHints();}
@@ -1278,7 +1252,6 @@ function openM(id){
   var el=document.getElementById(id);el.classList.add('open');
   document.body.style.overflow='hidden';
   document.body.classList.add('modal-open');
-  if(id==='m-reper-osl'){el.classList.add('fadein');}
   if(id==='m-osl')renderOslPitch();
   if(id==='m-pitch-big')renderPitchBig();
   if(id==='m-home-pitch'||id==='m-renseignements'||id==='m-resa'){muteVideo();_videoMuted=true;}
@@ -2348,7 +2321,7 @@ function secretTap2(){
 var _tapCount=0,_tapTimer=null;
 function applyResaMode(mode){
   _resaOff=(mode==='off');
-  if(_resaOff){_reperShown=true;} // en resa_on on ne touche pas _reperShown
+
   var horaires=document.getElementById('m-marco-horaires');if(horaires)horaires.style.display=_resaOff?'none':'block';
   var btn=document.getElementById('bn-resa');if(!btn)return;
   var bnIco=document.getElementById('bn-resa-ico');
