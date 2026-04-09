@@ -140,15 +140,15 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .mbody a{display:block}
 .mbox{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);width:100%;max-width:460px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden}
 /* Modale pitch : layout avec colonne photos gauche */
-#m-home-pitch .mbox{max-width:460px;flex-direction:column}
-#m-home-pitch .mbox-inner{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
+#m-home-pitch .mbox,#m-pitch-big .mbox{max-width:460px;flex-direction:column}
+#m-home-pitch .mbox-inner,#m-pitch-big .mbox-inner{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
 #m-home-pitch-photos,#m-pitch-big-photos{width:100px;flex-shrink:0;overflow:hidden;position:relative;background:var(--card)}
 #m-home-pitch-photos-inner,#m-pitch-big-photos-inner{display:flex;flex-direction:column;will-change:transform;animation:pitchPhotoUp 120s linear infinite}
 @keyframes pitchPhotoUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
 .pitch-photo-frame{width:100px;height:100px;overflow:hidden;cursor:pointer;flex-shrink:0;contain:strict}
 .pitch-photo-frame img{width:100px;height:100px;object-fit:cover;display:block;filter:brightness(0.65);transition:filter .2s;decoding:async}
 .pitch-photo-frame:hover img,.pitch-photo-frame:active img{filter:brightness(0.9)}
-#m-home-pitch .mbody{flex:1;overflow-y:auto;min-height:0}
+#m-home-pitch .mbody,#m-pitch-big .mbody{flex:1;overflow-y:auto;min-height:0}
 #m-home-pitch-hint{position:absolute;bottom:60px;left:50px;transform:translateX(-50%);pointer-events:none;opacity:0;transition:opacity .3s;z-index:2}
 .mhead{padding:16px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .mhead h3{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--cyan)}
@@ -454,7 +454,10 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
       </div>
       <div class="mbody" id="m-pitch-big-body"></div>
     </div>
-    <div class="mfoot" style="gap:8px"><button class="mbtn osl-info-btn pulse-btn" onclick="closeM('m-pitch-big')" style="flex:1;padding:10px 8px;margin:0;font-size:15px;font-weight:700;animation:btnpulse 3s ease-in-out infinite">En savoir moins</button><button class="mbtn sec" onclick="closeM('m-pitch-big');closeM('m-home-pitch')" style="flex:1">Fermer</button></div>
+    <div class="mfoot" style="gap:8px">
+      <button class="mbtn osl-info-btn pulse-btn" onclick="closeM('m-pitch-big')" style="flex:1;padding:10px 8px;margin:0;font-size:15px;font-weight:700;animation:btnpulse 3s ease-in-out infinite">En savoir moins</button>
+      <button class="mbtn sec" onclick="closeM('m-pitch-big');closeM('m-home-pitch')" style="flex:1">Fermer</button>
+    </div>
   </div>
 </div>
 
