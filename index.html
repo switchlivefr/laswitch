@@ -1764,7 +1764,9 @@ function openMarco(title, ctx, full) {
     document.getElementById('m-inscription-infos').style.display = 'none';
     document.getElementById('m-marco-btn-contact').style.display = 'none';
     document.getElementById('m-marco-head').textContent = "CONTACTE MARCO POUR T'INSCRIRE";
-    var msg = (ctx === 'osl')
+    var j1osl=(RAW.osl&&RAW.osl.rows&&RAW.osl.rows[0])?(RAW.osl.rows[0][9]||'').trim().toLowerCase():'';
+    var isOSLmode=(j1osl==='true'||j1osl==='vrai');
+    var msg = (ctx === 'osl' && isOSLmode)
       ? "Hello Marco !\nJe préfère intégrer le One Shot LIVE en réservant '" + title + "'"
       : "Hello Marco !\nJ'aimerais réserver '" + title + "' pour la prochaine SWiTCH";
     window._marcoMsg = msg;
