@@ -1416,7 +1416,7 @@ function openM(id){
     if(window._initPitchTouchControl)window._initPitchTouchControl();
     setTimeout(function(){applyPitchMode(_pitchMode);},80);
     // Précharger les photos de la 2e fenetre en arrière-plan
-    setTimeout(function(){fillPitchBigPhotos(window._pitchPhotos||[]);},500);
+    setTimeout(function(){initPitchBigPhotos();},500);
   }
   if(id!=='m-marco'&&id!=='m-pin'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
 }
