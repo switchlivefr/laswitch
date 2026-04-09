@@ -1461,6 +1461,16 @@ function jumpL(l){
   window.scrollTo({top:el2.getBoundingClientRect().top+window.scrollY-offset,behavior:'smooth'});
 }
 
+function applyOslLabel(){
+  if(!RAW.osl||!RAW.osl.rows)return;
+  var j1val=(g(RAW.osl.rows,0,9)||'').trim().toLowerCase();
+  var isOSL=(j1val==='true'||j1val==='vrai');
+  var bnlbl=document.getElementById('osl-bn-label');
+  if(bnlbl)bnlbl.textContent=isOSL?'One Shot Live':'Special KIF';
+  var ttxt=document.getElementById('osl-page-title-txt');
+  if(ttxt)ttxt.textContent=isOSL?'ONE SHOT LIVE':'SPECIAL KIF';
+}
+
 function renderOSL(){
   var ce=document.getElementById('osl-content');
   if(!RAW.osl||RAW.osl.error){ce.textContent='Donnees indisponibles';return;}
@@ -1678,7 +1688,7 @@ function silentRefresh(){
   fetch('/api')
     .then(function(r){return r.json();})
     .then(function(nd){
-      if(!nd)return;RAW=nd;renderHome();renderContactSw();
+      if(!nd)return;RAW=nd;renderHome();renderContactSw();applyOslLabel();
       if(nd.resaMode)applyResaMode(nd.resaMode);
       if(nd.pitchMode&&nd.pitchMode!==_pitchMode){_pitchMode=nd.pitchMode;}
       // Mettre à jour le gif si changé par quelqu'un d'autre
@@ -2370,7 +2380,7 @@ document.querySelector('.bnav').classList.add('nav-disabled');
 fetch('/api')
   .then(function(r){return r.json();})
   .then(function(nd){
-    RAW=nd;renderHome();renderContactSw();
+    RAW=nd;renderHome();renderContactSw();applyOslLabel();
     if(nd.pitchMode){_pitchMode=nd.pitchMode;}
     if(nd.gifIndex!==undefined){window._serverGifIndex=nd.gifIndex;} // sera appliqué dans loadVideoList après chargement des gifs
     if(nd.homeMode){
