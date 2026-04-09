@@ -701,6 +701,10 @@ function nav(id,direction){
   }
   currentPage=id;
   Object.keys(BNM).forEach(function(k){var b=document.getElementById(BNM[k]);if(b)b.classList.toggle('active',k===id);});
+  // Remettre le scroll à zéro sur la nouvelle page ET sur window
+  window.scrollTo(0,0);
+  var newPage=document.getElementById(id);
+  if(newPage){newPage.scrollTop=0;}
   var ne=document.getElementById(id);
   if(ne){
     ne.style.display='block';
@@ -725,7 +729,7 @@ function nav(id,direction){
       },10000);
     }
 }
-  if(id==='p-osl'){renderOSL();reperHintDismiss();window.scrollTo(0,0);}
+  if(id==='p-osl'){renderOSL();reperHintDismiss();}
   if(id==='p-rules'){
     _rulesBigMode=false;
     var moreBtn=document.getElementById('rules-more-btn');
@@ -1755,7 +1759,7 @@ function renderRules(){
   wrap.appendChild(card);re.appendChild(wrap);
   // Ajuster spacer : en mode normal resa_on, juste le lien Marco suffit
   var sp=document.getElementById('rules-spacer');
-  if(sp)sp.style.height=_rulesBigMode?'70px':(_resaOff?'70px':'16px');
+  if(sp)sp.style.height=_rulesBigMode?'70px':'16px';
 }
 
 function bnResaClick(){
