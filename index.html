@@ -37,8 +37,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 @keyframes rainbow{0%{color:#f2c94c}14%{color:#e8943a}28%{color:#e8407a}42%{color:#c471ed}57%{color:#5b9cf6}71%{color:#34d1c0}85%{color:#a8e063}100%{color:#f2c94c}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes reperHintPulse{0%,100%{opacity:0}50%{opacity:1}}
-#reper-side-hint{position:fixed;right:8px;top:50%;transform:translateY(-50%);z-index:9999;pointer-events:none;opacity:0;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;color:var(--gold);line-height:1.3;white-space:nowrap}
-#reper-side-hint.pulsing{animation:hintpulse 3s ease-in-out 3;pointer-events:none}
+#reper-side-hint{position:fixed;right:8px;top:50%;transform:translateY(-50%);z-index:9999;pointer-events:none;opacity:0;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;color:var(--gold);line-height:1.3;white-space:nowrap;transition:opacity .5s;background:rgba(8,8,16,.55);border:1px solid rgba(242,201,76,.2);border-radius:12px;padding:14px 12px}
+#reper-side-hint.visible{opacity:1;pointer-events:auto}
+#reper-side-hint-btn{display:block;margin-top:12px;width:100%;background:rgba(52,209,192,.07);border:1px solid rgba(52,209,192,.22);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;color:var(--cyan);cursor:pointer;padding:10px 16px;animation:btnpulse 3s ease-in-out infinite}
 @keyframes starPulse{0%,100%{opacity:.08;filter:brightness(1.5)}50%{opacity:.35;filter:brightness(3)}}
 @keyframes sloganPulse{0%,100%{opacity:.3}50%{opacity:1}}
 
@@ -384,7 +385,7 @@ body.modal-open #scroll-hint-down,body.modal-open #scroll-hint-up{opacity:0!impo
   <div id="info-lieu-btn"></div>
 </div>
 <div class="hint-bar" id="hint-bar">APPUI LONG SUR UN TITRE POUR S'INSCRIRE</div>
-<div id="reper-side-hint"><div>Jette un oeil au</div><div id="reper-side-hint-label">One Shot LIVE</div></div>
+<div id="reper-side-hint"><div>Jette un oeil au</div><div id="reper-side-hint-label">One Shot LIVE</div><button id="reper-side-hint-btn" onclick="reperHintValidate()">Valider</button></div>
 
 <nav class="bnav">
   <button class="bn active" id="bn-home" onclick="nav('p-home')"><span class="ico">🏠</span><span>Accueil</span></button>
@@ -705,17 +706,15 @@ function nav(id,direction){
     }else{ne.classList.add('active');}
   }
   if(id==='p-switch'){renderSwitch();showHint();
-    // Bandeau flottant droite (une seule fois)
-    if(!window._reperSideHintShown){
-      window._reperSideHintShown=true;
-      setTimeout(function(){
-        // Lire J1 de OSLSWiTCH (index 9)
+    // Bandeau flottant droite
+    if(!window._reperSideHintDone){
+      window._reperSideHintTimer=setTimeout(function(){
         var j1val='';
         if(RAW.osl&&RAW.osl.rows&&RAW.osl.rows[0])j1val=(RAW.osl.rows[0][9]||'').trim().toLowerCase();
         var label=document.getElementById('reper-side-hint-label');
         if(label)label.textContent=(j1val==='true'||j1val==='vrai')?'One Shot LIVE':'Special KIF';
         var el=document.getElementById('reper-side-hint');
-        if(el){el.classList.add('pulsing');el.addEventListener('animationend',function h(){el.classList.remove('pulsing');el.removeEventListener('animationend',h);});}
+        if(el)el.classList.add('visible');
       },10000);
     }
     if(!_reperShown){_reperShown=true;setTimeout(function(){
@@ -731,7 +730,7 @@ function nav(id,direction){
     }
     if(hasSongs)openM('m-reper-osl');
   },200);}}
-  if(id==='p-osl'){renderOSL();_reperShown=true;}
+  if(id==='p-osl'){renderOSL();_reperShown=true;reperHintDismiss();}
   if(id==='p-rules'){renderRules();hideHint();var shdR=document.getElementById('scroll-hint-down');if(shdR)shdR.style.bottom='calc(var(--nh) + 16px)';setTimeout(initScrollHints,400);}
   if(id==='p-resa'){renderInfo();hideHint();var shdI=document.getElementById('scroll-hint-down');if(shdI){shdI.classList.remove('visible');shdI.style.bottom='calc(var(--nh) + 112px)';}setTimeout(initScrollHints,400);}
   if(id==='p-home'){hideHint();hideScrollHints();}
@@ -1686,6 +1685,16 @@ function silentRefresh(){
     }).catch(function(){});
 }
 
+function reperHintDismiss(){
+  window._reperSideHintDone=true;
+  clearTimeout(window._reperSideHintTimer);
+  var el=document.getElementById('reper-side-hint');
+  if(el){el.style.opacity='0';el.style.pointerEvents='none';setTimeout(function(){el.classList.remove('visible');el.style.opacity='';el.style.pointerEvents='';},500);}
+}
+function reperHintValidate(){
+  reperHintDismiss();
+  nav('p-osl');
+}
 function showHint(){var el=document.getElementById('hint-bar');if(!el)return;el.classList.remove('pulsing');void el.offsetWidth;el.classList.add('pulsing');el.addEventListener('animationend',function h(){el.classList.remove('pulsing');el.removeEventListener('animationend',h);});}
 function hideHint(){var el=document.getElementById('hint-bar');if(el)el.classList.remove('pulsing');}
 
