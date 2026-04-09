@@ -10,7 +10,8 @@ const SHEETS = {
   'contactSw':       'CONTACT SWiTCH',
   'information':     'INFORMATION',
   'informationLieu': 'INFORMATION LIEU',
-  'pitchSwBig':    'PITCH SWiTCH BIG'
+  'pitchSwBig':    'PITCH SWiTCH BIG',
+  'reglesBig':     'REGLES BIG'
 };
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRxLRh2URcPDRhMKC9mQwDsToEBTGCkrRrULgAFqYSvaldTh2wWRZGP7vbZa9eMYWP/exec';
 
@@ -159,21 +160,37 @@ async function handleRequest(request, env) {
       ]);
       const assetsData = await videosRes.json();
 
+      // Gifs depuis R2
       let gifsData = [];
-      try {
-        const gifsRes = await fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/Gif', {
-          headers: { 'User-Agent': 'laswitch-app' }
-        });
-        gifsData = await gifsRes.json();
-      } catch(e) { gifsData = []; }
+      if (env.R2_BUCKET) {
+        try {
+          const gifsListed = await env.R2_BUCKET.list({ prefix: 'gifs/', delimiter: '/' });
+          gifsData = gifsListed.objects
+            .filter(obj => obj.key.match(/\.(gif|jpg|jpeg|png|webp)$/i))
+            .map(obj => ({
+              name: obj.key.split('/').pop(),
+              url: `https://www.laswitch.net/gifs/${encodeURIComponent(obj.key.split('/').pop())}`
+            }));
+        } catch(e) { gifsData = []; }
+      }
+      // Fallback GitHub si R2 vide
+      if (!gifsData.length) {
+        try {
+          const gifsRes = await fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets/Gif', {
+            headers: { 'User-Agent': 'laswitch-app' }
+          });
+          const gifsRaw = await gifsRes.json();
+          if (Array.isArray(gifsRaw)) gifsData = gifsRaw.filter(f => f.name.match(/\.(gif|jpg|jpeg|png|webp)$/i) && f.name !== '.gitkeep').map(f => ({ name: f.name, url: f.download_url }));
+        } catch(e) { gifsData = []; }
+      }
 
       const videos = Array.isArray(assetsData)
         ? assetsData.filter(f => f.name.match(/\.mp4$/i))
             .map(f => ({ name: f.name, url: f.download_url }))
         : [];
       const gifs = Array.isArray(gifsData)
-        ? gifsData.filter(f => f.name.match(/\.(gif|jpg|jpeg|png|webp)$/i) && f.name !== '.gitkeep')
-            .map(f => ({ name: f.name, url: f.download_url }))
+        ? gifsData.filter(f => f.name && f.name.match(/\.(gif|jpg|jpeg|png|webp)$/i) && f.name !== '.gitkeep')
+            .map(f => ({ name: f.name, url: f.url || f.download_url }))
         : [];
 
       return new Response(JSON.stringify({ photos, videos, gifs }), {
