@@ -437,7 +437,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
     <div id="m-pitch-mode-gif" style="display:none;flex:1;overflow:hidden;flex-direction:column;min-height:0">
       <div style="padding:14px 16px 4px;text-align:center;flex-shrink:0">
         <div class="home-gif-label">PRENDS LEUR PLACE</div>
-        <img id="m-pitch-gif" style="width:100%;max-width:380px;border-radius:var(--r);display:block;margin:0 auto" alt="">
+        <img id="m-pitch-gif" style="width:100%;max-width:380px;border-radius:var(--r);display:block;margin:0 auto;min-height:180px;background:var(--card)" alt="">
       </div>
       <div class="mbody" id="m-pitch-gif-body" onclick="pitchSecretTap(event)" style="padding-top:14px;border-top:1px solid var(--border);margin-top:8px"></div>
     </div>
@@ -1217,7 +1217,9 @@ function applyPitchMode(mode){
     if(gif) gif.style.display = 'flex';
     var pitchGif = document.getElementById('m-pitch-gif');
     if(pitchGif && window._allGifs && window._allGifs.length){
-      pitchGif.src = window._allGifs[window._gifIndex||0] + '?r=' + Date.now();
+      var gifUrl=window._allGifs[window._gifIndex||0];
+      // Si déjà préchargé, utiliser sans cache-bust pour affichage instantané
+      pitchGif.src=(window._pitchGifPreloaded===gifUrl)?gifUrl:gifUrl+'?r='+Date.now();
     }
     var gbody = document.getElementById('m-pitch-gif-body');
     var nbody = document.getElementById('m-home-pitch-body');
@@ -1985,6 +1987,17 @@ function loadVideoList(){
         applyGif(window._gifIndex);
         initGifLongPress();
       }
+      // Précharger le gif dans l'img de la modale pitch pour affichage instantané
+      (function(){
+        var idx=window._gifIndex||0;
+        var url=window._allGifs[idx];
+        if(!url)return;
+        var img=document.getElementById('m-pitch-gif');
+        if(img){img.src=url;} // précharge sans ?r= pour utiliser le cache navigateur
+        // Précharger aussi en Image() pour s'assurer que le navigateur le met en cache
+        var preload=new Image();preload.src=url;
+        window._pitchGifPreloaded=url;
+      })();
     }).catch(function(){});
 }
 function applyVideos(){
