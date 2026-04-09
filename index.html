@@ -142,8 +142,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 /* Modale pitch : layout avec colonne photos gauche */
 #m-home-pitch .mbox{max-width:460px;flex-direction:column}
 #m-home-pitch .mbox-inner{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
-#m-home-pitch-photos{width:100px;flex-shrink:0;overflow:hidden;position:relative;background:var(--card)}
-#m-home-pitch-photos-inner{display:flex;flex-direction:column;will-change:transform;animation:pitchPhotoUp 120s linear infinite}
+#m-home-pitch-photos,#m-pitch-big-photos{width:100px;flex-shrink:0;overflow:hidden;position:relative;background:var(--card)}
+#m-home-pitch-photos-inner,#m-pitch-big-photos-inner{display:flex;flex-direction:column;will-change:transform;animation:pitchPhotoUp 120s linear infinite}
 @keyframes pitchPhotoUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
 .pitch-photo-frame{width:100px;height:100px;overflow:hidden;cursor:pointer;flex-shrink:0;contain:strict}
 .pitch-photo-frame img{width:100px;height:100px;object-fit:cover;display:block;filter:brightness(0.65);transition:filter .2s;decoding:async}
@@ -448,7 +448,12 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 <!-- MODALE : En savoir plus (PITCH SWiTCH BIG) -->
 <div class="moverlay" id="m-pitch-big" onclick="if(event.target===this)closeM('m-pitch-big')" style="z-index:550">
   <div class="mbox">
-    <div class="mbody" id="m-pitch-big-body"></div>
+    <div class="mbox-inner">
+      <div id="m-pitch-big-photos">
+        <div id="m-pitch-big-photos-inner"></div>
+      </div>
+      <div class="mbody" id="m-pitch-big-body"></div>
+    </div>
     <div class="mfoot" style="gap:8px"><button class="mbtn osl-info-btn pulse-btn" onclick="closeM('m-pitch-big')" style="flex:1;padding:10px 8px;margin:0;font-size:15px;font-weight:700;animation:btnpulse 3s ease-in-out infinite">En savoir moins</button><button class="mbtn sec" onclick="closeM('m-pitch-big');closeM('m-home-pitch')" style="flex:1">Fermer</button></div>
   </div>
 </div>
@@ -1175,6 +1180,45 @@ function pinInput(idx,el){
 // ============================================================
 // MODALE PITCH : secret tap pour basculer mode normal <-> gif
 // ============================================================
+function fillPitchBigPhotos(photos){
+  var inner=document.getElementById('m-pitch-big-photos-inner');
+  if(!inner)return;
+  inner.innerHTML='';
+  var list=photos.slice();
+  list=list.concat(list);
+  list.forEach(function(p){
+    var frame=document.createElement('div');
+    frame.className='pitch-photo-frame';
+    var img=document.createElement('img');
+    img.src=p.thumb||p.url||p.full;
+    img.loading='lazy';img.decoding='async';img.alt='';
+    frame.appendChild(img);
+    var _src=p.full||p.url||p.thumb;
+    frame.addEventListener('click',function(){ window.openViewer(_src); });
+    var _touchMoved=false;
+    frame.addEventListener('touchstart',function(){ _touchMoved=false; },{passive:true});
+    frame.addEventListener('touchmove',function(){ _touchMoved=true; },{passive:true});
+    frame.addEventListener('touchend',function(e){
+      if(!_touchMoved){ e.preventDefault(); window.openViewer(_src); }
+    },{passive:false});
+    inner.appendChild(frame);
+  });
+}
+function initPitchBigPhotos(){
+  if(window._pitchPhotos&&window._pitchPhotos.length){
+    fillPitchBigPhotos(window._pitchPhotos);
+    return;
+  }
+  fetch('/api?action=getAssets')
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var photos=(data.photos||[]).map(function(f){return {url:f.url,thumb:f.url,full:f.full||f.url};});
+      window._allPhotos=photos; window._pitchPhotos=photos;
+      fillPitchBigPhotos(photos);
+    })
+    .catch(function(e){console.log('Pitch big photos erreur:',e);});
+}
+
 function renderPitchBig(){
   var el=document.getElementById('m-pitch-big-body');
   if(!el)return;
@@ -1279,7 +1323,7 @@ function openM(id){
   document.body.style.overflow='hidden';
   document.body.classList.add('modal-open');
   if(id==='m-osl')renderOslPitch();
-  if(id==='m-pitch-big')renderPitchBig();
+  if(id==='m-pitch-big'){renderPitchBig();initPitchBigPhotos();}
   if(id==='m-home-pitch'||id==='m-renseignements'||id==='m-resa'){muteVideo();_videoMuted=true;}
   if(id==='m-home-pitch'){initPitchPhotos();if(window._initPitchTouchControl)window._initPitchTouchControl();setTimeout(function(){applyPitchMode(_pitchMode);},80);}
   if(id!=='m-marco'&&id!=='m-pin'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
