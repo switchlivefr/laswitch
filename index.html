@@ -1031,11 +1031,11 @@ function initPitchPhotos(){
     }
   }
 
-  function initPitchTouchControl(){
-    var container = document.getElementById('m-home-pitch-photos');
+  function initPitchTouchControl(containerId, innerId){
+    var container = document.getElementById(containerId||'m-home-pitch-photos');
     if(!container || container._touchInit) return;
     container._touchInit = true;
-    inner = getInner();
+    inner = document.getElementById(innerId||'m-home-pitch-photos-inner')||getInner();
 
     container.addEventListener('touchstart', function(e){
       inner = getInner(); if(!inner) return;
@@ -1326,7 +1326,7 @@ function openM(id){
   document.body.style.overflow='hidden';
   document.body.classList.add('modal-open');
   if(id==='m-osl')renderOslPitch();
-  if(id==='m-pitch-big'){renderPitchBig();initPitchBigPhotos();}
+  if(id==='m-pitch-big'){renderPitchBig();initPitchBigPhotos();if(window._initPitchTouchControl)window._initPitchTouchControl('m-pitch-big-photos','m-pitch-big-photos-inner');}
   if(id==='m-home-pitch'||id==='m-renseignements'||id==='m-resa'){muteVideo();_videoMuted=true;}
   if(id==='m-home-pitch'){initPitchPhotos();if(window._initPitchTouchControl)window._initPitchTouchControl();setTimeout(function(){applyPitchMode(_pitchMode);},80);}
   if(id!=='m-marco'&&id!=='m-pin'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
