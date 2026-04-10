@@ -165,6 +165,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .mbody .sec{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--cyan);margin:14px 0 3px}
 .mbody .sec-osl-h{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--cyan);font-weight:700;margin:14px 0 4px;display:block}
 .mbody .sec-osl-s{font-family:'DM Sans',sans-serif;font-size:15px;color:var(--white);font-weight:700;margin:6px 0 2px;display:block}
+.mbody .sec-osl-z{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;margin:6px 0 2px;display:block;background:linear-gradient(90deg,#f2c94c,#e8407a,#34d1c0,#f2c94c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200% auto;animation:rainbow .8s linear infinite}
+.cc .sec.sub-z{font-size:15px;font-family:'DM Sans',sans-serif;font-weight:700;margin:6px 0 2px;display:block;background:linear-gradient(90deg,#f2c94c,#e8407a,#34d1c0,#f2c94c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200% auto;animation:rainbow .8s linear infinite}
 .mbody .sec-osl-t{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--cyan);font-weight:700;margin:18px 0 6px;display:block}
 .mbody a.marco{color:#5b9cf6;font-weight:700;text-decoration:none}
 .mfoot{padding:12px 18px;border-top:1px solid var(--border);flex-shrink:0;display:flex;gap:8px}
@@ -1344,6 +1346,7 @@ function renderPitchBig(){
     if(code==='T'){var t=document.createElement('div');t.className='sec-osl-t';t.textContent=txt;el.appendChild(t);}
     else if(code==='H'){var h=document.createElement('div');h.className='sec-osl-h';h.textContent=txt;el.appendChild(h);}
     else if(code==='S'){var s=document.createElement('div');s.className='sec-osl-s';s.textContent=txt;el.appendChild(s);}
+    else if(code==='Z'){var z=document.createElement('div');z.className='sec-osl-z';z.textContent=txt;el.appendChild(z);}
     else{var ls=txt.split('\n');for(var j=0;j<ls.length;j++){var l=ls[j].trim();if(!l)continue;var p=document.createElement('p');p.textContent=l;el.appendChild(p);}}
   }
 }
@@ -1406,6 +1409,7 @@ function applyPitchMode(mode){
           if(c==='T'){var el=document.createElement('div');el.className='sec-osl-t';el.textContent=t;gbody.appendChild(el);}
           else if(c==='H'){var el=document.createElement('div');el.className='sec-osl-h';el.textContent=t;gbody.appendChild(el);}
           else if(c==='S'){var el=document.createElement('div');el.className='sec-osl-s';el.textContent=t;gbody.appendChild(el);}
+          else if(c==='Z'){var el=document.createElement('div');el.className='sec-osl-z';el.textContent=t;gbody.appendChild(el);}
           else{var el=document.createElement('p');el.textContent=t;gbody.appendChild(el);}
         }
       }
@@ -1512,6 +1516,8 @@ function renderHome(){
       var h=document.createElement('div');h.className='sec-osl-h';h.textContent=txt;me.appendChild(h);
     }else if(code==='S'){
       var s=document.createElement('div');s.className='sec-osl-s';s.textContent=txt;me.appendChild(s);
+    }else if(code==='Z'){
+      var z=document.createElement('div');z.className='sec-osl-z';z.textContent=txt;me.appendChild(z);
     }else if(code==='K'){
       var lines=txt.split(/[\n\r]+/);
       for(var li=0;li<lines.length;li++){var line=lines[li].trim();if(!line)continue;var p=document.createElement('p');p.textContent=line;me.appendChild(p);}
@@ -1537,6 +1543,8 @@ function renderContactSw(){
       var h=document.createElement('div');h.className='sec-osl-h';h.textContent=txt;me.appendChild(h);
     }else if(code==='S'){
       var s=document.createElement('div');s.className='sec-osl-s';s.textContent=txt;me.appendChild(s);
+    }else if(code==='Z'){
+      var z=document.createElement('div');z.className='sec-osl-z';z.textContent=txt;me.appendChild(z);
     }else if(code==='K'){
       var lines=txt.split(/[\n\r]+/);
       for(var li=0;li<lines.length;li++){var line=lines[li].trim();if(!line)continue;var p=document.createElement('p');p.textContent=line;me.appendChild(p);}
@@ -1724,6 +1732,7 @@ function renderRules(){
     if(codeA==='T'){var ti=document.createElement('div');ti.className='sec';ti.textContent=txt;card.appendChild(ti);}
     else if(codeA==='H'){var secH=document.createElement('div');secH.className='sec';secH.textContent=txt;card.appendChild(secH);}
     else if(codeA==='S'){var subS=document.createElement('div');subS.className='sec sub';subS.textContent=txt;card.appendChild(subS);}
+    else if(codeA==='Z'){var subZ=document.createElement('div');subZ.className='sec sub-z';subZ.textContent=txt;card.appendChild(subZ);}
     else if(codeA==='K'){var linesK=txt.split(/[\n\r]+/);for(var liK=0;liK<linesK.length;liK++){var lineK=linesK[liK].trim();if(!lineK)continue;var pK=document.createElement('p');pK.textContent=lineK;card.appendChild(pK);}}
     else if(isRH(txt)){var sec=document.createElement('div');sec.className='sec';sec.textContent=txt;card.appendChild(sec);}
     else if(isRS(txt)){var sub=document.createElement('div');sub.className='sec sub';sub.textContent=txt;card.appendChild(sub);}
@@ -1803,6 +1812,7 @@ function renderInfo(){
     if(codeA==='T'){var ti=document.createElement('div');ti.className='sec';ti.textContent=txt;card.appendChild(ti);}
     else if(codeA==='H'){var sh=document.createElement('div');sh.className='sec';sh.textContent=txt;card.appendChild(sh);}
     else if(codeA==='S'){var ss=document.createElement('div');ss.className='sec sub';ss.textContent=txt;card.appendChild(ss);}
+    else if(codeA==='Z'){var ssZ=document.createElement('div');ssZ.className='sec sub-z';ssZ.textContent=txt;card.appendChild(ssZ);}
     else if(codeA==='K'){var lk=txt.split(/[\n\r]+/);for(var lki=0;lki<lk.length;lki++){var lkl=lk[lki].trim();if(!lkl)continue;var lkp=document.createElement('p');lkp.textContent=lkl;card.appendChild(lkp);}}
     else{var lines=txt.split(/[\n\r]+/);for(var li=0;li<lines.length;li++){var line=lines[li].trim();if(!line)continue;var p=document.createElement('p');p.textContent=line;card.appendChild(p);}}
   }
