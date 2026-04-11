@@ -489,7 +489,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
       <button class="mbtn" id="pwa-install-btn" style="background:var(--cyan);color:#000;font-weight:700;display:none" onclick="triggerPwaInstall()">Installer</button>
       <button class="mbtn" id="pwa-ios-btn" style="background:var(--cyan);color:#000;font-weight:700;display:none" onclick="closePwaModal()">⬆️ Partage → Sur l'écran d'accueil</button>
       <button class="mbtn" id="pwa-android-btn" style="background:var(--cyan);color:#000;font-weight:700;display:none" onclick="closePwaModal()">⋮ Menu → Ajouter à l'écran d'accueil</button>
-      <button class="mbtn sec" onclick="closePwaModal()">Plus tard</button>
+      <button id="pwa-later-btn" class="mbtn sec" onclick="closePwaModal()">Plus tard</button>
       <button id="pwa-quit-btn" class="mbtn" style="background:#e84057;color:#fff;font-weight:700;display:none" onclick="closePwaModal();doQuit()">Quitter sans installer</button>
     </div>
   </div>
@@ -752,11 +752,10 @@ function nav(id,direction){
   if(id==='p-switch'){renderSwitch();showHint();
     var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
     if(isStandalone){
-      // Installé : mémoriser pour détecter une désinstallation future
       localStorage.setItem('pwa_installed','1');
-    } else {
-      // Pas en standalone = pas installé → toujours proposer
-      setTimeout(openPwaModal, 600);
+    } else if(!window._pwaShownThisSession){
+      window._pwaShownThisSession = true;
+      setTimeout(function(){openPwaModal('repertoire');}, 600);
     }
     // Bandeau flottant droite
     if(!window._reperSideHintDone){
@@ -2053,6 +2052,8 @@ function openPwaModal(ctx){
   // Bouton Quitter : seulement en contexte quit
   var qb=document.getElementById('pwa-quit-btn');
   if(qb)qb.style.display=(_pwaContext==='quit')?'':'none';
+  var lb=document.getElementById('pwa-later-btn');
+  if(lb)lb.style.display=(_pwaContext==='quit')?'none':'';
 }
 
 function closePwaModal(){
