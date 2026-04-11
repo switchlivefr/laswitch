@@ -749,9 +749,10 @@ function nav(id,direction){
   }
   if(id==='p-switch'){renderSwitch();showHint();
     var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    var isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
     if(isStandalone){
       localStorage.setItem('pwa_installed','1');
-    } else if(!window._pwaShownThisSession){
+    } else if(isMobile && !window._pwaShownThisSession){
       window._pwaShownThisSession = true;
       setTimeout(function(){openPwaModal('repertoire');}, 600);
     }
@@ -2091,7 +2092,9 @@ function triggerPwaInstall(){
 // ─────────────────────────────────────────────────────────────────────────────
 
 function openQuitModal(){
+  var isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
   var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || window._pwaJustInstalled;
+  if(!isMobile){document.getElementById('c-quit').classList.add('open');document.body.classList.add('coverlay-open');return;}
   if(!isStandalone){
     openPwaModal('quit');
   } else {
