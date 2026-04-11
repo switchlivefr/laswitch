@@ -699,7 +699,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
     </div>
     <div class="cbtns">
       <button class="cno" onclick="document.getElementById('c-quit').classList.remove('open');document.body.classList.remove('coverlay-open')">Annuler</button>
-      <button class="cyes" style="background:#e84057" onclick="window.close()">Quitter</button>
+      <button class="cyes" style="background:#e84057" onclick="doQuit()">Quitter</button>
     </div>
   </div>
 </div>
@@ -2036,8 +2036,7 @@ function pwaQuit(){
   if(m){m.style.opacity='0';m.classList.remove('open');m.style.pointerEvents='none';}
   document.body.style.overflow='';
   document.body.classList.remove('modal-open');
-  quitting=true;
-  setTimeout(function(){history.go(-2);},50);
+  doQuit();
 }
 var _pwaContext='repertoire';
 function openPwaModal(ctx){
@@ -2366,10 +2365,12 @@ function copyMarcoMsg(){
 }
 
 function doQuit(){
-  var cq=document.getElementById('c-quit');
-  if(cq){cq.classList.remove('open');}
-  document.body.classList.remove('coverlay-open');
-  if(quitUrl){window.open(quitUrl,'_blank');quitUrl=null;}else{quitting=true;history.back();}
+  var cq=document.getElementById('c-quit');if(cq)cq.classList.remove('open');
+  var mp=document.getElementById('m-pwa');if(mp){mp.classList.remove('open');mp.style.opacity='0';mp.style.pointerEvents='none';}
+  document.body.classList.remove('coverlay-open','modal-open');
+  document.body.style.overflow='';
+  if(quitUrl){window.open(quitUrl,'_blank');quitUrl=null;}
+  else{quitting=true;history.go(-2);}
 }
 
 var _videoMuted=true;
