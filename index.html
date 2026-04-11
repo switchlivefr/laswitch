@@ -490,7 +490,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
       <button class="mbtn" id="pwa-ios-btn" style="background:var(--cyan);color:#000;font-weight:700;display:none" onclick="closePwaModal()">⬆️ Partage → Sur l'écran d'accueil</button>
       <button class="mbtn" id="pwa-android-btn" style="background:var(--cyan);color:#000;font-weight:700;display:none" onclick="closePwaModal()">⋮ Menu → Ajouter à l'écran d'accueil</button>
       <button class="mbtn sec" onclick="closePwaModal()">Plus tard</button>
-      <button class="mbtn" style="background:#e84057;color:#fff;font-weight:700" onclick="closePwaModal();doQuit()">Quitter sans installer</button>
+      <button id="pwa-quit-btn" class="mbtn" style="background:#e84057;color:#fff;font-weight:700;display:none" onclick="closePwaModal();doQuit()">Quitter sans installer</button>
     </div>
   </div>
 </div>
@@ -2032,23 +2032,27 @@ window.addEventListener('beforeinstallprompt', function(e){
   _deferredPrompt = e;
 });
 
-function openPwaModal(){
-  var m = document.getElementById('m-pwa');
-  if(!m) return;
-  m.style.pointerEvents = 'auto';
+var _pwaContext='repertoire';
+function openPwaModal(ctx){
+  _pwaContext=ctx||'repertoire';
+  var m=document.getElementById('m-pwa');
+  if(!m)return;
+  // Reset boutons
+  ['pwa-install-btn','pwa-ios-btn','pwa-android-btn'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.style.display='none';
+  });
+  m.style.pointerEvents='auto';
   m.classList.add('open');
-  document.body.style.overflow = 'hidden';
+  document.body.style.overflow='hidden';
   document.body.classList.add('modal-open');
-  setTimeout(function(){ m.style.opacity = '1'; }, 20);
-  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-  var isAndroid = /android/i.test(navigator.userAgent);
-  if(_deferredPrompt){
-    document.getElementById('pwa-install-btn').style.display = '';
-  } else if(isIOS){
-    document.getElementById('pwa-ios-btn').style.display = '';
-  } else {
-    document.getElementById('pwa-android-btn').style.display = '';
-  }
+  setTimeout(function(){m.style.opacity='1';},20);
+  var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.MSStream;
+  if(_deferredPrompt){document.getElementById('pwa-install-btn').style.display='';}
+  else if(isIOS){document.getElementById('pwa-ios-btn').style.display='';}
+  else{document.getElementById('pwa-android-btn').style.display='';}
+  // Bouton Quitter : seulement en contexte quit
+  var qb=document.getElementById('pwa-quit-btn');
+  if(qb)qb.style.display=(_pwaContext==='quit')?'':'none';
 }
 
 function closePwaModal(){
@@ -2085,7 +2089,7 @@ function triggerPwaInstall(){
 function openQuitModal(){
   var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
   if(!isStandalone){
-    openPwaModal();
+    openPwaModal('quit');
   } else {
     document.getElementById('c-quit').classList.add('open');
     document.body.classList.add('coverlay-open');
@@ -2353,8 +2357,10 @@ function copyMarcoMsg(){
 }
 
 function doQuit(){
-  document.getElementById('c-quit').classList.remove('open');document.body.classList.remove('coverlay-open');
-  if(quitUrl){window.open(quitUrl,'_blank');quitUrl=null;}else{quitting=true;history.go(-2);}
+  var cq=document.getElementById('c-quit');
+  if(cq){cq.classList.remove('open');}
+  document.body.classList.remove('coverlay-open');
+  if(quitUrl){window.open(quitUrl,'_blank');quitUrl=null;}else{quitting=true;history.back();}
 }
 
 var _videoMuted=true;
