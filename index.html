@@ -58,8 +58,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .arrows-visible .prc-arrow-l{animation:haloArrowL 1.5s ease-in-out infinite}
 .arrows-visible .prc-arrow-r{animation:haloArrowR 1.5s ease-in-out infinite}
 @keyframes halo{0%,100%{text-shadow:0 0 4px rgba(255,255,255,.1);transform:scale(1)}50%{text-shadow:0 0 10px #fff,0 0 25px #fff,0 0 50px rgba(255,255,255,.9),0 0 80px rgba(255,255,255,.6),0 0 120px rgba(255,255,255,.3);transform:scale(1.06)}}
-@keyframes haloArrowL{0%,100%{opacity:0}50%{opacity:.5}}
-@keyframes haloArrowR{0%,100%{opacity:0}50%{opacity:.5}}
+@keyframes haloArrowL{0%,100%{opacity:0;transform:translateX(0)}50%{opacity:.5;transform:translateX(-5px)}}
+@keyframes haloArrowR{0%,100%{opacity:0;transform:translateX(0)}50%{opacity:.5;transform:translateX(5px)}}
 .prc-label{font-size:26px;font-weight:700;letter-spacing:2px;animation:none;color:#fff}
 @keyframes slideFromLeft{from{transform:translateX(-120vw)}to{transform:translateX(0)}}
 @keyframes slideFromRight{from{transform:translateX(120vw)}to{transform:translateX(0)}}
