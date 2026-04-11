@@ -37,12 +37,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 @keyframes rainbow{0%{color:#f2c94c}14%{color:#e8943a}28%{color:#e8407a}42%{color:#c471ed}57%{color:#5b9cf6}71%{color:#34d1c0}85%{color:#a8e063}100%{color:#f2c94c}}
 @keyframes spin{to{transform:rotate(360deg)}}
 #prc-slideshow{width:100%;overflow:hidden;border-radius:12px;background:var(--card);margin:0 0 14px;position:relative;height:200px}
-#prc-slideshow img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:12px;transform:translateX(150%);transition:none}
-#prc-slideshow img.slide-in-left{animation:prcSlideInLeft .4s cubic-bezier(.22,1,.36,1) forwards}
-#prc-slideshow img.slide-in-right{animation:prcSlideInRight .4s cubic-bezier(.22,1,.36,1) forwards}
-#prc-slideshow img.slide-center{transform:translateX(0)}
-@keyframes prcSlideInLeft{from{transform:translateX(-150%)}to{transform:translateX(0)}}
-@keyframes prcSlideInRight{from{transform:translateX(150%)}to{transform:translateX(0)}}
+#prc-slideshow img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:12px}
+@keyframes prcFromRight{0%{transform:translateX(110%)}100%{transform:translateX(0)}}
+@keyframes prcFromLeft{0%{transform:translateX(-110%)}100%{transform:translateX(0)}}
 @keyframes starBlink{0%,100%{opacity:.6;filter:brightness(1)}50%{opacity:1;filter:brightness(2)}}
 #bn-osl .ico{animation:starBlink 2.5s ease-in-out infinite}
 @keyframes btnpulse-amber{0%,100%{background:rgba(232,148,58,.07);border-color:rgba(232,148,58,.22)}50%{background:rgba(232,148,58,.35);border-color:rgba(232,148,58,.7)}}
@@ -1943,30 +1940,32 @@ function startPrcSlideshow(){
   wrap.innerHTML='';
   _prcIdx=0; _prcDir='right';
   clearInterval(_prcTimer);
-  // Créer l'image courante
-  var img=document.createElement('img');
-  img.src=_prcPhotos[0].url||_prcPhotos[0];
-  img.className='slide-center';
-  wrap.appendChild(img);
+  // Première image déjà en place
+  var cur=document.createElement('img');
+  cur.src=_prcPhotos[0].url||_prcPhotos[0];
+  cur.style.transform='translateX(0)';
+  wrap.appendChild(cur);
   _prcTimer=setInterval(function(){
     var next=(_prcIdx+1)%_prcPhotos.length;
     var nextImg=document.createElement('img');
     nextImg.src=_prcPhotos[next].url||_prcPhotos[next];
-    nextImg.style.transform=_prcDir==='right'?'translateX(150%)':'translateX(-150%)';
+    // Positionner hors écran selon la direction
+    nextImg.style.cssText='transform:translateX('+(_prcDir==='right'?'110%':'-110%')+');z-index:2';
     wrap.appendChild(nextImg);
-    // Forcer reflow
     void nextImg.offsetWidth;
-    // Animer la nouvelle depuis la direction alternée
-    nextImg.className=_prcDir==='right'?'slide-in-right':'slide-in-left';
-    nextImg.addEventListener('animationend',function(){
-      nextImg.className='slide-center';
-      // Supprimer l'ancienne
+    // Arrivée rapide avec frein brutal (cubic-bezier très agressif)
+    nextImg.style.transition='transform .35s cubic-bezier(.12,1,.2,1)';
+    nextImg.style.transform='translateX(0)';
+    nextImg.addEventListener('transitionend',function(){
+      // Supprimer l'ancienne image
       var imgs=wrap.querySelectorAll('img');
-      if(imgs.length>1)wrap.removeChild(imgs[0]);
+      if(imgs.length>1){wrap.removeChild(imgs[0]);}
+      nextImg.style.zIndex='';
+      nextImg.style.transition='';
     },{once:true});
     _prcIdx=next;
     _prcDir=_prcDir==='right'?'left':'right';
-  },2400);
+  },1350); // 350ms anim + 1000ms pause
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
