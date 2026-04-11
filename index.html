@@ -55,11 +55,12 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 
 .prc-arrow-l{display:inline-block;margin-right:10px;line-height:1;opacity:0}
 .prc-arrow-r{display:inline-block;margin-left:8px;line-height:1;opacity:0}
-.arrows-visible .prc-arrow-l{animation:haloArrowL 1.5s ease-in-out infinite}
-.arrows-visible .prc-arrow-r{animation:haloArrowR 1.5s ease-in-out infinite}
+.arrows-visible .prc-arrow-l{animation:haloArrowLMove 6s ease-in-out infinite,haloArrowOpacity 1.5s ease-in-out infinite}
+.arrows-visible .prc-arrow-r{animation:haloArrowRMove 6s ease-in-out infinite,haloArrowOpacity 1.5s ease-in-out infinite}
 @keyframes halo{0%,100%{text-shadow:0 0 4px rgba(255,255,255,.1);transform:scale(1)}50%{text-shadow:0 0 10px #fff,0 0 25px #fff,0 0 50px rgba(255,255,255,.9),0 0 80px rgba(255,255,255,.6),0 0 120px rgba(255,255,255,.3);transform:scale(1.06)}}
-@keyframes haloArrowL{0%,100%{opacity:0;transform:translateX(0)}50%{opacity:.5;transform:translateX(-5px)}}
-@keyframes haloArrowR{0%,100%{opacity:0;transform:translateX(0)}50%{opacity:.5;transform:translateX(5px)}}
+@keyframes haloArrowLMove{0%,100%{transform:translateX(0)}50%{transform:translateX(-5px)}}
+@keyframes haloArrowOpacity{0%,100%{opacity:0}50%{opacity:.5}}
+@keyframes haloArrowRMove{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
 .prc-label{font-size:26px;font-weight:700;letter-spacing:2px;animation:none;color:#fff}
 @keyframes slideFromLeft{from{transform:translateX(-120vw)}to{transform:translateX(0)}}
 @keyframes slideFromRight{from{transform:translateX(120vw)}to{transform:translateX(0)}}
@@ -2698,7 +2699,7 @@ fetch('/api')
         });
         document.querySelectorAll('.prc-arrow-l,.prc-arrow-r').forEach(function(a){
           a.style.animationDelay='0s';
-          a.style.animationDuration='1.5s';
+          a.style.animationDuration='6s';
         });
         if(prc)prc.classList.add('arrows-visible');
         if(lieu)lieu.classList.add('arrows-visible');
