@@ -476,7 +476,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 </div>
 
 <!-- MODALE : Installer l'appli (PWA) -->
-<div class="moverlay" id="m-pwa" style="z-index:9500;opacity:0;transition:opacity .4s ease;pointer-events:none">
+<div class="moverlay" id="m-pwa" style="z-index:9500;opacity:0;transition:opacity .4s ease;pointer-events:none" onclick="if(event.target===this&&_pwaContext==='quit')closePwaModal()">
   <div class="mbox" style="text-align:center">
     <div class="mhead">
       <div style="font-size:48px;margin-bottom:8px">📲</div>
