@@ -36,6 +36,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 @keyframes hintpulse{0%,100%{color:var(--gold);opacity:.1}50%{color:var(--gold);opacity:1}}
 @keyframes rainbow{0%{color:#f2c94c}14%{color:#e8943a}28%{color:#e8407a}42%{color:#c471ed}57%{color:#5b9cf6}71%{color:#34d1c0}85%{color:#a8e063}100%{color:#f2c94c}}
 @keyframes spin{to{transform:rotate(360deg)}}
+#prc-slideshow{width:100%;overflow:hidden;border-radius:12px;background:var(--card);margin:0 0 14px;position:relative;height:200px}
+#prc-slideshow img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:12px;transform:translateX(150%);transition:none}
+#prc-slideshow img.slide-in-left{animation:prcSlideInLeft .4s cubic-bezier(.22,1,.36,1) forwards}
+#prc-slideshow img.slide-in-right{animation:prcSlideInRight .4s cubic-bezier(.22,1,.36,1) forwards}
+#prc-slideshow img.slide-center{transform:translateX(0)}
+@keyframes prcSlideInLeft{from{transform:translateX(-150%)}to{transform:translateX(0)}}
+@keyframes prcSlideInRight{from{transform:translateX(150%)}to{transform:translateX(0)}}
 @keyframes starBlink{0%,100%{opacity:.6;filter:brightness(1)}50%{opacity:1;filter:brightness(2)}}
 #bn-osl .ico{animation:starBlink 2.5s ease-in-out infinite}
 @keyframes btnpulse-amber{0%,100%{background:rgba(232,148,58,.07);border-color:rgba(232,148,58,.22)}50%{background:rgba(232,148,58,.35);border-color:rgba(232,148,58,.7)}}
@@ -632,7 +639,8 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 <div class="moverlay" id="m-resa" onclick="if(event.target===this)closeM('m-resa')">
   <div class="mbox">
     <div class="mhead"><h3 class="amber" style="text-align:center">🍽️ Reserver au Pro Race Cafe</h3></div>
-    <div class="mbody" style="text-align:center">
+    <div class="mbody" style="text-align:center;padding-top:8px">
+      <div id="prc-slideshow"></div>
       <p>Réserve ta table pour la soirée SWiTCH</p>
     </div>
     <div class="mfoot">
@@ -1437,6 +1445,7 @@ function openM(id){
   if(id==='m-osl')renderOslPitch();
   if(id==='m-pitch-big'){renderPitchBig();initPitchBigPhotos();if(window._initPitchBigTouchControl)window._initPitchBigTouchControl();}
   if(id==='m-home-pitch'||id==='m-renseignements'||id==='m-resa'){muteVideo();_videoMuted=true;}
+  if(id==='m-resa'){initPrcSlideshow();}
   if(id==='m-home-pitch'){
     initPitchPhotos();
     if(window._initPitchTouchControl)window._initPitchTouchControl();
@@ -1453,6 +1462,7 @@ function openM(id){
   if(id!=='m-marco'&&id!=='m-pin'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
 }
 function closeM(id){
+  if(id==='m-resa'){clearInterval(_prcTimer);_prcTimer=null;}
   hideScrollHints();
   document.body.classList.remove('coverlay-open');
   document.getElementById(id).classList.remove('open');
@@ -1912,6 +1922,53 @@ function silentRefresh(){
       if(currentPage==='p-resa')renderInfo();
     }).catch(function(){});
 }
+
+// ── Slideshow Pro Race Cafe ──────────────────────────────────────────────────
+var _prcPhotos=null, _prcIdx=0, _prcTimer=null, _prcDir='right';
+function initPrcSlideshow(){
+  var wrap=document.getElementById('prc-slideshow');
+  if(!wrap)return;
+  if(_prcPhotos&&_prcPhotos.length){startPrcSlideshow();return;}
+  // Lister les photos depuis R2
+  fetch('/api?action=getPrcPhotos')
+    .then(function(r){return r.json();})
+    .then(function(data){
+      _prcPhotos=(data.photos||[]);
+      if(_prcPhotos.length)startPrcSlideshow();
+    }).catch(function(){});
+}
+function startPrcSlideshow(){
+  var wrap=document.getElementById('prc-slideshow');
+  if(!wrap||!_prcPhotos||!_prcPhotos.length)return;
+  wrap.innerHTML='';
+  _prcIdx=0; _prcDir='right';
+  clearInterval(_prcTimer);
+  // Créer l'image courante
+  var img=document.createElement('img');
+  img.src=_prcPhotos[0].url||_prcPhotos[0];
+  img.className='slide-center';
+  wrap.appendChild(img);
+  _prcTimer=setInterval(function(){
+    var next=(_prcIdx+1)%_prcPhotos.length;
+    var nextImg=document.createElement('img');
+    nextImg.src=_prcPhotos[next].url||_prcPhotos[next];
+    nextImg.style.transform=_prcDir==='right'?'translateX(150%)':'translateX(-150%)';
+    wrap.appendChild(nextImg);
+    // Forcer reflow
+    void nextImg.offsetWidth;
+    // Animer la nouvelle depuis la direction alternée
+    nextImg.className=_prcDir==='right'?'slide-in-right':'slide-in-left';
+    nextImg.addEventListener('animationend',function(){
+      nextImg.className='slide-center';
+      // Supprimer l'ancienne
+      var imgs=wrap.querySelectorAll('img');
+      if(imgs.length>1)wrap.removeChild(imgs[0]);
+    },{once:true});
+    _prcIdx=next;
+    _prcDir=_prcDir==='right'?'left':'right';
+  },2400);
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 function reperHintDismiss(){
   window._reperSideHintDone=true;
