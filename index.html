@@ -637,7 +637,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
   <div class="mbox">
     <div class="mhead"><h3 class="amber" style="text-align:center">🍽️ Reserver au Pro Race Cafe</h3></div>
     <div class="mbody" style="text-align:center;padding-top:8px">
-      <div id="prc-slideshow"></div>
+      <div id="prc-slideshow"><div id="prc-flash" style="position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;border-radius:12px;z-index:10;transition:none"></div></div>
       <p style="color:#fff;font-weight:600">Réserve ta table pour la soirée SWiTCH 😋</p>
     </div>
     <div class="mfoot">
@@ -1459,7 +1459,7 @@ function openM(id){
   if(id!=='m-marco'&&id!=='m-pin'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
 }
 function closeM(id){
-  if(id==='m-resa'){clearInterval(_prcTimer);_prcTimer=null;}
+  if(id==='m-resa'){clearTimeout(_prcTimer);_prcTimer=null;}
   hideScrollHints();
   document.body.classList.remove('coverlay-open');
   document.getElementById(id).classList.remove('open');
@@ -1937,35 +1937,44 @@ function initPrcSlideshow(){
 function startPrcSlideshow(){
   var wrap=document.getElementById('prc-slideshow');
   if(!wrap||!_prcPhotos||!_prcPhotos.length)return;
+  // Vider sauf le flash
+  var flashEl=document.getElementById('prc-flash');
   wrap.innerHTML='';
+  if(flashEl)wrap.appendChild(flashEl);
   _prcIdx=0; _prcDir='right';
   clearInterval(_prcTimer);
-  // Première image déjà en place
   var cur=document.createElement('img');
   cur.src=_prcPhotos[0].url||_prcPhotos[0];
-  cur.style.transform='translateX(0)';
-  wrap.appendChild(cur);
-  _prcTimer=setInterval(function(){
-    var next=(_prcIdx+1)%_prcPhotos.length;
+  cur.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;border-radius:12px;transform:translateX(0)';
+  wrap.insertBefore(cur,flashEl||null);
+
+  function nextSlide(){
+    var nIdx=(_prcIdx+1)%_prcPhotos.length;
     var nextImg=document.createElement('img');
-    nextImg.src=_prcPhotos[next].url||_prcPhotos[next];
-    // Positionner hors écran selon la direction
-    nextImg.style.cssText='transform:translateX('+(_prcDir==='right'?'110%':'-110%')+');z-index:2';
-    wrap.appendChild(nextImg);
+    nextImg.src=_prcPhotos[nIdx].url||_prcPhotos[nIdx];
+    nextImg.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;border-radius:12px;z-index:2;transform:translateX('+(_prcDir==='right'?'110%':'-110%')+')';
+    wrap.insertBefore(nextImg,flashEl||null);
     void nextImg.offsetWidth;
-    // Arrivée rapide avec frein brutal (cubic-bezier très agressif)
-    nextImg.style.transition='transform .35s cubic-bezier(.12,1,.2,1)';
+
+    // Flash sur l'image courante
+    var fl=document.getElementById('prc-flash');
+    if(fl){fl.style.opacity='0.5';fl.style.transition='opacity .12s ease-out';setTimeout(function(){fl.style.opacity='0';},120);}
+
+    // Slide de la nouvelle
+    nextImg.style.transition='transform .38s cubic-bezier(.12,1,.18,1)';
     nextImg.style.transform='translateX(0)';
+
     nextImg.addEventListener('transitionend',function(){
-      // Supprimer l'ancienne image
       var imgs=wrap.querySelectorAll('img');
-      if(imgs.length>1){wrap.removeChild(imgs[0]);}
-      nextImg.style.zIndex='';
-      nextImg.style.transition='';
+      for(var i=0;i<imgs.length-1;i++)wrap.removeChild(imgs[i]);
+      nextImg.style.zIndex='';nextImg.style.transition='';
+      _prcIdx=nIdx;
+      _prcDir=_prcDir==='right'?'left':'right';
+      _prcTimer=setTimeout(nextSlide,2000);
     },{once:true});
-    _prcIdx=next;
-    _prcDir=_prcDir==='right'?'left':'right';
-  },2350); // 350ms anim + 2000ms pause
+  }
+
+  _prcTimer=setTimeout(nextSlide,2000);
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
