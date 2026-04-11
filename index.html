@@ -490,7 +490,6 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
       <button class="mbtn" id="pwa-ios-btn" style="background:var(--cyan);color:#000;font-weight:700;display:none" onclick="closePwaModal()">⬆️ Partage → Sur l'écran d'accueil</button>
       <button class="mbtn" id="pwa-android-btn" style="background:var(--cyan);color:#000;font-weight:700;display:none" onclick="closePwaModal()">⋮ Menu → Ajouter à l'écran d'accueil</button>
       <button id="pwa-later-btn" class="mbtn sec" onclick="closePwaModal()">Plus tard</button>
-      <button id="pwa-quit-btn" class="mbtn" style="background:#e84057;color:#fff;font-weight:700;display:none" onclick="pwaQuit()">Quitter sans installer</button>
     </div>
   </div>
 </div>
@@ -699,7 +698,6 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
     </div>
     <div class="cbtns">
       <button class="cno" onclick="document.getElementById('c-quit').classList.remove('open');document.body.classList.remove('coverlay-open')">Annuler</button>
-      <button class="cyes" style="background:#e84057" onclick="doQuit()">Quitter</button>
     </div>
   </div>
 </div>
@@ -2057,8 +2055,6 @@ function openPwaModal(ctx){
   else if(isIOS){document.getElementById('pwa-ios-btn').style.display='';}
   else{document.getElementById('pwa-android-btn').style.display='';}
   // Bouton Quitter : seulement en contexte quit
-  var qb=document.getElementById('pwa-quit-btn');
-  if(qb)qb.style.display=(_pwaContext==='quit')?'':'none';
   var lb=document.getElementById('pwa-later-btn');
   if(lb)lb.style.display=(_pwaContext==='quit')?'none':'';
 }
