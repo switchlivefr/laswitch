@@ -2036,7 +2036,8 @@ function pwaQuit(){
   if(m){m.style.opacity='0';m.classList.remove('open');m.style.pointerEvents='none';}
   document.body.style.overflow='';
   document.body.classList.remove('modal-open');
-  setTimeout(function(){window.close();quitting=true;history.back();},50);
+  quitting=true;
+  setTimeout(function(){history.go(-2);},50);
 }
 var _pwaContext='repertoire';
 function openPwaModal(ctx){
