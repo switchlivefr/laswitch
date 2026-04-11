@@ -2086,12 +2086,12 @@ function closePwaModal(){
 function triggerPwaInstall(){
   if(!_deferredPrompt) return;
   _deferredPrompt.prompt();
-  _deferredPrompt.userChoice.then(function(){ closePwaModal(); _deferredPrompt = null; });
+  _deferredPrompt.userChoice.then(function(choice){ closePwaModal(); if(choice.outcome==='accepted'){window._pwaJustInstalled=true;localStorage.setItem('pwa_installed','1');} _deferredPrompt = null; });
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
 function openQuitModal(){
-  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || window._pwaJustInstalled;
   if(!isStandalone){
     openPwaModal('quit');
   } else {
