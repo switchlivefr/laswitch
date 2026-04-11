@@ -690,8 +690,15 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
   <div class="cbox">
     <h3>Quitter ?</h3>
     <p>Quitter l'application SWiTCH ?</p>
+    <div id="c-quit-install" style="display:none;margin:10px 0 4px">
+      <p style="font-size:13px;color:var(--cyan);margin-bottom:8px">💡 Installe l'appli pour y accéder encore plus vite !</p>
+      <button class="mbtn" id="c-quit-install-btn" style="background:var(--cyan);color:#000;font-weight:700;width:100%;margin-bottom:6px;display:none" onclick="triggerPwaInstall()">Installer</button>
+      <button class="mbtn" id="c-quit-ios-btn" style="background:var(--cyan);color:#000;font-weight:700;width:100%;margin-bottom:6px;display:none">⬆️ Partage → Sur l'écran d'accueil</button>
+      <button class="mbtn" id="c-quit-android-btn" style="background:var(--cyan);color:#000;font-weight:700;width:100%;margin-bottom:6px;display:none">⋮ Menu → Ajouter à l'écran d'accueil</button>
+    </div>
     <div class="cbtns">
       <button class="cno" onclick="document.getElementById('c-quit').classList.remove('open');document.body.classList.remove('coverlay-open')">Annuler</button>
+      <button class="cyes" style="background:#e84057" onclick="window.close()">Quitter</button>
     </div>
   </div>
 </div>
@@ -744,20 +751,11 @@ function nav(id,direction){
   if(id==='p-switch'){renderSwitch();showHint();
     var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
     if(isStandalone){
-      // En mode standalone = installé, on mémorise
-      localStorage.setItem('pwa_was_installed','1');
+      // Installé : mémoriser pour détecter une désinstallation future
+      localStorage.setItem('pwa_installed','1');
     } else {
-      // Pas en standalone : était-il installé avant ?
-      var wasInstalled = localStorage.getItem('pwa_was_installed');
-      if(wasInstalled){
-        // L'icône a été supprimée → reproposer
-        localStorage.removeItem('pwa_shown_v2');
-        localStorage.removeItem('pwa_was_installed');
-      }
-      if(!localStorage.getItem('pwa_shown_v2')){
-        localStorage.setItem('pwa_shown_v2','1');
-        setTimeout(openPwaModal, 600);
-      }
+      // Pas en standalone = pas installé → toujours proposer
+      setTimeout(openPwaModal, 600);
     }
     // Bandeau flottant droite
     if(!window._reperSideHintDone){
@@ -1532,7 +1530,7 @@ document.addEventListener('touchstart',function(e){
 },{passive:true});
 window.addEventListener('popstate',function(){
   if(quitting){quitting=false;return;}
-  document.getElementById('c-quit').classList.add('open');document.body.classList.add('coverlay-open');
+  openQuitModal();
   history.pushState(null,'',window.location.href);
 });
 
@@ -2082,6 +2080,25 @@ function triggerPwaInstall(){
   _deferredPrompt.userChoice.then(function(){ closePwaModal(); _deferredPrompt = null; });
 }
 // ─────────────────────────────────────────────────────────────────────────────
+
+function openQuitModal(){
+  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  var installBlock = document.getElementById('c-quit-install');
+  if(!isStandalone && installBlock){
+    installBlock.style.display = 'block';
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+    var isAndroid = /android/i.test(navigator.userAgent);
+    if(_deferredPrompt){
+      document.getElementById('c-quit-install-btn').style.display = 'block';
+    } else if(isIOS){
+      document.getElementById('c-quit-ios-btn').style.display = 'block';
+    } else if(isAndroid){
+      document.getElementById('c-quit-android-btn').style.display = 'block';
+    }
+  }
+  openQuitModal();
+  document.body.classList.add('coverlay-open');
+}
 
 function reperHintDismiss(){
   window._reperSideHintDone=true;
