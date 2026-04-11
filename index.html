@@ -726,6 +726,7 @@ function nav(id,direction){
     // Bandeau flottant droite
     if(!window._reperSideHintDone){
       window._reperSideHintTimer=setTimeout(function(){
+        if(currentPage!=='p-switch')return; // Ne s'affiche que si on est encore sur le répertoire
         var j1val='';
         if(RAW.osl&&RAW.osl.rows&&RAW.osl.rows[0])j1val=(RAW.osl.rows[0][9]||'').trim().toLowerCase();
         var label=document.getElementById('reper-side-hint-label');
