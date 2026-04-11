@@ -1945,7 +1945,7 @@ function startPrcSlideshow(){
   // Deux images superposées
   var imgA=document.createElement('img');
   var imgB=document.createElement('img');
-  imgA.style.cssText=STYLE+';opacity:1;transform:scale(1)';
+  imgA.style.cssText=STYLE+';opacity:0;transform:scale(1.08)';
   imgB.style.cssText=STYLE+';opacity:0;transform:scale(1.08)';
   imgA.src=_prcPhotos[0].url||_prcPhotos[0];
   imgB.src=_prcPhotos[1%_prcPhotos.length].url||_prcPhotos[1%_prcPhotos.length];
@@ -1953,6 +1953,12 @@ function startPrcSlideshow(){
   wrap.appendChild(imgB);
 
   var cur=imgA, nxt=imgB;
+  // Faire apparaître la première photo avec l'effet
+  void imgA.offsetWidth;
+  imgA.style.transition='opacity 600ms ease,transform 600ms ease';
+  imgA.style.opacity='1';
+  imgA.style.transform='scale(1)';
+  setTimeout(function(){imgA.style.transition='none';},620);
 
   function nextSlide(){
     var nIdx=(_prcIdx+1)%_prcPhotos.length;
