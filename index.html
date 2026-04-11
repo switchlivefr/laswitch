@@ -36,8 +36,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 @keyframes hintpulse{0%,100%{color:var(--gold);opacity:.1}50%{color:var(--gold);opacity:1}}
 @keyframes rainbow{0%{color:#f2c94c}14%{color:#e8943a}28%{color:#e8407a}42%{color:#c471ed}57%{color:#5b9cf6}71%{color:#34d1c0}85%{color:#a8e063}100%{color:#f2c94c}}
 @keyframes spin{to{transform:rotate(360deg)}}
-#prc-slideshow{width:100%;overflow:hidden;border-radius:12px;background:var(--card);margin:0 0 14px;position:relative;height:200px}
-#prc-slideshow img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:12px}
+#prc-slideshow{width:100%;aspect-ratio:1/1;overflow:hidden;border-radius:12px;background:var(--card);margin:0 0 14px;position:relative}
+#prc-slideshow img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;border-radius:12px}
 @keyframes prcFromRight{0%{transform:translateX(110%)}100%{transform:translateX(0)}}
 @keyframes prcFromLeft{0%{transform:translateX(-110%)}100%{transform:translateX(0)}}
 @keyframes starBlink{0%,100%{opacity:.6;filter:brightness(1)}50%{opacity:1;filter:brightness(2)}}
