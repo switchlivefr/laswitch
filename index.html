@@ -490,6 +490,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
       <button class="mbtn" id="pwa-ios-btn" style="background:var(--cyan);color:#000;font-weight:700;display:none" onclick="closePwaModal()">⬆️ Partage → Sur l'écran d'accueil</button>
       <button class="mbtn" id="pwa-android-btn" style="background:var(--cyan);color:#000;font-weight:700;display:none" onclick="closePwaModal()">⋮ Menu → Ajouter à l'écran d'accueil</button>
       <button class="mbtn sec" onclick="closePwaModal()">Plus tard</button>
+      <button class="mbtn" style="background:#e84057;color:#fff;font-weight:700" onclick="closePwaModal();doQuit()">Quitter sans installer</button>
     </div>
   </div>
 </div>
@@ -2083,24 +2084,14 @@ function triggerPwaInstall(){
 
 function openQuitModal(){
   var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-  var installBlock = document.getElementById('c-quit-install');
-  ['c-quit-install-btn','c-quit-ios-btn','c-quit-android-btn'].forEach(function(id){
-    var el=document.getElementById(id); if(el) el.style.display='none';
-  });
-  if(installBlock){
-    installBlock.style.display = 'block';
-    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-    if(isIOS){
-      document.getElementById('c-quit-ios-btn').style.display = 'block';
-    } else if(_deferredPrompt){
-      document.getElementById('c-quit-install-btn').style.display = 'block';
-    } else {
-      document.getElementById('c-quit-android-btn').style.display = 'block';
-    }
+  if(!isStandalone){
+    openPwaModal();
+  } else {
+    document.getElementById('c-quit').classList.add('open');
+    document.body.classList.add('coverlay-open');
   }
-  document.getElementById('c-quit').classList.add('open');
-  document.body.classList.add('coverlay-open');
 }
+
 
 function reperHintDismiss(){
   window._reperSideHintDone=true;
