@@ -2800,5 +2800,12 @@ fetch('/api')
   <div class="loader-title">SWiTCH 💫</div>
   <div class="loader-spin"></div>
 </div>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('/sw.js');
+  });
+}
+</script>
 </body>
 </html>
