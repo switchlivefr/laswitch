@@ -1501,6 +1501,8 @@ function closeM(id){
   if(!document.querySelector('.moverlay.open')&&!document.querySelector('.coverlay.open')){
     document.body.style.overflow='';
     document.body.classList.remove('modal-open');
+    // Relancer les scroll hints si on est sur p-rules
+    if(currentPage==='p-rules')setTimeout(initScrollHints,100);
   }
 }
 
