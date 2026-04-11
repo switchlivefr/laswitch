@@ -2083,6 +2083,10 @@ function closePwaModal(){
     document.body.style.overflow = '';
     document.body.classList.remove('modal-open');
     showHint();
+    // Annuler tout timer précédent et masquer le bandeau s'il est déjà visible
+    clearTimeout(window._reperSideHintTimer);
+    var shEl=document.getElementById('reper-side-hint');
+    if(shEl)shEl.classList.remove('visible');
     if(!window._reperSideHintDone){
       window._reperSideHintTimer = setTimeout(function(){
         if(currentPage !== 'p-switch') return;
