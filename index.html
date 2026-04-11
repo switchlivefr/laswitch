@@ -742,7 +742,9 @@ function nav(id,direction){
     }else{ne.classList.add('active');}
   }
   if(id==='p-switch'){renderSwitch();showHint();
-    if(!localStorage.getItem('pwa_shown_v2')){
+    // Ne pas proposer si déjà en mode standalone (déjà installé)
+    var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    if(!isStandalone && !localStorage.getItem('pwa_shown_v2')){
       localStorage.setItem('pwa_shown_v2','1');
       setTimeout(openPwaModal, 600);
     }
