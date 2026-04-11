@@ -744,8 +744,7 @@ function nav(id,direction){
   if(id==='p-switch'){renderSwitch();showHint();
     if(!localStorage.getItem('pwa_shown')){
       localStorage.setItem('pwa_shown','1');
-      setTimeout(openPwaModal, 300);
-      return;
+      setTimeout(openPwaModal, 600);
     }
     // Bandeau flottant droite
     if(!window._reperSideHintDone){
