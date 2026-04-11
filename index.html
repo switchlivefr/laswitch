@@ -475,6 +475,25 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
   </div>
 </div>
 
+<!-- MODALE : Installer l'appli (PWA) -->
+<div class="moverlay" id="m-pwa" style="z-index:9500;opacity:0;transition:opacity .4s ease;pointer-events:none">
+  <div class="mbox" style="text-align:center">
+    <div class="mhead">
+      <div style="font-size:48px;margin-bottom:8px">📲</div>
+      <h3 style="color:var(--gold);font-size:20px;margin:0">Installe La SWiTCH !</h3>
+    </div>
+    <div class="mbody" style="text-align:center;padding:12px 16px">
+      <p id="pwa-msg" style="color:var(--white);font-size:15px;line-height:1.6">Ajoute l'icône sur ton écran d'accueil pour accéder à l'appli en un instant !</p>
+    </div>
+    <div class="mfoot" style="flex-direction:column;gap:10px">
+      <button class="mbtn" id="pwa-install-btn" style="background:var(--cyan);color:#000;font-weight:700;display:none" onclick="triggerPwaInstall()">Installer</button>
+      <button class="mbtn" id="pwa-ios-btn" style="background:var(--cyan);color:#000;font-weight:700;display:none" onclick="closePwaModal()">⬆️ Partage → Sur l'écran d'accueil</button>
+      <button class="mbtn" id="pwa-android-btn" style="background:var(--cyan);color:#000;font-weight:700;display:none" onclick="closePwaModal()">⋮ Menu → Ajouter à l'écran d'accueil</button>
+      <button class="mbtn sec" onclick="closePwaModal()">Plus tard</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODALE : Contacter Marco (appui long sur un titre) -->
 <div class="moverlay" id="m-marco" onclick="if(event.target===this)closeM('m-marco')">
   <div class="mbox">
@@ -723,6 +742,11 @@ function nav(id,direction){
     }else{ne.classList.add('active');}
   }
   if(id==='p-switch'){renderSwitch();showHint();
+    if(!localStorage.getItem('pwa_shown')){
+      localStorage.setItem('pwa_shown','1');
+      setTimeout(openPwaModal, 300);
+      return;
+    }
     // Bandeau flottant droite
     if(!window._reperSideHintDone){
       window._reperSideHintTimer=setTimeout(function(){
@@ -1990,6 +2014,63 @@ function startPrcSlideshow(){
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ── PWA Install ──────────────────────────────────────────────────────────────
+var _deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  _deferredPrompt = e;
+});
+
+function openPwaModal(){
+  var m = document.getElementById('m-pwa');
+  if(!m) return;
+  m.style.pointerEvents = 'auto';
+  m.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.body.classList.add('modal-open');
+  setTimeout(function(){ m.style.opacity = '1'; }, 20);
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  var isAndroid = /android/i.test(navigator.userAgent);
+  if(_deferredPrompt){
+    document.getElementById('pwa-install-btn').style.display = '';
+  } else if(isIOS){
+    document.getElementById('pwa-ios-btn').style.display = '';
+  } else if(isAndroid){
+    document.getElementById('pwa-android-btn').style.display = '';
+  }
+}
+
+function closePwaModal(){
+  var m = document.getElementById('m-pwa');
+  if(!m) return;
+  m.style.opacity = '0';
+  setTimeout(function(){
+    m.classList.remove('open');
+    m.style.pointerEvents = 'none';
+    document.body.style.overflow = '';
+    document.body.classList.remove('modal-open');
+    showHint();
+    if(!window._reperSideHintDone){
+      window._reperSideHintTimer = setTimeout(function(){
+        if(currentPage !== 'p-switch') return;
+        var j1val = '';
+        if(RAW.osl&&RAW.osl.rows&&RAW.osl.rows[0]) j1val=(RAW.osl.rows[0][9]||'').trim().toLowerCase();
+        var label = document.getElementById('reper-side-hint-label');
+        if(label) label.textContent = (j1val==='true'||j1val==='vrai') ? 'One Shot LIVE' : 'Special KIFF';
+        var el = document.getElementById('reper-side-hint');
+        if(el) el.classList.add('visible');
+      }, 10000);
+    }
+  }, 400);
+}
+
+function triggerPwaInstall(){
+  if(!_deferredPrompt) return;
+  _deferredPrompt.prompt();
+  _deferredPrompt.userChoice.then(function(){ closePwaModal(); _deferredPrompt = null; });
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function reperHintDismiss(){
   window._reperSideHintDone=true;
   clearTimeout(window._reperSideHintTimer);
@@ -2717,5 +2798,10 @@ fetch('/api')
   <div class="loader-title">SWiTCH 💫</div>
   <div class="loader-spin"></div>
 </div>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js');});
+}
+</script>
 </body>
 </html>
