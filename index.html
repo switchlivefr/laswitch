@@ -2088,18 +2088,14 @@ function openQuitModal(){
     var el=document.getElementById(id); if(el) el.style.display='none';
   });
   if(installBlock){
-    if(isStandalone){
-      installBlock.style.display = 'none';
+    installBlock.style.display = 'block';
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+    if(isIOS){
+      document.getElementById('c-quit-ios-btn').style.display = 'block';
+    } else if(_deferredPrompt){
+      document.getElementById('c-quit-install-btn').style.display = 'block';
     } else {
-      installBlock.style.display = 'block';
-      var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-      if(isIOS){
-        document.getElementById('c-quit-ios-btn').style.display = 'block';
-      } else if(_deferredPrompt){
-        document.getElementById('c-quit-install-btn').style.display = 'block';
-      } else {
-        document.getElementById('c-quit-android-btn').style.display = 'block';
-      }
+      document.getElementById('c-quit-android-btn').style.display = 'block';
     }
   }
   document.getElementById('c-quit').classList.add('open');
