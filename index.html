@@ -2369,8 +2369,18 @@ function doQuit(){
   var mp=document.getElementById('m-pwa');if(mp){mp.classList.remove('open');mp.style.opacity='0';mp.style.pointerEvents='none';}
   document.body.classList.remove('coverlay-open','modal-open');
   document.body.style.overflow='';
-  if(quitUrl){window.open(quitUrl,'_blank');quitUrl=null;}
-  else{quitting=true;history.go(-2);}
+  if(quitUrl){window.open(quitUrl,'_blank');quitUrl=null;return;}
+  // Tenter window.close() d'abord (fonctionne en PWA standalone)
+  window.close();
+  // Fallback Android : ouvrir l'écran d'accueil via intent
+  setTimeout(function(){
+    var isAndroid=/android/i.test(navigator.userAgent);
+    if(isAndroid){
+      window.location.href='intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.HOME;end';
+    } else {
+      quitting=true;history.go(-2);
+    }
+  },100);
 }
 
 var _videoMuted=true;
