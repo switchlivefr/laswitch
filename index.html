@@ -2045,7 +2045,7 @@ function openPwaModal(){
     document.getElementById('pwa-install-btn').style.display = '';
   } else if(isIOS){
     document.getElementById('pwa-ios-btn').style.display = '';
-  } else if(isAndroid){
+  } else {
     document.getElementById('pwa-android-btn').style.display = '';
   }
 }
@@ -2091,14 +2091,17 @@ function openQuitModal(){
   if(!isStandalone && installBlock){
     installBlock.style.display = 'block';
     var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-    var isAndroid = /android/i.test(navigator.userAgent);
     if(_deferredPrompt){
       document.getElementById('c-quit-install-btn').style.display = 'block';
     } else if(isIOS){
       document.getElementById('c-quit-ios-btn').style.display = 'block';
     } else {
+      // Android ou autre : toujours montrer les instructions manuelles
       document.getElementById('c-quit-android-btn').style.display = 'block';
     }
+  } else if(isStandalone && installBlock){
+    // Installé : cacher le bloc
+    installBlock.style.display = 'none';
   }
   document.getElementById('c-quit').classList.add('open');
   document.body.classList.add('coverlay-open');
