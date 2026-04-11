@@ -2084,7 +2084,6 @@ function triggerPwaInstall(){
 function openQuitModal(){
   var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
   var installBlock = document.getElementById('c-quit-install');
-  // Réinitialiser tous les boutons
   ['c-quit-install-btn','c-quit-ios-btn','c-quit-android-btn'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.style.display='none';
   });
@@ -2094,10 +2093,10 @@ function openQuitModal(){
     } else {
       installBlock.style.display = 'block';
       var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-      if(_deferredPrompt){
-        document.getElementById('c-quit-install-btn').style.display = 'block';
-      } else if(isIOS){
+      if(isIOS){
         document.getElementById('c-quit-ios-btn').style.display = 'block';
+      } else if(_deferredPrompt){
+        document.getElementById('c-quit-install-btn').style.display = 'block';
       } else {
         document.getElementById('c-quit-android-btn').style.display = 'block';
       }
