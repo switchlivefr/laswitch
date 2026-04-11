@@ -207,6 +207,29 @@ async function handleRequest(request, env) {
     }
   }
 
+  // GET photos Pro Race Cafe depuis R2
+  if (request.method === 'GET' && action === 'getPrcPhotos') {
+    try {
+      let photos = [];
+      if (env.R2_BUCKET) {
+        const listed = await env.R2_BUCKET.list({ prefix: 'photos/proracecafe/reservation/', delimiter: '/' });
+        photos = listed.objects
+          .filter(obj => obj.key.match(/\.(jpg|jpeg|png|webp)$/i))
+          .map(obj => {
+            const name = obj.key.split('/').pop();
+            return { name, url: `https://www.laswitch.net/photos/proracecafe/reservation/${encodeURIComponent(name)}` };
+          });
+      }
+      return new Response(JSON.stringify({ photos }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'max-age=300' }
+      });
+    } catch(e) {
+      return new Response(JSON.stringify({ photos: [], error: e.message }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
+  }
+
   // GET photos depuis Google Drive
   if (request.method === 'GET' && action === 'getPhotos') {
     try {
