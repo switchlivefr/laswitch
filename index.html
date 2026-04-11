@@ -742,11 +742,22 @@ function nav(id,direction){
     }else{ne.classList.add('active');}
   }
   if(id==='p-switch'){renderSwitch();showHint();
-    // Ne pas proposer si déjà en mode standalone (déjà installé)
     var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    if(!isStandalone && !localStorage.getItem('pwa_shown_v2')){
-      localStorage.setItem('pwa_shown_v2','1');
-      setTimeout(openPwaModal, 600);
+    if(isStandalone){
+      // En mode standalone = installé, on mémorise
+      localStorage.setItem('pwa_was_installed','1');
+    } else {
+      // Pas en standalone : était-il installé avant ?
+      var wasInstalled = localStorage.getItem('pwa_was_installed');
+      if(wasInstalled){
+        // L'icône a été supprimée → reproposer
+        localStorage.removeItem('pwa_shown_v2');
+        localStorage.removeItem('pwa_was_installed');
+      }
+      if(!localStorage.getItem('pwa_shown_v2')){
+        localStorage.setItem('pwa_shown_v2','1');
+        setTimeout(openPwaModal, 600);
+      }
     }
     // Bandeau flottant droite
     if(!window._reperSideHintDone){
