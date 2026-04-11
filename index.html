@@ -742,8 +742,8 @@ function nav(id,direction){
     }else{ne.classList.add('active');}
   }
   if(id==='p-switch'){renderSwitch();showHint();
-    if(!localStorage.getItem('pwa_shown')){
-      localStorage.setItem('pwa_shown','1');
+    if(!localStorage.getItem('pwa_shown_v2')){
+      localStorage.setItem('pwa_shown_v2','1');
       setTimeout(openPwaModal, 600);
     }
     // Bandeau flottant droite
