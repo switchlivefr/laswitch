@@ -2044,6 +2044,10 @@ var _pwaContext='repertoire';
 function openPwaModal(ctx){
   var isMob=/android|iphone|ipad|ipod/i.test(navigator.userAgent);
   if(!isMob)return;
+  // Détecter les webviews in-app (Messenger, Instagram, Facebook, TikTok...)
+  var ua=navigator.userAgent;
+  var isInAppBrowser=/FBAN|FBAV|Instagram|Messenger|Twitter|Line|WhatsApp|Snapchat|TikTok|musical_ly|LinkedInApp|GSA\/|YaBrowser|MiuiBrowser/i.test(ua);
+  if(isInAppBrowser)return;
   _pwaContext=ctx||'repertoire';
   var m=document.getElementById('m-pwa');
   if(!m)return;
