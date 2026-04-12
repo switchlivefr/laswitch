@@ -244,7 +244,6 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
   body.home-desktop{max-width:none!important;overflow:hidden}
   /* Bnav et autres fixed : restent ancrés sur le smartphone au centre */
   body.home-desktop .bnav{max-width:480px;width:480px}
-  body.home-desktop .moverlay{left:auto!important;right:auto!important;width:480px}
   body.home-desktop #info-lieu-btn:not(:empty){max-width:480px;width:480px}
   /* Layout flex : colonne texte + pellicule gauche à GAUCHE du smartphone, pellicule droite à droite */
   /* Le smartphone reste centré dans la fenêtre via margin auto */
@@ -759,7 +758,6 @@ function nav(id,direction){
       if(nav){nav.style.left='';nav.style.transform='';}
       var lieu=document.getElementById('info-lieu-btn');
       if(lieu){lieu.style.left='';lieu.style.transform='';}
-      document.querySelectorAll('.moverlay').forEach(function(m){m.style.left='';m.style.width='';});
     }
   }
   currentPage=id;
@@ -1006,7 +1004,6 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
       if(nav){nav.style.left='';nav.style.transform='';}
       var lieu=document.getElementById('info-lieu-btn');
       if(lieu){lieu.style.left='';lieu.style.transform='';}
-      document.querySelectorAll('.moverlay').forEach(function(m){m.style.left='';m.style.width='';});
     }
     } else {
       hide();
@@ -1505,6 +1502,15 @@ function applyPitchMode(mode){
 // ============================================================
 
 function openM(id){
+  // Sur desktop accueil : positionner la modale sur le smartphone
+  if(document.body.classList.contains('home-desktop')){
+    var wrap=document.getElementById('home-app-center-wrap');
+    if(wrap){
+      var rect=wrap.getBoundingClientRect();
+      var m=document.getElementById(id);
+      if(m){m.style.left=rect.left+'px';m.style.width=rect.width+'px';m.style.right='auto';}
+    }
+  }
   // Pour la modale pitch : appliquer le mode AVANT l'ajout de 'open'
   if(id==='m-home-pitch'){
     var _mn=document.getElementById('m-pitch-mode-normal');
@@ -1536,6 +1542,8 @@ function openM(id){
 }
 function closeM(id){
   if(id==='m-resa'){clearTimeout(_prcTimer);_prcTimer=null;}
+  var m=document.getElementById(id);
+  if(m){m.style.left='';m.style.width='';m.style.right='';}
   hideScrollHints();
   document.body.classList.remove('coverlay-open');
   document.getElementById(id).classList.remove('open');
@@ -2858,11 +2866,7 @@ function alignDesktopNav(){
   if(lieu&&lieu.innerHTML.trim()){lieu.style.left=left+'px';lieu.style.transform='none';}
   var hintWrap=document.getElementById('reper-side-hint-wrap');
   if(hintWrap){hintWrap.style.left=left+'px';hintWrap.style.width='480px';}
-  // Modales centrées sur la zone smartphone
-  document.querySelectorAll('.moverlay').forEach(function(m){
-    m.style.left=left+'px';
-    m.style.width='480px';
-  });
+
 }
 
 function applyResaMode(mode){
