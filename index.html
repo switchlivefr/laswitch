@@ -244,6 +244,13 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
   body.home-desktop{max-width:none!important;overflow:hidden}
   #p-home.active{display:flex!important;flex-direction:row;align-items:stretch;justify-content:center;height:calc(100vh - var(--nh));overflow:hidden}
   #home-app-center-wrap{flex:0 0 480px;width:480px;overflow-y:auto;height:100%}
+  #home-prc-col{flex:0 0 220px;width:220px;height:100%;overflow:hidden;position:relative;display:none;flex-direction:column;padding:16px 12px;box-sizing:border-box;border-right:1px solid var(--border)}
+  body.home-desktop #home-prc-col{display:flex}
+  #home-prc-col .mbody{flex:1;overflow-y:auto;min-height:0;font-size:14px;line-height:1.6}
+  #home-prc-col .sec-osl-t{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--cyan);font-weight:700;margin:14px 0 4px;display:block}
+  #home-prc-col .sec-osl-h{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:var(--cyan);font-weight:700;margin:10px 0 2px;display:block}
+  #home-prc-col .sec-osl-s{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--white);font-weight:700;margin:4px 0 2px;display:block}
+  #home-prc-col .sec-osl-z{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;margin:4px 0 2px;display:block;animation:rainbow .6s linear infinite}
   /* =====================================================
      PELLICULE CINEMA — perforations continues sur les bords
      ===================================================== */
@@ -273,6 +280,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 
 <div class="page active" id="p-home">
   <div id="film-left" class="film-strip" style="display:none"><div class="film-strip-inner" id="film-left-inner"></div></div>
+  <div id="home-prc-col"><div class="mbody" id="home-prc-text"></div></div>
   <div id="home-app-center-wrap">
   <div class="home-hero">
     <div class="eyebrow">Spectacle Musical Participatif</div>
@@ -1544,6 +1552,28 @@ window.addEventListener('popstate',function(){
   history.pushState(null,'',window.location.href);
 });
 
+function renderPrcCol(){
+  var el=document.getElementById('home-prc-text');
+  if(!el)return;
+  el.innerHTML='';
+  var d=RAW.proRaceCafe;
+  if(!d||d.error)return;
+  var rows=d.rows;
+  var cs=_resaOff?3:0, ce=_resaOff?4:1;
+  for(var i=0;i<rows.length;i++){
+    var code=(rows[i][cs]||'').trim().toUpperCase();
+    var txt=(rows[i][ce]||'').trim();
+    if(code==='X')continue;
+    if(txt&&txt.charCodeAt(0)===9658)continue;
+    if(!txt){var sp=document.createElement('div');sp.style.height='8px';el.appendChild(sp);continue;}
+    if(code==='T'){var t=document.createElement('div');t.className='sec-osl-t';t.textContent=txt;el.appendChild(t);}
+    else if(code==='H'){var h=document.createElement('div');h.className='sec-osl-h';h.textContent=txt;el.appendChild(h);}
+    else if(code==='S'){var s=document.createElement('div');s.className='sec-osl-s';s.textContent=txt;el.appendChild(s);}
+    else if(code==='Z'){var z=document.createElement('div');z.className='sec-osl-z';z.textContent=txt;el.appendChild(z);}
+    else{var lines=txt.split('\n');for(var j=0;j<lines.length;j++){var l=lines[j].trim();if(!l)continue;var p=document.createElement('p');p.style.fontSize='13px';p.textContent=l;el.appendChild(p);}}
+  }
+}
+
 function renderHome(){
   if(!RAW.switch||RAW.switch.error)return;
   var rows=RAW.switch.rows;
@@ -1551,6 +1581,7 @@ function renderHome(){
   var ct=g(rows,0,2);var sw=document.getElementById('sw-count-sub');if(sw&&ct)sw.textContent=ct;
   var eventUrl=g(rows,0,3);var ebtn=document.getElementById('fb-event-btn');
   if(ebtn&&eventUrl){ebtn.dataset.url=eventUrl;ebtn.style.display='flex';}else if(ebtn){ebtn.style.display='none';}
+  renderPrcCol();
   var pd=RAW.pitchSw;if(!pd||pd.error)return;
   var prows=pd.rows;var me=document.getElementById('m-home-pitch-body');if(!me)return;
   me.innerHTML='';
