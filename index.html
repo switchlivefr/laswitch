@@ -243,6 +243,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 @media(min-width:900px){
   /* body reste normal - géré par JS selon l'onglet actif */
   body.home-desktop{max-width:none!important;overflow:hidden}
+  body.home-desktop .bnav{max-width:480px;left:50%;transform:translateX(-50%);right:auto;width:480px}
   #p-home.active{display:flex!important;flex-direction:row;align-items:stretch;justify-content:center;height:calc(100vh - var(--nh));overflow:hidden}
   #home-app-center-wrap{flex:0 0 480px;width:480px;overflow-y:auto;height:100%}
   #home-prc-col{flex:0 0 520px;width:520px;height:100%;overflow:hidden;position:relative;display:none;flex-direction:column;padding:16px 12px;box-sizing:border-box;border-right:1px solid var(--border)}
