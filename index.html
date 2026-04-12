@@ -53,7 +53,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 #reper-side-hint.visible{opacity:1;pointer-events:auto}
 #reper-side-hint-btn{display:block;margin-top:12px;width:100%;background:rgba(52,209,192,.07);border:1px solid rgba(52,209,192,.22);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;color:var(--cyan);cursor:pointer;padding:10px 16px;animation:btnpulse 3s ease-in-out infinite}
 @keyframes starPulse{0%,100%{opacity:.08;filter:brightness(1.5)}50%{opacity:.35;filter:brightness(3)}}
-@keyframes sloganPulse{0%,100%{opacity:.2}50%{opacity:1}}
+@keyframes sloganPulse{0%,100%{opacity:.3}50%{opacity:1}}
 
 .prc-arrow-l{display:inline-block;margin-right:10px;line-height:1;opacity:0}
 .prc-arrow-r{display:inline-block;margin-left:8px;line-height:1;opacity:0}
@@ -154,7 +154,6 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .mbox{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);width:100%;max-width:460px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden}
 /* Modale pitch : layout avec colonne photos gauche */
 #m-home-pitch .mbox,#m-pitch-big .mbox{max-width:460px;flex-direction:column}
-#m-prc .mbox{max-height:95vh;overflow-y:auto}
 #m-home-pitch .mbox-inner,#m-pitch-big .mbox-inner{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
 #m-home-pitch-photos,#m-pitch-big-photos{width:100px;flex-shrink:0;overflow:hidden;position:relative;background:var(--card)}
 #m-home-pitch-photos-inner,#m-pitch-big-photos-inner{display:flex;flex-direction:column;will-change:transform;animation:pitchPhotoUp 120s linear infinite}
@@ -242,19 +241,18 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 #home-prc-col{display:none}
 @media(min-width:900px){
   /* body reste normal - géré par JS selon l'onglet actif */
-  body.home-desktop{max-width:480px;margin:0 auto;overflow:hidden}
-  #p-home.active{position:relative;display:block!important;height:calc(100vh - var(--nh));overflow:hidden}
-  #home-app-center-wrap{width:100%;height:100%;overflow-y:auto}
-  body.home-desktop #film-left{position:fixed;left:calc(50% - 240px - 130px);top:0;bottom:calc(var(--nh) + env(safe-area-inset-bottom))}
-  body.home-desktop #film-right{position:fixed;right:calc(50% - 240px - 130px);top:0;bottom:calc(var(--nh) + env(safe-area-inset-bottom))}
-  body.home-desktop #home-prc-col{position:fixed;left:calc(50% - 240px - 520px);top:0;bottom:calc(var(--nh) + env(safe-area-inset-bottom));width:520px}
-  #home-prc-col{flex:0 0 520px;width:520px;height:100%;overflow:hidden;position:relative;display:none;flex-direction:column;padding:16px 12px;box-sizing:border-box;border-right:1px solid var(--border)}
+  body.home-desktop{max-width:none!important;overflow:hidden}
+  body.home-desktop .bnav{left:50%;transform:translateX(-50%);max-width:480px;right:auto;width:480px}
+  #p-home.active{display:flex!important;flex-direction:row;align-items:stretch;justify-content:center;height:calc(100vh - var(--nh));overflow:hidden}
+  #home-app-center-wrap{flex:0 0 480px;width:480px;overflow-y:auto;height:100%}
+  #home-prc-col{flex:0 0 520px;width:520px;height:100%;overflow:hidden;position:relative;flex-direction:column;padding:16px 20px;box-sizing:border-box;border-right:1px solid var(--border)}
   body.home-desktop #home-prc-col{display:flex}
-  #home-prc-col .mbody{flex:1;overflow-y:auto;min-height:0;font-size:14px;line-height:1.6}
-  #home-prc-col .sec-osl-t{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--cyan);font-weight:700;margin:14px 0 4px;display:block}
-  #home-prc-col .sec-osl-h{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:var(--cyan);font-weight:700;margin:10px 0 2px;display:block}
+  #home-prc-col .mbody{flex:1;overflow-y:auto;min-height:0;font-size:14px;line-height:1.7}
+  #home-prc-col .sec-osl-t{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--cyan);font-weight:700;margin:14px 0 4px;display:block}
+  #home-prc-col .sec-osl-h{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:var(--amber);font-weight:700;margin:10px 0 2px;display:block}
   #home-prc-col .sec-osl-s{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--white);font-weight:700;margin:4px 0 2px;display:block}
   #home-prc-col .sec-osl-z{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;margin:4px 0 2px;display:block;animation:rainbow .6s linear infinite}
+  #home-prc-col p{font-size:14px;margin:4px 0;color:var(--white)}
   /* =====================================================
      PELLICULE CINEMA — perforations continues sur les bords
      ===================================================== */
@@ -432,9 +430,6 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 <div class="moverlay" id="m-prc" onclick="if(event.target===this)closeM('m-prc')">
   <div class="mbox">
     <div class="mhead" style="text-align:center"><h3 style="color:var(--gold)">ALLER SUR LE SITE DU PRO RACE CAFE</h3></div>
-    <div class="mbody" style="padding:8px 16px 0">
-      <img src="https://www.laswitch.net/gifs/proracecafe/switch-pro%20race%20cafe.gif" style="width:90%;border-radius:10px;display:block;margin:0 auto" alt="">
-    </div>
     <div class="mfoot" style="gap:8px">
       <button class="mbtn sec" onclick="closeM('m-prc')">Annuler</button>
       <button class="mbtn" onclick="window.open('https://www.proracecafe.com/','_blank');closeM('m-prc')" style="background:var(--gold);color:#000">Continuer</button>
@@ -497,7 +492,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 <div class="moverlay" id="m-pwa" style="z-index:9500;opacity:0;transition:opacity .4s ease;pointer-events:none" onclick="if(event.target===this&&_pwaContext==='quit')closePwaModal()">
   <div class="mbox" style="text-align:center;width:auto;display:inline-flex;flex-direction:column">
     <div class="mhead">
-      <div style="font-size:48px;margin-bottom:8px;margin-right:18px">📲</div>
+      <div style="font-size:48px;margin-bottom:8px">📲</div>
       <h3 style="color:var(--gold);font-size:20px;margin:0">Installe La SWiTCH !</h3>
     </div>
     <div class="mbody" style="text-align:center;padding:12px 16px">
@@ -1511,7 +1506,7 @@ function openM(id){
       }
     },300);
   }
-  if(id!=='m-marco'&&id!=='m-pin'&&id!=='m-prc'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
+  if(id!=='m-marco'&&id!=='m-pin'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
 }
 function closeM(id){
   if(id==='m-resa'){clearTimeout(_prcTimer);_prcTimer=null;}
@@ -1574,7 +1569,7 @@ function renderPrcCol(){
     else if(code==='H'){var h=document.createElement('div');h.className='sec-osl-h';h.textContent=txt;el.appendChild(h);}
     else if(code==='S'){var s=document.createElement('div');s.className='sec-osl-s';s.textContent=txt;el.appendChild(s);}
     else if(code==='Z'){var z=document.createElement('div');z.className='sec-osl-z';z.textContent=txt;el.appendChild(z);}
-    else{var lines=txt.split('\n');for(var j=0;j<lines.length;j++){var l=lines[j].trim();if(!l)continue;var p=document.createElement('p');p.style.fontSize='13px';p.textContent=l;el.appendChild(p);}}
+    else{var lines=txt.split('\n');for(var j=0;j<lines.length;j++){var l=lines[j].trim();if(!l)continue;var p=document.createElement('p');p.textContent=l;el.appendChild(p);}}
   }
 }
 
