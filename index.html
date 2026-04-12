@@ -154,6 +154,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .mbox{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);width:100%;max-width:460px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden}
 /* Modale pitch : layout avec colonne photos gauche */
 #m-home-pitch .mbox,#m-pitch-big .mbox{max-width:460px;flex-direction:column}
+#m-prc .mbox{max-height:none;overflow:visible}
 #m-home-pitch .mbox-inner,#m-pitch-big .mbox-inner{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
 #m-home-pitch-photos,#m-pitch-big-photos{width:100px;flex-shrink:0;overflow:hidden;position:relative;background:var(--card)}
 #m-home-pitch-photos-inner,#m-pitch-big-photos-inner{display:flex;flex-direction:column;will-change:transform;animation:pitchPhotoUp 120s linear infinite}
@@ -420,7 +421,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
   <div class="mbox">
     <div class="mhead" style="text-align:center"><h3 style="color:var(--gold)">ALLER SUR LE SITE DU PRO RACE CAFE</h3></div>
     <div class="mbody" style="padding:8px 16px 0">
-      <img src="https://www.laswitch.net/gifs/proracecafe/switch-pro%20race%20cafe.gif" style="width:100%;max-height:35vh;object-fit:contain;border-radius:10px;display:block" alt="">
+      <img src="https://www.laswitch.net/gifs/proracecafe/switch-pro%20race%20cafe.gif" style="width:100%;border-radius:10px;display:block" alt="">
     </div>
     <div class="mfoot" style="gap:8px">
       <button class="mbtn sec" onclick="closeM('m-prc')">Annuler</button>
