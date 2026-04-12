@@ -752,7 +752,13 @@ function nav(id,direction){
   // Desktop pellicules : max-width none uniquement sur accueil
   if(window.innerWidth>=900){
     if(id==='p-home'){document.body.classList.add('home-desktop');setTimeout(alignDesktopNav,50);}
-    else{document.body.classList.remove('home-desktop');}
+    else{
+      document.body.classList.remove('home-desktop');
+      var nav=document.querySelector('.bnav');
+      if(nav){nav.style.left='';nav.style.transform='';}
+      var lieu=document.getElementById('info-lieu-btn');
+      if(lieu){lieu.style.left='';lieu.style.transform='';}
+    }
   }
   currentPage=id;
   Object.keys(BNM).forEach(function(k){var b=document.getElementById(BNM[k]);if(b)b.classList.toggle('active',k===id);});
@@ -992,7 +998,13 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
     if(isDesk()){
       show();load();
       if(currentPage==='p-home'){document.body.classList.add('home-desktop');}
-      else{document.body.classList.remove('home-desktop');}
+      else{
+      document.body.classList.remove('home-desktop');
+      var nav=document.querySelector('.bnav');
+      if(nav){nav.style.left='';nav.style.transform='';}
+      var lieu=document.getElementById('info-lieu-btn');
+      if(lieu){lieu.style.left='';lieu.style.transform='';}
+    }
     } else {
       hide();
       document.body.classList.remove('home-desktop');
