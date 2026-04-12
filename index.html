@@ -244,7 +244,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
   body.home-desktop{max-width:480px!important;margin:0 auto;overflow:hidden}
   #p-home.active{display:block!important;height:calc(100vh - var(--nh));overflow:hidden}
   #home-app-center-wrap{width:100%;height:100%;overflow-y:auto}
-  body.home-desktop #film-left{position:fixed!important;display:block!important;left:calc(50% - 240px - 130px);top:0;bottom:calc(var(--nh) + env(safe-area-inset-bottom));height:auto}
+  body.home-desktop #film-left{position:fixed!important;display:block!important;left:calc(50% - 240px - 130px - 520px - 130px);top:0;bottom:calc(var(--nh) + env(safe-area-inset-bottom));height:auto}
   body.home-desktop #film-right{position:fixed!important;display:block!important;right:calc(50% - 240px - 130px);top:0;bottom:calc(var(--nh) + env(safe-area-inset-bottom));height:auto}
   body.home-desktop #home-prc-col{position:fixed!important;display:flex!important;left:calc(50% - 240px - 130px - 520px);top:0;bottom:calc(var(--nh) + env(safe-area-inset-bottom));width:520px;height:auto}
   #home-prc-col{flex:0 0 520px;width:520px;height:100%;overflow:hidden;position:relative;flex-direction:column;padding:16px 20px;box-sizing:border-box;border-right:1px solid var(--border)}
@@ -432,6 +432,9 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 <div class="moverlay" id="m-prc" onclick="if(event.target===this)closeM('m-prc')">
   <div class="mbox">
     <div class="mhead" style="text-align:center"><h3 style="color:var(--gold)">ALLER SUR LE SITE DU PRO RACE CAFE</h3></div>
+    <div class="mbody" style="padding:8px 16px 0">
+      <img src="https://www.laswitch.net/gifs/proracecafe/switch-pro%20race%20cafe.gif" style="width:90%;border-radius:10px;display:block;margin:0 auto" alt="">
+    </div>
     <div class="mfoot" style="gap:8px">
       <button class="mbtn sec" onclick="closeM('m-prc')">Annuler</button>
       <button class="mbtn" onclick="window.open('https://www.proracecafe.com/','_blank');closeM('m-prc')" style="background:var(--gold);color:#000">Continuer</button>
