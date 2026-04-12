@@ -243,8 +243,8 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
   /* body reste normal - géré par JS selon l'onglet actif */
   body.home-desktop{max-width:none!important;overflow:hidden}
   /* Bnav et autres fixed : restent ancrés sur le smartphone au centre */
-  body.home-desktop .bnav{left:50%;transform:translateX(-50%);max-width:480px;right:auto;width:480px}
-  body.home-desktop #info-lieu-btn:not(:empty){left:50%;transform:translateX(-50%);max-width:480px;right:auto;width:480px}
+  body.home-desktop .bnav{max-width:480px;width:480px}
+  body.home-desktop #info-lieu-btn:not(:empty){max-width:480px;width:480px}
   /* Layout flex : colonne texte + pellicule gauche à GAUCHE du smartphone, pellicule droite à droite */
   /* Le smartphone reste centré dans la fenêtre via margin auto */
   #p-home.active{display:flex!important;flex-direction:row;align-items:stretch;justify-content:center;height:calc(100vh - var(--nh));overflow:hidden}
@@ -751,7 +751,7 @@ function nav(id,direction){
   if(id==='p-home')applyVideoSound();
   // Desktop pellicules : max-width none uniquement sur accueil
   if(window.innerWidth>=900){
-    if(id==='p-home'){document.body.classList.add('home-desktop');}
+    if(id==='p-home'){document.body.classList.add('home-desktop');setTimeout(alignDesktopNav,50);}
     else{document.body.classList.remove('home-desktop');}
   }
   currentPage=id;
@@ -1583,6 +1583,8 @@ function renderPrcCol(){
     else{var lines=txt.split('\n');for(var j=0;j<lines.length;j++){var l=lines[j].trim();if(!l)continue;var p=document.createElement('p');p.textContent=l;el.appendChild(p);}}
   }
 }
+
+window.addEventListener('resize', alignDesktopNav);
 
 function renderHome(){
   if(!RAW.switch||RAW.switch.error)return;
@@ -2822,6 +2824,20 @@ function secretTap2(){
 }
 
 var _tapCount=0,_tapTimer=null;
+function alignDesktopNav(){
+  if(window.innerWidth<900)return;
+  var wrap=document.getElementById('home-app-center-wrap');
+  if(!wrap)return;
+  var rect=wrap.getBoundingClientRect();
+  var left=rect.left;
+  var nav=document.querySelector('.bnav');
+  if(nav){nav.style.left=left+'px';nav.style.transform='none';}
+  var lieu=document.getElementById('info-lieu-btn');
+  if(lieu&&lieu.innerHTML.trim()){lieu.style.left=left+'px';lieu.style.transform='none';}
+  var hintWrap=document.getElementById('reper-side-hint-wrap');
+  if(hintWrap){hintWrap.style.left=left+'px';hintWrap.style.width='480px';}
+}
+
 function applyResaMode(mode){
   _resaOff=(mode==='off');
 
@@ -2858,7 +2874,7 @@ document.querySelector('.bnav').classList.add('nav-disabled');
 fetch('/api')
   .then(function(r){return r.json();})
   .then(function(nd){
-    RAW=nd;renderHome();renderContactSw();applyOslLabel();
+    RAW=nd;renderHome();renderContactSw();applyOslLabel();setTimeout(alignDesktopNav,100);
     if(nd.pitchMode){_pitchMode=nd.pitchMode;}
     if(nd.gifIndex!==undefined){window._serverGifIndex=nd.gifIndex;} // sera appliqué dans loadVideoList après chargement des gifs
     if(nd.homeMode){
