@@ -242,10 +242,12 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 #home-prc-col{display:none}
 @media(min-width:900px){
   /* body reste normal - géré par JS selon l'onglet actif */
-  body.home-desktop{max-width:none!important;overflow:hidden}
-  body.home-desktop .bnav{max-width:480px;left:50%;transform:translateX(-50%);right:auto;width:480px}
-  #p-home.active{display:flex!important;flex-direction:row;align-items:stretch;justify-content:center;height:calc(100vh - var(--nh));overflow:hidden}
-  #home-app-center-wrap{flex:0 0 480px;width:480px;overflow-y:auto;height:100%}
+  body.home-desktop{max-width:480px;margin:0 auto;overflow:hidden}
+  #p-home.active{position:relative;display:block!important;height:calc(100vh - var(--nh));overflow:hidden}
+  #home-app-center-wrap{width:100%;height:100%;overflow-y:auto}
+  body.home-desktop #film-left{position:fixed;left:calc(50% - 240px - 130px);top:0;bottom:calc(var(--nh) + env(safe-area-inset-bottom))}
+  body.home-desktop #film-right{position:fixed;right:calc(50% - 240px - 130px);top:0;bottom:calc(var(--nh) + env(safe-area-inset-bottom))}
+  body.home-desktop #home-prc-col{position:fixed;left:calc(50% - 240px - 520px);top:0;bottom:calc(var(--nh) + env(safe-area-inset-bottom));width:520px}
   #home-prc-col{flex:0 0 520px;width:520px;height:100%;overflow:hidden;position:relative;display:none;flex-direction:column;padding:16px 12px;box-sizing:border-box;border-right:1px solid var(--border)}
   body.home-desktop #home-prc-col{display:flex}
   #home-prc-col .mbody{flex:1;overflow-y:auto;min-height:0;font-size:14px;line-height:1.6}
