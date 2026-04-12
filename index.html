@@ -242,12 +242,17 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 @media(min-width:900px){
   /* body reste normal - géré par JS selon l'onglet actif */
   body.home-desktop{max-width:none!important;overflow:hidden}
-  body.home-desktop .bnav{max-width:480px;left:50%;transform:translateX(-50%);right:auto;width:480px}
+  /* Bnav et autres fixed : restent ancrés sur le smartphone au centre */
+  body.home-desktop .bnav{left:50%;transform:translateX(-50%);max-width:480px;right:auto;width:480px}
+  body.home-desktop #info-lieu-btn:not(:empty){left:50%;transform:translateX(-50%);max-width:480px;right:auto;width:480px}
+  /* Layout flex : colonne texte + pellicule gauche à GAUCHE du smartphone, pellicule droite à droite */
+  /* Le smartphone reste centré dans la fenêtre via margin auto */
   #p-home.active{display:flex!important;flex-direction:row;align-items:stretch;justify-content:center;height:calc(100vh - var(--nh));overflow:hidden}
-  #home-app-center-wrap{flex:0 0 480px;width:480px;overflow-y:auto;height:100%;position:relative;z-index:1}
-  body.home-desktop #film-left{flex:0 0 130px!important;display:block!important;position:relative;height:100%}
-  body.home-desktop #film-right{flex:0 0 130px!important;display:block!important;position:relative;height:100%}
-  body.home-desktop #home-prc-col{position:relative;display:flex!important;flex:0 0 520px;width:520px;height:100%}
+  #home-app-center-wrap{flex:0 0 480px;width:480px;overflow-y:auto;height:100%}
+  body.home-desktop #film-left{flex:0 0 130px!important;display:block!important;height:100%;order:1}
+  body.home-desktop #home-prc-col{display:flex!important;flex:0 0 520px;width:520px;height:100%;order:2}
+  #home-app-center-wrap{order:3}
+  body.home-desktop #film-right{flex:0 0 130px!important;display:block!important;height:100%;order:4}
   #home-prc-col{flex:0 0 520px;width:520px;height:100%;overflow:hidden;position:relative;flex-direction:column;padding:16px 20px;box-sizing:border-box;border-right:1px solid var(--border)}
   body.home-desktop #home-prc-col{display:flex}
   #home-prc-col .mbody{flex:1;overflow-y:auto;min-height:0;font-size:14px;line-height:1.7}
