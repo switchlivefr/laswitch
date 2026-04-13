@@ -451,12 +451,12 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 </div>
 
 <!-- MODALE : Pro Race Cafe (mobile) -->
-<div class="moverlay" id="m-prc-mobile" onclick="if(event.target===this)closeM('m-prc-mobile')">
+<div class="moverlay" id="m-prc-mobile" onclick="if(event.target===this){var m=document.getElementById('m-prc-mobile-body');if(m)m.scrollTop=0;closeM('m-prc-mobile');}">
   <div class="mbox">
     <div class="mbody" id="m-prc-mobile-body" style="padding:16px 20px;font-size:14px;line-height:1.7"></div>
     <div class="mfoot" style="gap:8px">
-      <button class="mbtn sec" onclick="closeM('m-prc-mobile')">Fermer</button>
-      <button class="mbtn" onclick="window.open('https://www.proracecafe.com/','_blank');closeM('m-prc-mobile')" style="background:var(--gold);color:#000">Visiter le site</button>
+      <button class="mbtn sec" onclick="var m=document.getElementById('m-prc-mobile-body');if(m)m.scrollTop=0;closeM('m-prc-mobile')">Fermer</button>
+      <button class="mbtn" onclick="var m=document.getElementById('m-prc-mobile-body');if(m)m.scrollTop=0;window.open('https://www.proracecafe.com/','_blank');closeM('m-prc-mobile')" style="background:var(--gold);color:#000">Visiter le site</button>
     </div>
   </div>
 </div>
@@ -1661,7 +1661,6 @@ function openPrcMobile(){
     _renderPrcRows(mob, rows, cs, ce, ci);
   }
   openM('m-prc-mobile');
-  setTimeout(function(){if(mob)mob.scrollTop=0;},50);
 }
 
 window.addEventListener('resize', function(){
