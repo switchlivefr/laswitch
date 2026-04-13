@@ -299,7 +299,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
     <div class="hmeta" style="overflow:hidden;width:100%;position:relative;z-index:1">
       <div class="hedition" id="home-edition" onclick="secretTap2()" style="cursor:pointer;position:relative;z-index:10">—</div>
       <div id="home-prc-link" style="display:none">
-        <div onclick="openM('m-prc')" style="background:transparent;border:none;padding:6px 18px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;position:relative">
+        <div onclick="document.body.classList.contains('home-desktop')?openM('m-prc'):openPrcMobile()" style="background:transparent;border:none;padding:6px 18px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;position:relative">
           <span class="prc-arrow-l"><svg width="18" height="16" viewBox="0 0 18 16" fill="none"><rect x="0" y="5" width="11" height="6" rx="1.5" fill="white"/><polygon points="9,0 18,8 9,16" fill="white"/></svg></span><span class="prc-label">PRO RACE CAFE</span><span class="prc-arrow-r"><svg width="18" height="16" viewBox="0 0 18 16" fill="none"><rect x="7" y="5" width="11" height="6" rx="1.5" fill="white"/><polygon points="9,0 0,8 9,16" fill="white"/></svg></span>
         </div>
       </div>
@@ -444,6 +444,17 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
     <div class="mfoot" style="gap:8px">
       <button class="mbtn sec" onclick="closeM('m-prc')">Annuler</button>
       <button class="mbtn" onclick="window.open('https://www.proracecafe.com/','_blank');closeM('m-prc')" style="background:var(--gold);color:#000">Continuer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE : Pro Race Cafe (mobile) -->
+<div class="moverlay" id="m-prc-mobile" onclick="if(event.target===this)closeM('m-prc-mobile')">
+  <div class="mbox">
+    <div class="mbody" id="m-prc-mobile-body" style="padding:16px 20px;font-size:14px;line-height:1.7"></div>
+    <div class="mfoot" style="gap:8px">
+      <button class="mbtn sec" onclick="closeM('m-prc-mobile')">Fermer</button>
+      <button class="mbtn" onclick="window.open('https://www.proracecafe.com/','_blank');closeM('m-prc-mobile')" style="background:var(--gold);color:#000">Visiter le site</button>
     </div>
   </div>
 </div>
@@ -1593,6 +1604,13 @@ function renderPrcCol(){
   if(!d||d.error)return;
   var rows=d.rows;
   var cs=_resaOff?3:0, ce=_resaOff?4:1, ci=_resaOff?5:2;
+  _renderPrcRows(el, rows, cs, ce, ci);
+  // Mettre à jour aussi la modale mobile si elle existe
+  var mob=document.getElementById('m-prc-mobile-body');
+  if(mob){mob.innerHTML='';_renderPrcRows(mob, rows, cs, ce, ci);}
+}
+
+function _renderPrcRows(el, rows, cs, ce, ci){
   for(var i=0;i<rows.length;i++){
     var code=(rows[i][cs]||'').trim().toUpperCase();
     var txt=(rows[i][ce]||'').trim();
@@ -1631,6 +1649,16 @@ function renderPrcCol(){
     else if(code==='Z'){var z=document.createElement('div');z.className='sec-osl-z';z.textContent=txt;el.appendChild(z);}
     else{var lines=txt.split('\n');for(var j=0;j<lines.length;j++){var l=lines[j].trim();if(!l)continue;var p=document.createElement('p');p.textContent=l;el.appendChild(p);}}
   }
+}
+
+function openPrcMobile(){
+  var mob=document.getElementById('m-prc-mobile-body');
+  if(mob&&!mob.children.length&&RAW.proRaceCafe&&!RAW.proRaceCafe.error){
+    var rows=RAW.proRaceCafe.rows;
+    var cs=_resaOff?3:0, ce=_resaOff?4:1, ci=_resaOff?5:2;
+    _renderPrcRows(mob, rows, cs, ce, ci);
+  }
+  openM('m-prc-mobile');
 }
 
 window.addEventListener('resize', function(){
