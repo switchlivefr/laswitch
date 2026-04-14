@@ -61,7 +61,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .arrows-visible .prc-arrow-r{animation:haloArrowRMove 6s ease-in-out infinite,haloArrowOpacity 1.5s ease-in-out infinite}
 @keyframes halo{0%,100%{text-shadow:0 0 4px rgba(255,255,255,.1);transform:scale(1)}50%{text-shadow:0 0 10px #fff,0 0 25px #fff,0 0 50px rgba(255,255,255,.9),0 0 80px rgba(255,255,255,.6),0 0 120px rgba(255,255,255,.3);transform:scale(1.06)}}
 @keyframes haloArrowLMove{0%,100%{transform:translateX(0)}50%{transform:translateX(-5px)}}
-@keyframes haloArrowOpacity{0%,100%{opacity:0}50%{opacity:.5}}
+@keyframes haloArrowOpacity{0%,100%{opacity:0}50%{opacity:.75}}
 @keyframes haloArrowRMove{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
 .prc-label{font-size:26px;font-weight:700;letter-spacing:2px;animation:none;color:#fff}
 @keyframes slideFromLeft{from{transform:translateX(-120vw)}to{transform:translateX(0)}}
@@ -307,7 +307,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
       <div class="hedition" id="home-edition" onclick="secretTap2()" style="cursor:pointer;position:relative;z-index:10">—</div>
       <div id="home-prc-link" style="display:none">
         <div onclick="document.body.classList.contains('home-desktop')?openM('m-prc'):openPrcMobile()" style="background:transparent;border:none;padding:6px 18px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;position:relative">
-          <span class="prc-arrow-l">👉</span><span class="prc-label">PRO RACE CAFE</span><span class="prc-arrow-r">🔗</span>
+          <span class="prc-arrow-l">🔗</span><span class="prc-label">PRO RACE CAFE</span><span class="prc-arrow-r">👈</span>
         </div>
       </div>
       <div id="home-lieu-link" style="display:none">
