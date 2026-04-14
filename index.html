@@ -696,7 +696,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
   <div class="mbox">
     <div class="mhead"><h3 class="amber" style="text-align:center">🍽️ Reserver au Pro Race Cafe</h3></div>
     <div style="padding:8px 16px 6px;flex-shrink:0">
-      <video src="https://www.laswitch.net/photos/proracecafe/accueil-ordi/SWiTCH%20PRC%20MENUS.mp4" autoplay muted loop playsinline style="width:90%;border-radius:12px;display:block;margin:0 auto"></video>
+      <video src="https://www.laswitch.net/photos/proracecafe/accueil-ordi/SWiTCH%20PRC%20MENUS.mp4" autoplay muted loop playsinline style="width:90%;border-radius:12px;display:block;margin:0 auto" onloadedmetadata="this.style.width=this.offsetWidth+'px';this.style.height=this.offsetHeight+'px'"></video>
     </div>
     <div class="mbody" style="text-align:left;padding:4px 16px 0;overflow:visible;flex-shrink:0">
       <div id="resa-text-body"></div>
@@ -1638,6 +1638,10 @@ function _renderPrcRows(el, rows, cs, ce, ci){
         vid.loop=true;
         vid.playsInline=true;
         vid.style.cssText=cssBase;
+        vid.addEventListener('loadedmetadata',function(){
+          this.style.width=this.offsetWidth+'px';
+          this.style.height=this.offsetHeight+'px';
+        });
         el.appendChild(vid);
       } else {
         var img=document.createElement('img');
