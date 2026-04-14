@@ -696,7 +696,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
   <div class="mbox">
     <div class="mhead"><h3 class="amber" style="text-align:center">🍽️ Reserver au Pro Race Cafe</h3></div>
     <div style="padding:8px 16px 6px;flex-shrink:0">
-      <div id="prc-slideshow"><div id="prc-flash" style="position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;border-radius:12px;z-index:10;transition:none"></div></div>
+      <video src="https://www.laswitch.net/photos/proracecafe/accueil-ordi/SWiTCH%20PRC%20PLATS.mp4" autoplay muted loop playsinline style="width:90%;border-radius:12px;display:block;margin:0 auto"></video>
     </div>
     <div class="mbody" style="text-align:left;padding:4px 16px 0;overflow:visible;flex-shrink:0">
       <div id="resa-text-body"></div>
@@ -1541,7 +1541,7 @@ function openM(id){
   if(id==='m-osl')renderOslPitch();
   if(id==='m-pitch-big'){renderPitchBig();initPitchBigPhotos();if(window._initPitchBigTouchControl)window._initPitchBigTouchControl();var pb=document.getElementById('m-pitch-big-body');if(pb)pb.scrollTop=0;}
   if(id==='m-home-pitch'||id==='m-renseignements'||id==='m-resa'){muteVideo();_videoMuted=true;}
-  if(id==='m-resa'){initPrcSlideshow();renderResaText();}
+  if(id==='m-resa'){renderResaText();}
   if(id==='m-home-pitch'){
     initPitchPhotos();
     if(window._initPitchTouchControl)window._initPitchTouchControl();
