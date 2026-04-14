@@ -56,9 +56,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 @keyframes sloganPulse{0%,100%{opacity:.2}50%{opacity:1}}
 
 .prc-arrow-l{display:inline-block;margin-right:10px;line-height:1;opacity:0}
-.prc-arrow-r{display:inline-block;margin-left:8px;line-height:1;opacity:0}
+.prc-arrow-r{display:inline-block;margin-left:8px;line-height:1;opacity:0;position:relative}
 .arrows-visible .prc-arrow-l{animation:haloArrowLMove 6s ease-in-out infinite,haloArrowOpacity 1.5s ease-in-out infinite}
 .arrows-visible .prc-arrow-r{animation:haloArrowRMove 6s ease-in-out infinite,haloArrowOpacity 1.5s ease-in-out infinite}
+.arrows-visible .prc-arrow-r::after{content:'';position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:8px;height:8px;border-radius:50%;background:transparent;border:1.5px solid var(--gold);animation:prcRipple 2s ease-out infinite}
+@keyframes prcRipple{0%{width:8px;height:8px;opacity:.7;border-color:var(--gold)}100%{width:28px;height:28px;opacity:0;border-color:var(--amber)}}
 @keyframes halo{0%,100%{text-shadow:0 0 4px rgba(255,255,255,.1);transform:scale(1)}50%{text-shadow:0 0 10px #fff,0 0 25px #fff,0 0 50px rgba(255,255,255,.9),0 0 80px rgba(255,255,255,.6),0 0 120px rgba(255,255,255,.3);transform:scale(1.06)}}
 @keyframes haloArrowLMove{0%,100%{transform:translateX(0)}50%{transform:translateX(-5px)}}
 @keyframes haloArrowOpacity{0%,100%{opacity:0}50%{opacity:.75}}
