@@ -697,7 +697,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
     <div class="mhead"><h3 class="amber" style="text-align:center">🍽️ Reserver au Pro Race Cafe</h3></div>
     <div class="mbody" style="text-align:center;padding-top:8px">
       <div id="prc-slideshow"><div id="prc-flash" style="position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;border-radius:12px;z-index:10;transition:none"></div></div>
-      <p style="color:#fff;font-weight:600">Réserve ta table pour la SWiTCH 😋</p>
+      <div id="resa-text-body" class="cc-wrap" style="text-align:left;margin-top:10px"></div>
     </div>
     <div class="mfoot">
       <button class="mbtn sec" onclick="closeM('m-resa')">Annuler</button>
@@ -1539,7 +1539,7 @@ function openM(id){
   if(id==='m-osl')renderOslPitch();
   if(id==='m-pitch-big'){renderPitchBig();initPitchBigPhotos();if(window._initPitchBigTouchControl)window._initPitchBigTouchControl();var pb=document.getElementById('m-pitch-big-body');if(pb)pb.scrollTop=0;}
   if(id==='m-home-pitch'||id==='m-renseignements'||id==='m-resa'){muteVideo();_videoMuted=true;}
-  if(id==='m-resa'){initPrcSlideshow();}
+  if(id==='m-resa'){initPrcSlideshow();renderResaText();}
   if(id==='m-home-pitch'){
     initPitchPhotos();
     if(window._initPitchTouchControl)window._initPitchTouchControl();
@@ -1960,6 +1960,34 @@ function bnResaClick(){
   if(_resaOff){nav('p-resa');}else{openM('m-resa');}
 }
 
+function renderResaText(){
+  var el=document.getElementById('resa-text-body');
+  if(!el)return;
+  el.innerHTML='';
+  var d=RAW.reservation;
+  if(!d||d.error)return;
+  var rows=d.rows;
+  var card=document.createElement('div');card.className='cc';
+  for(var i=0;i<rows.length;i++){
+    var code=(rows[i][0]||'').trim().toUpperCase();
+    if(code==='X')continue;
+    var txt='';
+    var b=(rows[i][1]||'').trim();
+    var c=(rows[i][2]||'').trim();
+    if(b&&b.charCodeAt(0)!==9658)txt=b;
+    else if(c&&c.charCodeAt(0)!==9658)txt=c;
+    if(code==='L'){var lsp=document.createElement('div');lsp.style.height='10px';card.appendChild(lsp);continue;}
+    if(!txt)continue;
+    if(code==='T'){var t=document.createElement('div');t.className='sec';t.textContent=txt;card.appendChild(t);}
+    else if(code==='H'){var h=document.createElement('div');h.className='sec';h.textContent=txt;card.appendChild(h);}
+    else if(code==='S'){var s=document.createElement('div');s.className='sec sub';s.textContent=txt;card.appendChild(s);}
+    else if(code==='Z'){var z=document.createElement('div');z.className='sec sub-z';z.textContent=txt;card.appendChild(z);}
+    else if(code==='K'){var linesK=txt.split(/[\n\r]+/);for(var li=0;li<linesK.length;li++){var lk=linesK[li].trim();if(!lk)continue;var pk=document.createElement('p');pk.textContent=lk;card.appendChild(pk);}}
+    else{var lines=txt.split(/[\n\r]+/);for(var j=0;j<lines.length;j++){var l=lines[j].trim();if(!l)continue;var p=document.createElement('p');p.textContent=l;card.appendChild(p);}}
+  }
+  el.appendChild(card);
+}
+
 function renderLieuHome(){
   var dl=RAW.informationLieu;
   if(!dl||dl.error||!dl.rows)return;
@@ -2097,6 +2125,7 @@ function silentRefresh(){
       if(currentPage==='p-osl')renderOSL();
       if(currentPage==='p-rules')renderRules();
       if(currentPage==='p-resa')renderInfo();
+      if(document.getElementById('m-resa').classList.contains('open'))renderResaText();
     }).catch(function(){});
 }
 
