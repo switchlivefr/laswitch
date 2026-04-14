@@ -13,7 +13,8 @@ const SHEETS = {
   'pitchSwBig':    'PITCH SWiTCH BIG',
   'reglesBig':     'REGLES BIG',
   'proRaceCafe':   'PRO RACE CAFE',
-  'reservation':   'RESERVATION'
+  'reservation':   'RESERVATION',
+  'promoSw':       'PROMO SWiTCH'
 };
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRxLRh2URcPDRhMKC9mQwDsToEBTGCkrRrULgAFqYSvaldTh2wWRZGP7vbZa9eMYWP/exec';
 
