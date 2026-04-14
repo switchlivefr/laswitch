@@ -1969,6 +1969,7 @@ function renderResaText(){
   var d=RAW.reservation;
   if(!d||d.error)return;
   var rows=d.rows;
+  var card=document.createElement('div');card.className='cc';card.style.cssText='padding:10px 14px;margin:0';
   for(var i=0;i<rows.length;i++){
     var code=(rows[i][0]||'').trim().toUpperCase();
     if(code==='X')continue;
@@ -1977,15 +1978,16 @@ function renderResaText(){
     var c=(rows[i][2]||'').trim();
     if(b&&b.charCodeAt(0)!==9658)txt=b;
     else if(c&&c.charCodeAt(0)!==9658)txt=c;
-    if(code==='L'){var lsp=document.createElement('div');lsp.style.height='6px';el.appendChild(lsp);continue;}
+    if(code==='L'){var lsp=document.createElement('div');lsp.style.height='6px';card.appendChild(lsp);continue;}
     if(!txt)continue;
-    if(code==='T'){var t=document.createElement('div');t.className='sec';t.textContent=txt;el.appendChild(t);}
-    else if(code==='H'){var h=document.createElement('div');h.className='sec';h.textContent=txt;el.appendChild(h);}
-    else if(code==='S'){var s=document.createElement('div');s.className='sec sub';s.textContent=txt;el.appendChild(s);}
-    else if(code==='Z'){var z=document.createElement('div');z.className='sec sub-z';z.textContent=txt;el.appendChild(z);}
-    else if(code==='K'){var linesK=txt.split(/[\n\r]+/);for(var li=0;li<linesK.length;li++){var lk=linesK[li].trim();if(!lk)continue;var pk=document.createElement('p');pk.textContent=lk;el.appendChild(pk);}}
-    else{var lines=txt.split(/[\n\r]+/);for(var j=0;j<lines.length;j++){var l=lines[j].trim();if(!l)continue;var p=document.createElement('p');p.textContent=l;el.appendChild(p);}}
+    if(code==='T'){var t=document.createElement('div');t.className='sec';t.textContent=txt;card.appendChild(t);}
+    else if(code==='H'){var h=document.createElement('div');h.className='sec';h.textContent=txt;card.appendChild(h);}
+    else if(code==='S'){var s=document.createElement('div');s.className='sec sub';s.textContent=txt;card.appendChild(s);}
+    else if(code==='Z'){var z=document.createElement('div');z.className='sec sub-z';z.textContent=txt;card.appendChild(z);}
+    else if(code==='K'){var linesK=txt.split(/[\n\r]+/);for(var li=0;li<linesK.length;li++){var lk=linesK[li].trim();if(!lk)continue;var pk=document.createElement('p');pk.textContent=lk;card.appendChild(pk);}}
+    else{var lines=txt.split(/[\n\r]+/);for(var j=0;j<lines.length;j++){var l=lines[j].trim();if(!l)continue;var p=document.createElement('p');p.textContent=l;card.appendChild(p);}}
   }
+  el.appendChild(card);
 }
 
 function renderLieuHome(){
