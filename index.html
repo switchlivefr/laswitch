@@ -660,6 +660,10 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 <div class="moverlay" id="m-renseignements" onclick="if(event.target===this)closeM('m-renseignements')">
   <div class="mbox" style="display:flex;flex-direction:column;max-height:85vh">
     <div class="mhead" style="text-align:center;flex-shrink:0"><h3 style="color:var(--gold)">CONTACTER MARCO</h3></div>
+    <div class="mbody" style="overflow-y:auto;flex:1;text-align:left">
+      <div id="m-promo-sw-body"></div>
+      <div id="m-contact-sw-body"></div>
+    </div>
     <div style="flex-shrink:0;text-align:center;padding:0 16px 12px">
       <div style="display:flex;gap:12px;justify-content:center">
         <button onclick="openLink('https://www.linkedin.com/in/marco-switch-295ab93b1','m-renseignements')" style="display:flex;flex-direction:column;align-items:center;gap:6px;border:none;cursor:pointer;border-radius:12px;padding:14px 18px;flex:1;background:#0077b5">
@@ -675,9 +679,6 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
           <span style="color:white;font-size:12px;font-weight:700;font-family:DM Sans,sans-serif">Messenger</span>
         </button>
       </div>
-    </div>
-    <div class="mbody" style="overflow-y:auto;flex:1;text-align:left">
-      <div id="m-contact-sw-body"></div>
     </div>
     <div class="mfoot" style="flex-shrink:0"><button class="mbtn sec" onclick="closeM('m-renseignements')">Fermer</button></div>
   </div>
@@ -1742,6 +1743,30 @@ function renderContactSw(){
   }
 }
 
+function renderPromoSw(){
+  var el=document.getElementById('m-promo-sw-body');
+  if(!el)return;
+  el.innerHTML='';
+  var d=RAW.promoSw;
+  if(!d||d.error)return;
+  var rows=d.rows;
+  var card=document.createElement('div');card.className='cc';card.style.cssText='padding:10px 14px;margin:0 0 10px 0';
+  for(var i=0;i<rows.length;i++){
+    var code=(rows[i][0]||'').trim().toUpperCase();
+    if(code==='X')continue;
+    var txt=(rows[i][1]||'').trim();
+    if(code==='L'){var lsp=document.createElement('div');lsp.style.height='6px';card.appendChild(lsp);continue;}
+    if(!txt)continue;
+    if(code==='T'){var t=document.createElement('div');t.className='sec';t.textContent=txt;card.appendChild(t);}
+    else if(code==='H'){var h=document.createElement('div');h.className='sec';h.textContent=txt;card.appendChild(h);}
+    else if(code==='S'){var s=document.createElement('div');s.className='sec sub';s.textContent=txt;card.appendChild(s);}
+    else if(code==='Z'){var z=document.createElement('div');z.className='sec sub-z';z.textContent=txt;card.appendChild(z);}
+    else if(code==='K'){var linesK=txt.split(/[\n\r]+/);for(var li=0;li<linesK.length;li++){var lk=linesK[li].trim();if(!lk)continue;var pk=document.createElement('p');pk.textContent=lk;card.appendChild(pk);}}
+    else{var lines=txt.split(/[\n\r]+/);for(var j=0;j<lines.length;j++){var l=lines[j].trim();if(!l)continue;var p=document.createElement('p');p.textContent=l;card.appendChild(p);}}
+  }
+  if(card.children.length)el.appendChild(card);
+}
+
 
 function renderSwitch(){
   var listEl=document.getElementById('sw-list');
@@ -2107,7 +2132,7 @@ function silentRefresh(){
   fetch('/api')
     .then(function(r){return r.json();})
     .then(function(nd){
-      if(!nd)return;RAW=nd;renderHome();renderContactSw();applyOslLabel();
+      if(!nd)return;RAW=nd;renderHome();renderContactSw();renderPromoSw();applyOslLabel();
       if(nd.resaMode)applyResaMode(nd.resaMode);
       if(nd.pitchMode&&nd.pitchMode!==_pitchMode){_pitchMode=nd.pitchMode;}
       // Mettre à jour le gif si changé par quelqu'un d'autre
@@ -2998,7 +3023,7 @@ document.querySelector('.bnav').classList.add('nav-disabled');
 fetch('/api')
   .then(function(r){return r.json();})
   .then(function(nd){
-    RAW=nd;renderHome();renderContactSw();applyOslLabel();setTimeout(alignDesktopNav,100);
+    RAW=nd;renderHome();renderContactSw();renderPromoSw();applyOslLabel();setTimeout(alignDesktopNav,100);
     if(nd.pitchMode){_pitchMode=nd.pitchMode;}
     if(nd.gifIndex!==undefined){window._serverGifIndex=nd.gifIndex;} // sera appliqué dans loadVideoList après chargement des gifs
     if(nd.homeMode){
