@@ -1681,6 +1681,10 @@ function renderHome(){
   var ct=g(rows,0,2);var sw=document.getElementById('sw-count-sub');if(sw&&ct)sw.textContent=ct;
   var eventUrl=g(rows,0,3);var ebtn=document.getElementById('fb-event-btn');
   if(ebtn&&eventUrl){ebtn.dataset.url=eventUrl;ebtn.style.display='flex';}else if(ebtn){ebtn.style.display='none';}
+  var sl1=g(rows,1,0);var sl2=g(rows,1,2);
+  var l1=document.querySelector('.hslogan-l1');var l2=document.querySelector('.hslogan-l2');
+  if(l1&&sl1)l1.textContent=sl1;
+  if(l2&&sl2)l2.textContent=sl2;
   renderPrcCol();
   var pd=RAW.pitchSw;if(!pd||pd.error)return;
   var prows=pd.rows;var me=document.getElementById('m-home-pitch-body');if(!me)return;
