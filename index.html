@@ -267,7 +267,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
   body.home-desktop #home-prc-col{display:flex!important;flex:0 0 480px;width:480px;height:100%;order:2}
   #home-app-center-wrap{order:3}
   body.home-desktop #film-right{flex:0 0 130px!important;display:block!important;height:100%;order:4}
-  #home-prc-col{flex:0 0 480px;width:480px;height:100%;overflow:hidden;position:relative;flex-direction:column;padding:16px 20px;box-sizing:border-box;border-right:1px solid var(--border);opacity:0;transition:opacity 2s ease}
+  #home-prc-col{flex:0 0 480px;width:480px;height:100%;overflow:hidden;position:relative;flex-direction:column;padding:16px 20px;box-sizing:border-box;border-right:1px solid var(--border);opacity:0;transition:opacity 4s ease}
   body.home-desktop #home-prc-col{display:flex}
   #home-prc-col .mbody{flex:1;overflow-y:auto;min-height:0;font-size:14px;line-height:1.7}
   #home-prc-col .sec-osl-t{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--cyan);font-weight:700;margin:14px 0 4px;display:block}
@@ -774,7 +774,7 @@ function nav(id,direction){
   // Desktop pellicules : max-width none uniquement sur accueil
   if(window.innerWidth>=900){
     if(id==='p-home'){document.body.classList.add('home-desktop');setTimeout(alignDesktopNav,50);
-      setTimeout(function(){var c=document.getElementById('home-prc-col');if(c)c.style.opacity='1';},1000);
+      setTimeout(function(){var c=document.getElementById('home-prc-col');if(c)c.style.opacity='1';},3000);
     }
     else{
       document.body.classList.remove('home-desktop');
@@ -1022,7 +1022,7 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
     if(isDesk()){
       show();load();
       if(currentPage==='p-home'){document.body.classList.add('home-desktop');
-        setTimeout(function(){var c=document.getElementById('home-prc-col');if(c)c.style.opacity='1';},1000);
+        setTimeout(function(){var c=document.getElementById('home-prc-col');if(c)c.style.opacity='1';},3000);
       }
       else{
       document.body.classList.remove('home-desktop');
