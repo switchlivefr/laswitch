@@ -61,7 +61,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .arrows-visible .prc-arrow-r{animation:haloArrowRMove 6s ease-in-out infinite,prcFingerPulse 6s ease-in-out infinite;filter:grayscale(1) brightness(10)}
 .arrows-visible .prc-arrow-r::after{content:'';position:absolute;top:35%;left:10%;width:12px;height:12px;margin-left:-6px;margin-top:-6px;border-radius:50%;border:2px solid var(--white);opacity:0;animation:prcRippleSync 6s ease-in-out infinite}
 @keyframes prcFingerPulse{0%,20%{opacity:0}50%{opacity:.5}75%,100%{opacity:0}}
-@keyframes prcRippleSync{0%,40%{transform:scale(1);opacity:0}50%{transform:scale(1);opacity:1}96%{transform:scale(5);opacity:0}100%{transform:scale(1);opacity:0}}
+@keyframes prcRippleSync{0%,40%{transform:scale(1);opacity:0}50%{transform:scale(1);opacity:1}96%{transform:scale(4.2);opacity:0}100%{transform:scale(1);opacity:0}}
 @keyframes halo{0%,100%{text-shadow:0 0 4px rgba(255,255,255,.1);transform:scale(1)}50%{text-shadow:0 0 10px #fff,0 0 25px #fff,0 0 50px rgba(255,255,255,.9),0 0 80px rgba(255,255,255,.6),0 0 120px rgba(255,255,255,.3);transform:scale(1.06)}}
 @keyframes haloArrowLMove{0%,100%{transform:translateX(0)}50%{transform:translateX(-5px)}}
 @keyframes haloArrowOpacity{0%,100%{opacity:0}50%{opacity:.75}}
