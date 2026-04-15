@@ -304,7 +304,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 
 <div class="page active" id="p-home">
   <div id="film-left" class="film-strip" style="display:none"><div class="film-strip-inner" id="film-left-inner"></div></div>
-  <div id="home-prc-col" style="opacity:0;transition:opacity 2s ease"><div class="mbody" id="home-prc-text"></div></div>
+  <div id="home-prc-col"><div class="mbody" id="home-prc-text"></div></div>
   <div id="home-app-center-wrap">
   <div class="home-hero">
     <div class="eyebrow">Spectacle Musical Participatif</div>
@@ -773,7 +773,10 @@ function nav(id,direction){
   if(id==='p-home')applyVideoSound();
   // Desktop pellicules : max-width none uniquement sur accueil
   if(window.innerWidth>=900){
-    if(id==='p-home'){document.body.classList.add('home-desktop');setTimeout(alignDesktopNav,50);setTimeout(function(){var c=document.getElementById('home-prc-col');if(c)c.style.opacity='1';},1000);}
+    if(id==='p-home'){document.body.classList.add('home-desktop');setTimeout(alignDesktopNav,50);
+      var c=document.getElementById('home-prc-col');
+      if(c){c.style.opacity='0';c.style.transition='opacity 2s ease';setTimeout(function(){c.style.opacity='1';},1000);}
+    }
     else{
       document.body.classList.remove('home-desktop');
       var nav=document.querySelector('.bnav');
@@ -1019,7 +1022,10 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
   function init(){
     if(isDesk()){
       show();load();
-      if(currentPage==='p-home'){document.body.classList.add('home-desktop');setTimeout(function(){var c=document.getElementById('home-prc-col');if(c)c.style.opacity='1';},1000);}
+      if(currentPage==='p-home'){document.body.classList.add('home-desktop');
+        var c=document.getElementById('home-prc-col');
+        if(c){c.style.opacity='0';c.style.transition='opacity 2s ease';setTimeout(function(){c.style.opacity='1';},1000);}
+      }
       else{
       document.body.classList.remove('home-desktop');
       var nav=document.querySelector('.bnav');
