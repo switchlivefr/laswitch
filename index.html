@@ -775,7 +775,7 @@ function nav(id,direction){
   if(window.innerWidth>=900){
     if(id==='p-home'){document.body.classList.add('home-desktop');setTimeout(alignDesktopNav,50);
       var c=document.getElementById('home-prc-col');
-      if(c){c.style.opacity='0';c.style.transition='opacity 2s ease';setTimeout(function(){c.style.opacity='1';},1000);}
+      if(c){c.style.transition='none';c.style.opacity='0';requestAnimationFrame(function(){requestAnimationFrame(function(){c.style.transition='opacity 2s ease';setTimeout(function(){c.style.opacity='1';},1000);});});}
     }
     else{
       document.body.classList.remove('home-desktop');
@@ -1024,7 +1024,7 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
       show();load();
       if(currentPage==='p-home'){document.body.classList.add('home-desktop');
         var c=document.getElementById('home-prc-col');
-        if(c){c.style.opacity='0';c.style.transition='opacity 2s ease';setTimeout(function(){c.style.opacity='1';},1000);}
+        if(c){c.style.transition='none';c.style.opacity='0';requestAnimationFrame(function(){requestAnimationFrame(function(){c.style.transition='opacity 2s ease';setTimeout(function(){c.style.opacity='1';},1000);});});}
       }
       else{
       document.body.classList.remove('home-desktop');
