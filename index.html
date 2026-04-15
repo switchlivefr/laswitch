@@ -774,7 +774,7 @@ function nav(id,direction){
   // Desktop pellicules : max-width none uniquement sur accueil
   if(window.innerWidth>=900){
     if(id==='p-home'){document.body.classList.add('home-desktop');setTimeout(alignDesktopNav,50);
-      setTimeout(function(){var c=document.getElementById('home-prc-col');if(c)c.style.opacity='1';},3000);
+      setTimeout(function(){var c=document.getElementById('home-prc-col');if(c)c.style.opacity='1';},6000);
     }
     else{
       document.body.classList.remove('home-desktop');
@@ -1022,7 +1022,7 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
     if(isDesk()){
       show();load();
       if(currentPage==='p-home'){document.body.classList.add('home-desktop');
-        setTimeout(function(){var c=document.getElementById('home-prc-col');if(c)c.style.opacity='1';},3000);
+        setTimeout(function(){var c=document.getElementById('home-prc-col');if(c)c.style.opacity='1';},6000);
       }
       else{
       document.body.classList.remove('home-desktop');
