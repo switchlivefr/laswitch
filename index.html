@@ -31,6 +31,7 @@ body::-webkit-scrollbar{display:none}
 img,video{-webkit-touch-callout:none!important;-webkit-user-drag:none!important;user-select:none!important}
 body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none}
 @keyframes pIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes prcColFadeIn{from{opacity:0}to{opacity:1}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 @keyframes titlepulse{0%,100%{opacity:.1}50%{opacity:1}}
 @keyframes hintpulse{0%,100%{color:var(--gold);opacity:.1}50%{color:var(--gold);opacity:1}}
@@ -267,7 +268,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
   #home-app-center-wrap{order:3}
   body.home-desktop #film-right{flex:0 0 130px!important;display:block!important;height:100%;order:4}
   #home-prc-col{flex:0 0 480px;width:480px;height:100%;overflow:hidden;position:relative;flex-direction:column;padding:16px 20px;box-sizing:border-box;border-right:1px solid var(--border)}
-  body.home-desktop #home-prc-col{display:flex}
+  body.home-desktop #home-prc-col{display:flex;animation:prcColFadeIn 2s ease forwards 1s;opacity:0}
   #home-prc-col .mbody{flex:1;overflow-y:auto;min-height:0;font-size:14px;line-height:1.7}
   #home-prc-col .sec-osl-t{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--cyan);font-weight:700;margin:14px 0 4px;display:block}
   #home-prc-col .sec-osl-h{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:var(--gold);font-weight:700;margin:10px 0 2px;display:block}
