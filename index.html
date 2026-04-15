@@ -2202,7 +2202,7 @@ function silentRefresh(){
       if(currentPage==='p-osl')renderOSL();
       if(currentPage==='p-rules')renderRules();
       if(currentPage==='p-resa')renderInfo();
-      if(document.getElementById('m-resa').classList.contains('open'))renderResaText();
+      if(document.getElementById('m-resa').classList.contains('open')&&!document.getElementById('resa-text-body').children.length)renderResaText();
     }).catch(function(){});
 }
 
