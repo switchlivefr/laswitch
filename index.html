@@ -700,9 +700,6 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 <div class="moverlay" id="m-resa" onclick="if(event.target===this)closeM('m-resa')">
   <div class="mbox">
     <div class="mhead"><h3 class="amber" style="text-align:center">🍽️ Reserver au Pro Race Cafe</h3></div>
-    <div style="padding:8px 16px 6px;flex-shrink:0">
-      <video id="resa-video" src="https://www.laswitch.net/photos/proracecafe/accueil-ordi/SWiTCH%20PRC%20MENUS.mp4" autoplay muted loop playsinline style="width:90%;border-radius:12px;display:block;margin:0 auto"></video>
-    </div>
     <div class="mbody" style="text-align:left;padding:4px 16px 0;overflow:visible;flex-shrink:0">
       <div id="resa-text-body"></div>
     </div>
@@ -2001,12 +1998,30 @@ function renderResaText(){
   var card=document.createElement('div');card.className='cc';card.style.cssText='padding:10px 14px;margin:0';
   for(var i=0;i<rows.length;i++){
     var code=(rows[i][0]||'').trim().toUpperCase();
+    var txt=(rows[i][1]||'').trim();
     if(code==='X')continue;
-    var txt='';
-    var b=(rows[i][1]||'').trim();
-    var c=(rows[i][2]||'').trim();
-    if(b&&b.charCodeAt(0)!==9658)txt=b;
-    else if(c&&c.charCodeAt(0)!==9658)txt=c;
+    if(code==='C'){var cl=document.createElement('div');cl.style.clear='both';card.appendChild(cl);continue;}
+    if(code==='I'){
+      var url=txt;
+      if(!url)continue;
+      var pos=(rows[i][2]||'').trim().toUpperCase();
+      var side=(pos==='L')?'left':'right';
+      var margin=(side==='right')?'0 0 10px 16px':'0 16px 10px 0';
+      var cssBase='float:'+side+';max-width:45%;border-radius:8px;margin:'+margin+';display:block';
+      var isVideo=/\.(mp4|webm|ogg)(\?.*)?$/i.test(url);
+      if(isVideo){
+        var vid=document.createElement('video');
+        vid.src=url;vid.autoplay=true;vid.muted=true;vid.loop=true;vid.playsInline=true;
+        vid.style.cssText=cssBase+';height:auto';
+        card.appendChild(vid);
+      } else {
+        var img=document.createElement('img');
+        img.src=url;img.style.cssText=cssBase;
+        card.appendChild(img);
+      }
+      continue;
+    }
+    if(txt&&txt.charCodeAt(0)===9658)continue;
     if(code==='L'){var lsp=document.createElement('div');lsp.style.height='6px';card.appendChild(lsp);continue;}
     if(!txt)continue;
     if(code==='T'){var t=document.createElement('div');t.className='sec';t.textContent=txt;card.appendChild(t);}
