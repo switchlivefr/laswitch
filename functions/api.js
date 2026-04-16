@@ -290,6 +290,35 @@ async function handleRequest(request, env) {
         }
       }
 
+      // Tri du plus récent au plus ancien (format dd/mm/yyyy)
+      videos.sort((a, b) => {
+        const parseDate = d => {
+          if (!d) return 0;
+          const parts = d.split('/');
+          if (parts.length === 3) return new Date(parts[2], parts[1]-1, parts[0]).getTime();
+          return 0;
+        };
+        return parseDate(b.date) - parseDate(a.date);
+      });
+
+      // Récupérer les titres YouTube via oEmbed (en parallèle, max 20 à la fois)
+      const fetchTitle = async (url) => {
+        try {
+          const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+          const r = await fetch(oembedUrl);
+          if (!r.ok) return '';
+          const d = await r.json();
+          return d.title || '';
+        } catch(e) { return ''; }
+      };
+
+      // Récupérer par lots de 10 pour ne pas surcharger
+      for (let i = 0; i < videos.length; i += 10) {
+        const batch = videos.slice(i, i + 10);
+        const titles = await Promise.all(batch.map(v => v.titre ? Promise.resolve(v.titre) : fetchTitle(v.youtube)));
+        titles.forEach((t, j) => { if (t) videos[i + j].titre = t; });
+      }
+
       return new Response(JSON.stringify({ videos }), {
         headers: {
           'Content-Type': 'application/json',
