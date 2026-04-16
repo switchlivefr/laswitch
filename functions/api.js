@@ -17,6 +17,8 @@ const SHEETS = {
   'promoSw':       'PROMO SWiTCH'
 };
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRxLRh2URcPDRhMKC9mQwDsToEBTGCkrRrULgAFqYSvaldTh2wWRZGP7vbZa9eMYWP/exec';
+const FB_APP_ID = '3170724703113870';
+const VIDEOS_SHEET = 'VIDEOS';
 
 const R2_PUBLIC_BASE = 'https://www.laswitch.net/photos/switch';
 
@@ -254,6 +256,49 @@ async function handleRequest(request, env) {
       });
     } catch(e) {
       return new Response(JSON.stringify({ photos: [], error: e.message }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
+  }
+
+  // GET videos par nom de personne
+  if (request.method === 'GET' && action === 'getVideos') {
+    try {
+      const nom = (url.searchParams.get('nom') || '').trim().toLowerCase();
+      if (!nom) return new Response(JSON.stringify({ videos: [] }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+
+      const sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(VIDEOS_SHEET)}?key=${API_KEY}`;
+      const r = await fetch(sheetUrl);
+      const data = await r.json();
+      if (data.error) throw new Error(data.error.message);
+
+      const rows = (data.values || []).slice(1); // skip header
+      const videos = [];
+      for (const row of rows) {
+        const youtube = (row[0] || '').trim();
+        const titre = (row[1] || '').trim();
+        const personnes = (row[2] || '').trim().toLowerCase();
+        const date = (row[3] || '').trim();
+        if (!youtube) continue;
+        // Chercher le nom dans la colonne personnes
+        const parts = personnes.split('|').map(p => p.trim());
+        const match = parts.some(p => p.includes(nom) || nom.includes(p));
+        if (match) {
+          videos.push({ youtube, titre, date, personnes: row[2] || '' });
+        }
+      }
+
+      return new Response(JSON.stringify({ videos }), {
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Cache-Control': 'no-cache'
+        }
+      });
+    } catch(e) {
+      return new Response(JSON.stringify({ videos: [], error: e.message }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
     }
