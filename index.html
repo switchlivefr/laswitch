@@ -3200,7 +3200,7 @@ var _fbUser = null;
 function fbLogin() {
   FB.login(function(response) {
     if (response.authResponse) {
-      FB.api('/me', { fields: 'name,first_name,picture' }, function(me) {
+      FB.api('/me', { fields: 'id,name,first_name' }, function(me) {
         _fbUser = me;
         loadPrestas(me);
       });
@@ -3227,7 +3227,7 @@ function loadPrestas(me) {
 
   // Chercher par prénom dans la feuille VIDEOS
   var prenom = (me.first_name || me.name || '').toLowerCase();
-  fetch('/api?action=getVideos&nom=' + encodeURIComponent(prenom))
+  fetch('/api?action=getVideos&fbid=' + encodeURIComponent(me.id) + '&nom=' + encodeURIComponent(prenom) + '&fullname=' + encodeURIComponent((me.name||'').toLowerCase()))
     .then(function(r) { return r.json(); })
     .then(function(data) {
       document.getElementById('prestas-loading').style.display = 'none';
@@ -3293,26 +3293,13 @@ function loadPrestas(me) {
           info.appendChild(titreEl);
         }
 
-        // Date + personnes en secondaire
-        var meta = document.createElement('div');
-        meta.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap';
+        // Date centrée
         if (v.date) {
-          var dateEl = document.createElement('span');
-          dateEl.style.cssText = 'font-size:10px;color:var(--cyan);font-family:"DM Mono",monospace;letter-spacing:1px';
+          var dateEl = document.createElement('div');
+          dateEl.style.cssText = 'font-size:10px;color:var(--cyan);font-family:"DM Mono",monospace;letter-spacing:1px;margin-bottom:8px;text-align:center';
           dateEl.textContent = v.date;
-          meta.appendChild(dateEl);
+          info.appendChild(dateEl);
         }
-        if (v.personnes) {
-          var sep = document.createElement('span');
-          sep.style.cssText = 'font-size:10px;color:var(--border2)';
-          sep.textContent = '·';
-          meta.appendChild(sep);
-          var pers = document.createElement('span');
-          pers.style.cssText = 'font-size:10px;color:var(--muted2);line-height:1.4';
-          pers.textContent = v.personnes.replace(/\|/g, '·').replace(/\s+/g, ' ');
-          meta.appendChild(pers);
-        }
-        info.appendChild(meta);
 
         // Bouton ouvrir dans YouTube
         var ytBtn = document.createElement('a');
@@ -3346,7 +3333,7 @@ function checkFbSession() {
   if (typeof FB === 'undefined') return;
   FB.getLoginStatus(function(response) {
     if (response.status === 'connected' && !_fbUser) {
-      FB.api('/me', { fields: 'name,first_name,picture' }, function(me) {
+      FB.api('/me', { fields: 'id,name,first_name' }, function(me) {
         _fbUser = me;
         loadPrestas(me);
       });
