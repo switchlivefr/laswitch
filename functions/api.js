@@ -17,8 +17,6 @@ const SHEETS = {
   'promoSw':       'PROMO SWiTCH'
 };
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRxLRh2URcPDRhMKC9mQwDsToEBTGCkrRrULgAFqYSvaldTh2wWRZGP7vbZa9eMYWP/exec';
-const FB_APP_ID = '3170724703113870';
-const VIDEOS_SHEET = 'VIDEOS';
 
 const R2_PUBLIC_BASE = 'https://www.laswitch.net/photos/switch';
 
@@ -256,88 +254,6 @@ async function handleRequest(request, env) {
       });
     } catch(e) {
       return new Response(JSON.stringify({ photos: [], error: e.message }), {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-      });
-    }
-  }
-
-  // GET videos par ID Facebook
-  if (request.method === 'GET' && action === 'getVideos') {
-    try {
-      const fbId = (url.searchParams.get('fbid') || '').trim();
-      const nom = (url.searchParams.get('nom') || '').trim().toLowerCase();
-      const fullname = (url.searchParams.get('fullname') || '').trim().toLowerCase();
-
-      if (!fbId) return new Response(JSON.stringify({ videos: [] }), {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-      });
-
-      // Marco = admin → toutes les vidéos
-      const isAdmin = nom === 'marco' && fullname.includes('switch');
-
-      const sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(VIDEOS_SHEET)}?key=${API_KEY}`;
-      const r = await fetch(sheetUrl);
-      const data = await r.json();
-      if (data.error) throw new Error(data.error.message);
-
-      const rows = (data.values || []).slice(1);
-      const videos = [];
-      for (const row of rows) {
-        const youtube = (row[0] || '').trim();
-        const titre   = (row[1] || '').trim();
-        const personnes = (row[2] || '').trim();
-        const date    = (row[3] || '').trim();
-        const fb_ids  = (row[4] || '').trim();
-        if (!youtube) continue;
-
-        if (!isAdmin) {
-          // Chercher l'ID Facebook dans la colonne fb_ids
-          const ids = fb_ids.split('|').map(i => i.trim());
-          if (!ids.includes(fbId)) continue;
-        }
-
-        videos.push({ youtube, titre, date });
-      }
-
-      // Tri du plus récent au plus ancien
-      videos.sort((a, b) => {
-        const parseDate = d => {
-          if (!d) return 0;
-          const p = d.split('/');
-          if (p.length === 3) return new Date(p[2], p[1]-1, p[0]).getTime();
-          return 0;
-        };
-        return parseDate(b.date) - parseDate(a.date);
-      });
-
-      // Récupérer titres YouTube via oEmbed par lots de 10
-      const fetchTitle = async (ytUrl) => {
-        try {
-          const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(ytUrl)}&format=json`;
-          const res = await fetch(oembedUrl);
-          if (!res.ok) return '';
-          const d = await res.json();
-          return d.title || '';
-        } catch(e) { return ''; }
-      };
-
-      for (let i = 0; i < videos.length; i += 10) {
-        const batch = videos.slice(i, i + 10);
-        const titles = await Promise.all(
-          batch.map(v => v.titre ? Promise.resolve(v.titre) : fetchTitle(v.youtube))
-        );
-        titles.forEach((t, j) => { if (t) videos[i + j].titre = t; });
-      }
-
-      return new Response(JSON.stringify({ videos }), {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Cache-Control': 'no-cache'
-        }
-      });
-    } catch(e) {
-      return new Response(JSON.stringify({ videos: [], error: e.message }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
     }
