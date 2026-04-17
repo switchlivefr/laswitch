@@ -1663,6 +1663,12 @@ function openM(id){
   var el=document.getElementById(id);el.classList.add('open');
   document.body.style.overflow='hidden';
   document.body.classList.add('modal-open');
+  // Pour m-marco : réserver l'espace du bouton Plus de détails en bas
+  if(id==='m-marco'){
+    var rmb=document.getElementById('rules-more-btn');
+    var rmbH=rmb?rmb.offsetHeight:56;
+    el.style.bottom=rmbH+'px';
+  }
   if(id==='m-osl')renderOslPitch();
   if(id==='m-pitch-big'){renderPitchBig();initPitchBigPhotos();if(window._initPitchBigTouchControl)window._initPitchBigTouchControl();var pb=document.getElementById('m-pitch-big-body');if(pb)pb.scrollTop=0;}
   if(id==='m-home-pitch'||id==='m-renseignements'||id==='m-resa'){muteVideo();_videoMuted=true;}
@@ -1688,7 +1694,7 @@ function closeM(id){
   if(m){m.style.left='';m.style.width='';m.style.right='';}
   hideScrollHints();
   document.body.classList.remove('coverlay-open');
-  document.getElementById(id).classList.remove('open');
+  var closedEl=document.getElementById(id);closedEl.classList.remove('open');closedEl.style.bottom='';
   if(!document.querySelector('.moverlay.open')&&!document.querySelector('.coverlay.open')){
     document.body.style.overflow='';
     document.body.classList.remove('modal-open');
