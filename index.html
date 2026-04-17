@@ -649,15 +649,15 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 
 <!-- MODALE : Contacter Marco (appui long sur un titre) -->
 <div class="moverlay" id="m-marco" onclick="if(event.target===this)closeM('m-marco')">
-  <div class="mbox">
-    <div class="mhead" style="text-align:center">
+  <div class="mbox" style="display:flex;flex-direction:column;max-height:88vh">
+    <div class="mhead" style="text-align:center;flex-shrink:0">
       <h3 id="m-marco-head" style="color:var(--gold)">CONTACTE MARCO POUR T'INSCRIRE</h3>
       <div id="m-marco-horaires">
         <div id="m-marco-horaires-txt" style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--gold);line-height:1.6"></div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--gold);line-height:1.6"></div>
       </div>
     </div>
-    <div class="mbody" style="text-align:center">
+    <div class="mbody" style="text-align:center;overflow-y:auto;flex:1;min-height:0">
       <p id="m-marco-title" style="font-size:18px;font-weight:700;color:var(--white);margin-bottom:10px;animation:titlepulse 3s ease-in-out infinite">—</p>
 
       <!-- MODE NORMAL (resa on) -->
@@ -666,7 +666,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
           <div id="m-marco-msg" style="font-size:13px;color:var(--white);line-height:1.5;font-style:italic;margin-bottom:8px">—</div>
           <button onclick="copyMarcoMsg()" id="m-marco-copy" style="width:100%;background:var(--gold);color:#000;border:none;border-radius:8px;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">📋 COPIE LE MESSAGE</button>
         </div>
-        <div id="m-marco-social-btns" style="display:flex;gap:12px;justify-content:center;margin-bottom:24px;opacity:0.3;pointer-events:none">
+        <div id="m-marco-social-btns" style="display:flex;gap:12px;justify-content:center;margin-bottom:4px;opacity:0.3;pointer-events:none">
           <button id="m-marco-fb" onclick="openLink('https://m.me/marco.onlyformusic?ref='+encodeURIComponent(window._marcoTitle||''),'m-marco')" style="display:flex;flex-direction:column;align-items:center;gap:6px;border:none;cursor:pointer;border-radius:12px;padding:14px 18px;flex:1;background:#1877f2">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.744 6.614 4.469 8.652V24l4.088-2.242c1.092.3 2.246.464 3.443.464 6.627 0 12-4.974 12-11.111S18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.732 8l3.131 3.259L19.752 8l-6.561 6.963z"/></svg>
             <span style="color:white;font-size:12px;font-weight:700;font-family:DM Sans,sans-serif">Messenger</span>
@@ -910,6 +910,7 @@ function nav(id,direction){
     }else{ne.classList.add('active');}
   }
   if(id==='p-prestas'){checkFbSession();hideHint();}
+  if(oldId==='p-prestas'&&id!=='p-prestas'){stopPrestasVideo();}
   if(id==='p-switch'){renderSwitch();showHint();
     var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
     var isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -3263,6 +3264,7 @@ function fbLogin() {
 }
 
 function fbLogout() {
+  stopPrestasVideo();
   _fbUser = null;
   document.getElementById('prestas-nologin').style.display = 'block';
   document.getElementById('prestas-loggedin').style.display = 'none';
@@ -3400,6 +3402,24 @@ function extractYtId(url) {
 // Vérifier si déjà connecté au chargement de la page prestas
 
 
+
+function stopPrestasVideo() {
+  // Supprimer l'iframe active et remettre la miniature
+  var iframe = document.getElementById('prestas-active-iframe');
+  if (iframe) {
+    // Stopper la lecture en vidant le src
+    iframe.src = '';
+    // Remettre le thumb original si possible
+    var thumb = window._prestasActiveThumb;
+    if (thumb) {
+      // Recréer miniature vide (la carte reste visible, juste sans lecture)
+      thumb.innerHTML = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:48px;height:48px;background:rgba(255,0,0,.85);border-radius:50%;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 10 10" fill="white"><polygon points="3,1 9,5 3,9"/></svg></div>';
+      window._prestasActiveThumb = null;
+    }
+    iframe.removeAttribute('id');
+  }
+}
+
 function renderVideoList(videos) {
   var list = document.getElementById('prestas-list');
   list.innerHTML = '';
@@ -3429,12 +3449,15 @@ function renderVideoList(videos) {
     // Lecture inline au clic
     thumb.onclick = function() {
       if (!ytId) return;
+      stopPrestasVideo();
       var iframe = document.createElement('iframe');
       iframe.src = 'https://www.youtube.com/embed/' + ytId + '?autoplay=1';
       iframe.style.cssText = 'width:100%;aspect-ratio:16/9;border:none;display:block';
       iframe.allow = 'autoplay; fullscreen';
+      iframe.id = 'prestas-active-iframe';
       thumb.innerHTML = '';
       thumb.appendChild(iframe);
+      window._prestasActiveThumb = thumb;
     };
     card.appendChild(thumb);
 
@@ -3478,6 +3501,7 @@ var _idsFbk = [];            // cache de la liste IDS_FBK
 var _searchValidated = false; // true quand un nom a été validé depuis le dropdown
 
 function toggleSearchMode() {
+  stopPrestasVideo();
   _searchMode = (_searchMode === 'id') ? 'phrase' : 'id';
   var btn = document.getElementById('prestas-search-mode');
   if (_searchMode === 'id') {
@@ -3490,6 +3514,7 @@ function toggleSearchMode() {
 }
 
 function clearSearch() {
+  stopPrestasVideo();
   var input = document.getElementById('prestas-search-input');
   input.value = '';
   _searchValidated = false;
@@ -3499,6 +3524,7 @@ function clearSearch() {
 function onSearchFocus() {
   // Si un nom a été validé et qu'on refocus → effacer pour recommencer (mode id seulement)
   if (_searchMode === 'id' && _searchValidated) {
+    stopPrestasVideo();
     clearSearch();
   }
 }
@@ -3551,7 +3577,7 @@ function closeDropdown() {
 }
 
 function runIdSearch(fbId, name) {
-  // Afficher loading
+  stopPrestasVideo();
   document.getElementById('prestas-list').innerHTML = '';
   document.getElementById('prestas-count').textContent = 'Recherche…';
   document.getElementById('prestas-sub').textContent = name;
@@ -3566,6 +3592,7 @@ function runIdSearch(fbId, name) {
 }
 
 function runPhraseSearch(q) {
+  stopPrestasVideo();
   document.getElementById('prestas-list').innerHTML = '';
   document.getElementById('prestas-count').textContent = 'Recherche…';
   document.getElementById('prestas-sub').textContent = '"' + q + '"';
