@@ -481,7 +481,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
         <div style="position:relative;flex:1">
           <input id="prestas-search-input" type="text" placeholder="Rechercher un nom…" autocomplete="off"
             oninput="onSearchInput()"
-            onfocus="onSearchFocus()"
+            onfocus="stopPrestasVideo();onSearchFocus()"
             style="width:100%;box-sizing:border-box;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:9px 36px 9px 12px;font-size:14px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none">
           <!-- Croix effacer -->
           <button onclick="clearSearch()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted2);font-size:18px;line-height:1;padding:0">✕</button>
@@ -3430,7 +3430,7 @@ function renderVideoList(videos) {
   videos.forEach(function(v) {
     var ytId = extractYtId(v.youtube);
     var card = document.createElement('div');
-    card.style.cssText = 'background:#101828;border-radius:14px;overflow:hidden;margin-bottom:14px';
+    card.style.cssText = 'background:#f9f9f9;border-radius:14px;overflow:hidden;margin-bottom:14px';
 
     // Miniature YouTube cliquable
     var thumb = document.createElement('div');
@@ -3465,12 +3465,12 @@ function renderVideoList(videos) {
 
     // Infos
     var info = document.createElement('div');
-    info.style.cssText = 'padding:10px 14px 10px';
+    info.style.cssText = 'padding:10px 14px 12px;background:#f9f9f9';
 
     // Titre YouTube en premier et en évidence
     if (v.titre) {
       var titreEl = document.createElement('div');
-      titreEl.style.cssText = 'font-size:13px;font-weight:700;color:var(--white);line-height:1.4;margin-bottom:6px';
+      titreEl.style.cssText = 'font-size:13px;font-weight:700;color:#0f0f0f;line-height:1.4;margin-bottom:6px';
       titreEl.textContent = v.titre;
       info.appendChild(titreEl);
     }
@@ -3478,7 +3478,7 @@ function renderVideoList(videos) {
     // Date centrée
     if (v.date) {
       var dateEl = document.createElement('div');
-      dateEl.style.cssText = 'font-size:10px;color:#1877f2;font-family:"DM Mono",monospace;letter-spacing:1px;margin-bottom:8px;text-align:center';
+      dateEl.style.cssText = 'font-size:10px;color:#1877f2;font-family:"DM Mono",monospace;letter-spacing:1px;margin-bottom:8px;text-align:center;font-weight:600';
       dateEl.textContent = v.date;
       info.appendChild(dateEl);
     }
@@ -3487,7 +3487,7 @@ function renderVideoList(videos) {
     var ytBtn = document.createElement('a');
     ytBtn.href = v.youtube;
     ytBtn.target = '_blank';
-    ytBtn.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,0,0,.08);border:1px solid rgba(255,0,0,.2);border-radius:8px;padding:8px;text-decoration:none;width:100%';
+    ytBtn.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,0,0,.06);border:1px solid rgba(255,0,0,.15);border-radius:8px;padding:8px;text-decoration:none;width:100%;box-sizing:border-box';
     ytBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24"><path d="M21.8 8s-.2-1.4-.8-2c-.8-.8-1.6-.8-2-.9C16.7 5 12 5 12 5s-4.7 0-7 .1c-.4.1-1.2.1-2 .9-.6.6-.8 2-.8 2S2 9.6 2 11.2v1.5c0 1.6.2 3.2.2 3.2s.2 1.4.8 2c.8.8 1.8.7 2.2.8C6.8 18.8 12 19 12 19s4.7 0 7-.2c.4-.1 1.2-.1 2-.9.6-.6.8-2 .8-2s.2-1.6.2-3.2v-1.5C22 9.6 21.8 8 21.8 8z" fill="#ff0000"/><polygon points="10,9 10,15 16,12" fill="white"/></svg><span style="color:#ff4444;font-size:12px;font-weight:600;font-family:\'DM Sans\',sans-serif">Ouvrir dans YouTube</span>';
     info.appendChild(ytBtn);
 
