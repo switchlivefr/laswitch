@@ -3316,15 +3316,32 @@ function checkFriendshipAndLoad(me) {
   document.getElementById('prestas-nofriend').style.display = 'none';
   document.getElementById('prestas-loading').style.display = 'block';
 
-  // Vérifier si ami avec Marco via l'API Facebook
-  // Marco FB ID : 100027512771366
+  // Exception admin : Marco passe directement
+  var isAdmin = me.name && me.name.toLowerCase().includes('marco') && me.name.toLowerCase().includes('switch');
+  if (isAdmin) {
+    document.getElementById('prestas-loading').style.display = 'none';
+    loadPrestas(me);
+    return;
+  }
+
+  // Pour les autres : vérifier l'amitié via l'API Facebook
+  // IMPORTANT : /me/friends/ID ne retourne un résultat que si la personne
+  // utilise aussi l'app ET est ami avec Marco. Tant que l'app n'est pas publiée,
+  // cette vérification ne fonctionne pas pour les utilisateurs normaux.
+  // En attendant la publication Meta, on affiche directement les vidéos si trouvées.
   FB.api('/me/friends/100027512771366', function(response) {
     document.getElementById('prestas-loading').style.display = 'none';
+    // response.data.length > 0 = ami confirmé via app
+    // response.error = app pas publiée ou permission manquante → on essaie quand même
     if (response && response.data && response.data.length > 0) {
-      // CAS 1 : ami → charger les vidéos
+      // CAS 1 confirmé : ami via API
+      loadPrestas(me);
+    } else if (response && response.error) {
+      // App pas encore publiée → on tente loadPrestas directement
+      // Si pas de vidéos trouvées, l'écran "aucune prestation" s'affichera
       loadPrestas(me);
     } else {
-      // CAS 2 : pas ami → afficher le message
+      // CAS 2 : pas ami (API a répondu correctement, data vide)
       showNoFriend(me);
     }
   });
