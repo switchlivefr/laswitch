@@ -3430,7 +3430,7 @@ function renderVideoList(videos) {
   videos.forEach(function(v) {
     var ytId = extractYtId(v.youtube);
     var card = document.createElement('div');
-    card.style.cssText = 'background:rgba(24,119,242,.08);border:1px solid rgba(24,119,242,.2);border-radius:14px;overflow:hidden;margin-bottom:14px';
+    card.style.cssText = 'background:rgba(24,119,242,.04);border:1px solid rgba(24,119,242,.12);border-radius:14px;overflow:hidden;margin-bottom:14px';
 
     // Miniature YouTube cliquable
     var thumb = document.createElement('div');
@@ -3491,28 +3491,6 @@ function renderVideoList(videos) {
     ytBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24"><path d="M21.8 8s-.2-1.4-.8-2c-.8-.8-1.6-.8-2-.9C16.7 5 12 5 12 5s-4.7 0-7 .1c-.4.1-1.2.1-2 .9-.6.6-.8 2-.8 2S2 9.6 2 11.2v1.5c0 1.6.2 3.2.2 3.2s.2 1.4.8 2c.8.8 1.8.7 2.2.8C6.8 18.8 12 19 12 19s4.7 0 7-.2c.4-.1 1.2-.1 2-.9.6-.6.8-2 .8-2s.2-1.6.2-3.2v-1.5C22 9.6 21.8 8 21.8 8z" fill="#ff0000"/><polygon points="10,9 10,15 16,12" fill="white"/></svg><span style="color:#ff4444;font-size:12px;font-weight:600;font-family:\'DM Sans\',sans-serif">Ouvrir dans YouTube</span>';
     info.appendChild(ytBtn);
 
-    // Bouton copier le lien
-    var copyBtn = document.createElement('button');
-    copyBtn.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:8px;width:100%;margin-top:6px;cursor:pointer';
-    copyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg><span style="color:var(--muted2);font-size:12px;font-weight:600;font-family:\'DM Sans\',sans-serif">Copier le lien</span>';
-    (function(url, btn) {
-      btn.onclick = function(e) {
-        e.preventDefault();
-        var ytUrl = url;
-        // Méthode 1 : clipboard API
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(ytUrl).then(function() {
-            btn.innerHTML = '<span style="color:var(--cyan);font-size:12px;font-weight:600;font-family:\'DM Sans\',sans-serif">✅ Lien copié !</span>';
-            setTimeout(function() {
-              btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg><span style="color:var(--muted2);font-size:12px;font-weight:600;font-family:\'DM Sans\',sans-serif">Copier le lien</span>';
-            }, 2000);
-          }).catch(function() { fallbackCopy(ytUrl, btn); });
-        } else {
-          fallbackCopy(ytUrl, btn);
-        }
-      };
-    })(v.youtube, copyBtn);
-    info.appendChild(copyBtn);
 
     card.appendChild(info);
     list.appendChild(card);
