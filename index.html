@@ -666,7 +666,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
           <div id="m-marco-msg" style="font-size:13px;color:var(--white);line-height:1.5;font-style:italic;margin-bottom:8px">—</div>
           <button onclick="copyMarcoMsg()" id="m-marco-copy" style="width:100%;background:var(--gold);color:#000;border:none;border-radius:8px;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">📋 COPIE LE MESSAGE</button>
         </div>
-        <div id="m-marco-social-btns" style="display:flex;gap:12px;justify-content:center;margin-bottom:4px;opacity:0.3;pointer-events:none">
+        <div id="m-marco-social-btns" style="display:flex;gap:12px;justify-content:center;margin-bottom:24px;opacity:0.3;pointer-events:none">
           <button id="m-marco-fb" onclick="openLink('https://m.me/marco.onlyformusic?ref='+encodeURIComponent(window._marcoTitle||''),'m-marco')" style="display:flex;flex-direction:column;align-items:center;gap:6px;border:none;cursor:pointer;border-radius:12px;padding:14px 18px;flex:1;background:#1877f2">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.744 6.614 4.469 8.652V24l4.088-2.242c1.092.3 2.246.464 3.443.464 6.627 0 12-4.974 12-11.111S18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.732 8l3.131 3.259L19.752 8l-6.561 6.963z"/></svg>
             <span style="color:white;font-size:12px;font-weight:700;font-family:DM Sans,sans-serif">Messenger</span>
@@ -3605,6 +3605,58 @@ function unlockPrestas() {
     nav('p-prestas');
   }
 }
+
+
+/* ---- DRAG TO SCROLL (desktop sans molette) ---- */
+(function(){
+  function enableDragScroll(el) {
+    if (!el || el._dragEnabled) return;
+    el._dragEnabled = true;
+    var startY, startX, scrollTop, scrollLeft, isDown = false;
+    el.addEventListener('mousedown', function(e) {
+      // Ignorer si clic sur bouton/input/a
+      if (e.target.closest('button,input,a,iframe,select')) return;
+      isDown = true;
+      el.style.cursor = 'grabbing';
+      startY = e.pageY - el.offsetTop;
+      startX = e.pageX - el.offsetLeft;
+      scrollTop = el.scrollTop;
+      scrollLeft = el.scrollLeft;
+      e.preventDefault();
+    });
+    el.addEventListener('mouseleave', function() { isDown = false; el.style.cursor = ''; });
+    el.addEventListener('mouseup', function() { isDown = false; el.style.cursor = ''; });
+    el.addEventListener('mousemove', function(e) {
+      if (!isDown) return;
+      e.preventDefault();
+      var y = e.pageY - el.offsetTop;
+      var x = e.pageX - el.offsetLeft;
+      el.scrollTop = scrollTop - (y - startY);
+      el.scrollLeft = scrollLeft - (x - startX);
+    });
+  }
+
+  function initDragScroll() {
+    // Toutes les zones overflow-y:auto / scroll
+    var selectors = [
+      '.mbody', '#prestas-list', '#home-app-center-wrap',
+      '#home-prc-col .mbody', '.moverlay'
+    ];
+    selectors.forEach(function(sel) {
+      document.querySelectorAll(sel).forEach(enableDragScroll);
+    });
+  }
+
+  // Init au chargement et observer les nouveaux éléments
+  document.addEventListener('DOMContentLoaded', initDragScroll);
+  setTimeout(initDragScroll, 1000);
+
+  // Observer les modale qui s'ouvrent
+  var observer = new MutationObserver(function() { initDragScroll(); });
+  document.addEventListener('DOMContentLoaded', function() {
+    observer.observe(document.body, { childList: true, subtree: true, attributeFilter: ['class'] });
+  });
+})();
 
 function checkFbSession() {
   if (typeof FB === 'undefined') return;
