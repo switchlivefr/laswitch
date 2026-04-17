@@ -284,7 +284,7 @@ async function handleRequest(request, env) {
       const videos = [];
       for (const row of rows) {
         const youtube = (row[0] || '').trim();
-        const titre   = (row[1] || '').trim();
+        const phrase  = (row[1] || '').trim();
         const personnes = (row[2] || '').trim();
         const date    = (row[3] || '').trim();
         const fb_ids  = (row[4] || '').trim();
@@ -296,7 +296,7 @@ async function handleRequest(request, env) {
           if (!ids.includes(fbId)) continue;
         }
 
-        videos.push({ youtube, titre, phrase: (row[1]||'').trim(), personnes: (row[2]||'').trim(), date, fb_ids });
+        videos.push({ youtube, titre: '', phrase, personnes, date, fb_ids });
       }
 
       // Tri du plus récent au plus ancien
