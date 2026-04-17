@@ -450,14 +450,14 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 
 <div class="page" id="p-prestas">
   <div class="sub-hero sh-cyan" style="position:sticky;top:0;z-index:10;background:var(--bg)">
-    <div class="sht sht-cyan">MES PRESTAS</div>
-    <div class="shsub" id="prestas-sub">Tes prestations SWiTCH</div>
+    <div class="sht" style="color:#1877f2;text-shadow:0 0 40px rgba(24,119,242,.35)">MES PRESTAS</div>
+    <div class="shsub" id="prestas-sub" style="color:var(--white)">Tes prestations SWiTCH</div>
   </div>
   <!-- État : non connecté -->
   <div id="prestas-nologin" style="padding:32px 20px;text-align:center">
     <div style="font-size:52px;margin-bottom:16px">🎬</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:8px">Tes vidéos SWiTCH</div>
-    <div style="font-size:14px;color:var(--muted2);line-height:1.7;margin-bottom:28px">Connecte-toi avec Facebook pour accéder à toutes tes prestations SWiTCH en un clin d'œil</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:8px">TES PRESTATIONS SWiTCH</div>
+    <div style="font-size:14px;color:var(--muted2);line-height:1.7;margin-bottom:28px">Connecte-toi avec Facebook pour accéder à<br>tes prestations SWiTCH en un clin d'œil</div>
     <button onclick="fbLogin()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#1877f2;border:none;border-radius:12px;padding:16px;cursor:pointer">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
       <span style="color:#fff;font-size:16px;font-weight:700;font-family:'DM Sans',sans-serif">Continuer avec Facebook</span>
@@ -495,9 +495,11 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
       <div id="prestas-avatar" style="width:34px;height:34px;border-radius:50%;background:#1877f2;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0">?</div>
       <div>
         <div id="prestas-username" style="font-size:13px;font-weight:700;color:var(--white)">—</div>
-        <div id="prestas-count" style="font-size:11px;color:var(--muted2)">—</div>
+        <div id="prestas-count" style="font-size:11px;color:var(--white);font-weight:600">—</div>
       </div>
-      <button onclick="fbLogout()" style="margin-left:auto;background:none;border:1px solid var(--border2);border-radius:8px;padding:5px 10px;font-size:11px;color:var(--muted2);cursor:pointer;font-family:'DM Sans',sans-serif">Déco</button>
+      <button onclick="fbLogout()" title="Déconnecter" style="margin-left:auto;background:none;border:1px solid rgba(229,57,53,.4);border-radius:8px;padding:6px 8px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e53935" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
     </div>
     <!-- Liste vidéos — zone scrollable -->
     <div id="prestas-list" style="padding:12px 16px 80px;overflow-y:auto;flex:1"></div>
@@ -3373,7 +3375,7 @@ function loadPrestas(me) {
       var initials = (me.name || '?').split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
       document.getElementById('prestas-avatar').textContent = initials;
       document.getElementById('prestas-username').textContent = me.name;
-      document.getElementById('prestas-count').textContent = videos.length + ' prestation' + (videos.length > 1 ? 's' : '') + ' trouvée' + (videos.length > 1 ? 's' : '');
+      document.getElementById('prestas-count').textContent = videos.length + ' PRESTATION' + (videos.length > 1 ? 'S' : '') + ' SWiTCH';
       document.getElementById('prestas-sub').textContent = videos.length + ' prestation' + (videos.length > 1 ? 's' : '');
 
       // Mode admin : activer la barre de recherche et charger IDS_FBK
@@ -3428,7 +3430,7 @@ function renderVideoList(videos) {
   videos.forEach(function(v) {
     var ytId = extractYtId(v.youtube);
     var card = document.createElement('div');
-    card.style.cssText = 'background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:14px';
+    card.style.cssText = 'background:rgba(24,119,242,.08);border:1px solid rgba(24,119,242,.2);border-radius:14px;overflow:hidden;margin-bottom:14px';
 
     // Miniature YouTube cliquable
     var thumb = document.createElement('div');
@@ -3476,7 +3478,7 @@ function renderVideoList(videos) {
     // Date centrée
     if (v.date) {
       var dateEl = document.createElement('div');
-      dateEl.style.cssText = 'font-size:10px;color:var(--cyan);font-family:"DM Mono",monospace;letter-spacing:1px;margin-bottom:8px;text-align:center';
+      dateEl.style.cssText = 'font-size:10px;color:#1877f2;font-family:"DM Mono",monospace;letter-spacing:1px;margin-bottom:8px;text-align:center';
       dateEl.textContent = v.date;
       info.appendChild(dateEl);
     }
@@ -3488,6 +3490,29 @@ function renderVideoList(videos) {
     ytBtn.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,0,0,.08);border:1px solid rgba(255,0,0,.2);border-radius:8px;padding:8px;text-decoration:none;width:100%';
     ytBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24"><path d="M21.8 8s-.2-1.4-.8-2c-.8-.8-1.6-.8-2-.9C16.7 5 12 5 12 5s-4.7 0-7 .1c-.4.1-1.2.1-2 .9-.6.6-.8 2-.8 2S2 9.6 2 11.2v1.5c0 1.6.2 3.2.2 3.2s.2 1.4.8 2c.8.8 1.8.7 2.2.8C6.8 18.8 12 19 12 19s4.7 0 7-.2c.4-.1 1.2-.1 2-.9.6-.6.8-2 .8-2s.2-1.6.2-3.2v-1.5C22 9.6 21.8 8 21.8 8z" fill="#ff0000"/><polygon points="10,9 10,15 16,12" fill="white"/></svg><span style="color:#ff4444;font-size:12px;font-weight:600;font-family:\'DM Sans\',sans-serif">Ouvrir dans YouTube</span>';
     info.appendChild(ytBtn);
+
+    // Bouton copier le lien
+    var copyBtn = document.createElement('button');
+    copyBtn.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:8px;width:100%;margin-top:6px;cursor:pointer';
+    copyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg><span style="color:var(--muted2);font-size:12px;font-weight:600;font-family:\'DM Sans\',sans-serif">Copier le lien</span>';
+    (function(url, btn) {
+      btn.onclick = function(e) {
+        e.preventDefault();
+        var ytUrl = url;
+        // Méthode 1 : clipboard API
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(ytUrl).then(function() {
+            btn.innerHTML = '<span style="color:var(--cyan);font-size:12px;font-weight:600;font-family:\'DM Sans\',sans-serif">✅ Lien copié !</span>';
+            setTimeout(function() {
+              btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg><span style="color:var(--muted2);font-size:12px;font-weight:600;font-family:\'DM Sans\',sans-serif">Copier le lien</span>';
+            }, 2000);
+          }).catch(function() { fallbackCopy(ytUrl, btn); });
+        } else {
+          fallbackCopy(ytUrl, btn);
+        }
+      };
+    })(v.youtube, copyBtn);
+    info.appendChild(copyBtn);
 
     card.appendChild(info);
     list.appendChild(card);
@@ -3586,7 +3611,7 @@ function runIdSearch(fbId, name) {
     .then(function(r) { return r.json(); })
     .then(function(data) {
       var videos = data.videos || [];
-      document.getElementById('prestas-count').textContent = videos.length + ' prestation' + (videos.length > 1 ? 's' : '') + ' trouvée' + (videos.length > 1 ? 's' : '');
+      document.getElementById('prestas-count').textContent = videos.length + ' PRESTATION' + (videos.length > 1 ? 'S' : '') + ' SWiTCH';
       renderVideoList(videos);
     });
 }
@@ -3684,6 +3709,26 @@ function unlockPrestas() {
     observer.observe(document.body, { childList: true, subtree: true, attributeFilter: ['class'] });
   });
 })();
+
+
+function fallbackCopy(text, btn) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try {
+    document.execCommand('copy');
+    btn.innerHTML = '<span style="color:var(--cyan);font-size:12px;font-weight:600;font-family:\'DM Sans\',sans-serif">✅ Lien copié !</span>';
+    setTimeout(function() {
+      btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg><span style="color:var(--muted2);font-size:12px;font-weight:600;font-family:\'DM Sans\',sans-serif">Copier le lien</span>';
+    }, 2000);
+  } catch(e) {
+    btn.innerHTML = '<span style="color:#e53935;font-size:12px">❌ Échec copie</span>';
+  }
+  document.body.removeChild(ta);
+}
 
 function checkFbSession() {
   if (typeof FB === 'undefined') return;
