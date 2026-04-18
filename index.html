@@ -3757,13 +3757,6 @@ function fallbackCopy(text, btn) {
 
 // SYSTEME ACCES SWITCH
 var _swAccNames = [];
-// Charger les noms IDS_APPLI au démarrage
-(function() {
-  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=getAppliNames')
-    .then(function(r){ return r.json(); })
-    .then(function(data){ _swAccNames = data.names || []; console.log('IDS_APPLI chargé:', _swAccNames.length, 'noms'); })
-    .catch(function(e){ console.warn('Erreur chargement noms:', e); });
-})();
 var _swAccName  = '';
 var _swAccToken = '';
 var _swAccLinks = {};
@@ -3857,14 +3850,20 @@ function swAdminValidate(name, btn) {
 }
 
 function swVerifyToken(token, name) {
+  if (typeof currentPage !== 'undefined' && currentPage !== 'p-prestas') return;
   document.getElementById('prestas-nologin').style.display  = 'none';
   document.getElementById('prestas-loggedin').style.display = 'none';
   document.getElementById('prestas-empty').style.display    = 'none';
   document.getElementById('prestas-nofriend').style.display = 'none';
   document.getElementById('prestas-loading').style.display  = 'block';
+  var swTimeout = setTimeout(function(){
+    document.getElementById('prestas-loading').style.display = 'none';
+    document.getElementById('prestas-nologin').style.display = 'block';
+  }, 8000);
   fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=verifyToken&token=' + encodeURIComponent(token) + '&name=' + encodeURIComponent(name))
     .then(function(r){ return r.json(); })
     .then(function(data) {
+      clearTimeout(swTimeout);
       document.getElementById('prestas-loading').style.display = 'none';
       if (data.ok && data.fbId) {
         var fakeMe = { id: data.fbId, name: name, first_name: name.split(' ')[0] };
@@ -3878,6 +3877,7 @@ function swVerifyToken(token, name) {
       }
     })
     .catch(function(){
+      clearTimeout(swTimeout);
       document.getElementById('prestas-loading').style.display = 'none';
       document.getElementById('prestas-nologin').style.display = 'block';
     });
@@ -7869,13 +7869,6 @@ function fallbackCopy(text, btn) {
 
 // SYSTEME ACCES SWITCH
 var _swAccNames = [];
-// Charger les noms IDS_APPLI au démarrage
-(function() {
-  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=getAppliNames')
-    .then(function(r){ return r.json(); })
-    .then(function(data){ _swAccNames = data.names || []; console.log('IDS_APPLI chargé:', _swAccNames.length, 'noms'); })
-    .catch(function(e){ console.warn('Erreur chargement noms:', e); });
-})();
 var _swAccName  = '';
 var _swAccToken = '';
 var _swAccLinks = {};
@@ -7969,14 +7962,20 @@ function swAdminValidate(name, btn) {
 }
 
 function swVerifyToken(token, name) {
+  if (typeof currentPage !== 'undefined' && currentPage !== 'p-prestas') return;
   document.getElementById('prestas-nologin').style.display  = 'none';
   document.getElementById('prestas-loggedin').style.display = 'none';
   document.getElementById('prestas-empty').style.display    = 'none';
   document.getElementById('prestas-nofriend').style.display = 'none';
   document.getElementById('prestas-loading').style.display  = 'block';
+  var swTimeout = setTimeout(function(){
+    document.getElementById('prestas-loading').style.display = 'none';
+    document.getElementById('prestas-nologin').style.display = 'block';
+  }, 8000);
   fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=verifyToken&token=' + encodeURIComponent(token) + '&name=' + encodeURIComponent(name))
     .then(function(r){ return r.json(); })
     .then(function(data) {
+      clearTimeout(swTimeout);
       document.getElementById('prestas-loading').style.display = 'none';
       if (data.ok && data.fbId) {
         var fakeMe = { id: data.fbId, name: name, first_name: name.split(' ')[0] };
@@ -7990,6 +7989,7 @@ function swVerifyToken(token, name) {
       }
     })
     .catch(function(){
+      clearTimeout(swTimeout);
       document.getElementById('prestas-loading').style.display = 'none';
       document.getElementById('prestas-nologin').style.display = 'block';
     });
