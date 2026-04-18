@@ -3644,6 +3644,10 @@ function adminTap() {
   if (_adminTapCount >= 5) {
     _adminTapCount = 0;
     _adminMode = !_adminMode;
+    _prestasUnlocked = false;
+    _prestasClicks = 0;
+    var btn2 = document.getElementById('bn-prestas');
+    if (btn2) { btn2.style.opacity = '0.35'; btn2.onclick = function(){ unlockPrestas(); }; }
     var t = document.createElement('div');
     t.textContent = _adminMode ? '🔧 MODE ADMIN ACTIF' : '👤 MODE UTILISATEUR';
     t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:' + (_adminMode ? '#e53935' : '#1877f2') + ';color:#fff;padding:10px 24px;border-radius:20px;font-size:15px;font-weight:700;z-index:9999;font-family:DM Sans,sans-serif';
@@ -3674,7 +3678,6 @@ function unlockPrestas() {
     _prestasUnlocked = true;
     var btn = document.getElementById('bn-prestas');
     btn.style.opacity = '1';
-    btn.onclick = function(){ nav('p-prestas'); };
     nav('p-prestas');
   }
 }
