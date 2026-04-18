@@ -462,7 +462,6 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
       <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
       <span style="color:#fff;font-size:16px;font-weight:700;font-family:'DM Sans',sans-serif">Continuer avec Facebook</span>
     </button>
-    <button onclick="openSwitchAccess()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:none;border:1px solid var(--border2);border-radius:12px;padding:14px;cursor:pointer;margin-top:12px"><span style="font-size:20px">🎬</span><span style="color:var(--white);font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif">Accès SWiTCH</span></button>
   </div>
   <!-- État : chargement -->
   <div id="prestas-loading" style="display:none;padding:48px 20px;text-align:center">
@@ -3632,6 +3631,7 @@ document.addEventListener('click', function(e) {
 var _adminMode = false;
 var _adminTapCount = 0;
 var _adminTapTimer = null;
+
 function adminTap() {
   _adminTapCount++;
   clearTimeout(_adminTapTimer);
@@ -3640,12 +3640,13 @@ function adminTap() {
     _adminTapCount = 0;
     _adminMode = !_adminMode;
     var t = document.createElement('div');
-    t.textContent = _adminMode ? '🔧 MODE ADMIN' : '👤 MODE UTILISATEUR';
+    t.textContent = _adminMode ? '🔧 MODE ADMIN ACTIF' : '👤 MODE UTILISATEUR';
     t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:' + (_adminMode ? '#e53935' : '#1877f2') + ';color:#fff;padding:10px 24px;border-radius:20px;font-size:15px;font-weight:700;z-index:9999;font-family:DM Sans,sans-serif';
     document.body.appendChild(t);
-    setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 3000);
+    setTimeout(function(){ if(t.parentNode)t.parentNode.removeChild(t); }, 3000);
   }
 }
+
 var _prestasClicks = 0;
 var _prestasUnlocked = false;
 function unlockPrestas() {
@@ -3654,8 +3655,8 @@ function unlockPrestas() {
   if (_prestasClicks >= 10) {
     if (_adminMode) {
       _prestasClicks = 0;
-      loadAdminAccess();
-      openM('m-admin-access');
+      swLoadAdminRequests();
+      openM('m-sw-admin');
     } else {
       _prestasUnlocked = true;
       var btn = document.getElementById('bn-prestas');
@@ -3739,300 +3740,223 @@ function fallbackCopy(text, btn) {
 }
 
 
+// ============================================================
 // SYSTEME ACCES SWITCH
-var _accessNames = [];
-var _accessNameSelected = '';
+// ============================================================
+var _swAccNames = [];
+var _swAccName  = '';
+var _swAccToken = '';
+var _swAccLinks = {};
 
-function loadAdminAccess() {
-  var list = document.getElementById('admin-access-list');
-  var count = document.getElementById('admin-access-count');
+// ADMIN : charger les demandes
+function swLoadAdminRequests() {
+  var list  = document.getElementById('sw-admin-list');
+  var count = document.getElementById('sw-admin-count');
   if (!list) return;
-  list.innerHTML = '<div style="color:var(--muted2);font-size:13px;padding:8px">Chargement...</div>';
+  list.innerHTML = '<div style="color:var(--muted2);font-size:13px;padding:12px">Chargement...</div>';
+  var limit = Date.now() - 48 * 3600 * 1000;
   fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=getAccessRequests')
     .then(function(r){ return r.json(); })
     .then(function(data) {
-      var rows = data.rows || [];
-      var pending = rows.filter(function(r){ return !r.validated; });
-      if (count) count.textContent = pending.length + ' en attente sur ' + rows.length;
+      var rows = (data.rows || []).filter(function(r){
+        if (r.validated) return true;
+        return (r.timestamp || 0) > limit;
+      });
+      var pending = rows.filter(function(r){ return !r.validated; }).length;
+      if (count) count.textContent = pending + ' EN ATTENTE · ' + (rows.length - pending) + ' VALIDEES';
       list.innerHTML = '';
-      if (!rows.length) { list.innerHTML = '<div style="color:var(--muted2);font-size:13px;padding:8px;text-align:center">Aucune demande</div>'; return; }
+      if (!rows.length) {
+        list.innerHTML = '<div style="color:var(--muted2);font-size:13px;padding:12px;text-align:center">Aucune demande</div>';
+        return;
+      }
       rows.sort(function(a,b){ return (a.validated?1:0)-(b.validated?1:0)||(b.timestamp||0)-(a.timestamp||0); });
       rows.forEach(function(row) {
-        var d = document.createElement('div');
         var isVal = row.validated;
         var nom = (row.name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
-        d.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:8px';
+        var d = document.createElement('div');
+        d.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:8px;text-align:left';
+        var info = '<div style="flex:1"><div style="font-size:14px;font-weight:700;color:' + (isVal?'var(--muted2)':'var(--white)') + '">' + nom + '</div>'
+          + '<div style="font-size:11px;color:var(--muted2);font-family:DM Mono,monospace">' + (row.date||'') + '</div></div>';
+        d.innerHTML = info;
         if (isVal) {
-          d.innerHTML = '<div style="flex:1"><div style="font-size:14px;color:var(--muted2)">' + nom + '</div><div style="font-size:11px;color:var(--muted2)">' + (row.date||'') + '</div></div><div style="color:#34d1c0;font-size:13px;font-weight:600">Valide</div>';
+          var tag = document.createElement('div');
+          tag.textContent = 'VALIDE';
+          tag.style.cssText = 'color:#34d1c0;font-size:12px;font-weight:700;font-family:Bebas Neue,sans-serif;letter-spacing:1px;flex-shrink:0';
+          d.appendChild(tag);
         } else {
-          d.innerHTML = '<div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--white)">' + nom + '</div><div style="font-size:11px;color:var(--muted2)">' + (row.date||'') + '</div></div>';
           var btn = document.createElement('button');
-          btn.textContent = 'Valider';
-          btn.style.cssText = 'background:#34d1c0;border:none;border-radius:8px;padding:8px 14px;color:#000;font-family:DM Sans,sans-serif;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0';
-          btn.onclick = (function(n,b){ return function(){ validateAccess(n,b); }; })(row.name||'', btn);
+          btn.textContent = 'VALIDER';
+          btn.style.cssText = 'background:#34d1c0;border:none;border-radius:8px;padding:8px 14px;color:#000;font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:1px;cursor:pointer;flex-shrink:0';
+          btn.onclick = (function(n,b){ return function(){ swAdminValidate(n,b); }; })(row.name||'', btn);
           d.appendChild(btn);
         }
         list.appendChild(d);
       });
     })
-    .catch(function(){ list.innerHTML = '<div style="color:#e53935;font-size:13px;padding:8px">Erreur</div>'; });
+    .catch(function(){
+      list.innerHTML = '<div style="color:#e53935;font-size:13px;padding:12px">Erreur de chargement</div>';
+    });
 }
 
-function validateAccess(name, btn) {
+function swAdminValidate(name, btn) {
   btn.textContent = '...'; btn.disabled = true;
-  fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=validateAccessRequest&name=' + encodeURIComponent(name))
+  fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=validateRequest&name=' + encodeURIComponent(name))
     .then(function(r){ return r.json(); })
     .then(function(data) {
-      if (data.ok) { localStorage.setItem('switch_access_name', name); loadAdminAccess(); }
-      else { btn.textContent = 'Erreur'; btn.disabled = false; }
+      if (data.ok) swLoadAdminRequests();
+      else { btn.textContent = 'ERREUR'; btn.disabled = false; }
     })
-    .catch(function(){ btn.textContent = 'Erreur'; btn.disabled = false; });
+    .catch(function(){ btn.textContent = 'ERREUR'; btn.disabled = false; });
 }
 
-function openSwitchAccess() {
-  var savedName = localStorage.getItem('switch_access_name');
-  if (savedName) { checkAndLoadAccess(savedName); return; }
-  loadAccessNames();
-  document.getElementById('switch-access-step1').style.display = 'block';
-  document.getElementById('switch-access-step2').style.display = 'none';
-  document.getElementById('switch-access-name-input').value = '';
-  document.getElementById('switch-access-dropdown').style.display = 'none';
-  _accessNameSelected = '';
-  openM('m-switch-access');
-}
-
-function checkAndLoadAccess(name) {
-  document.getElementById('prestas-nologin').style.display = 'none';
+// UTILISATEUR : vérifier token et charger prestas
+function swVerifyToken(token, name) {
+  document.getElementById('prestas-nologin').style.display  = 'none';
   document.getElementById('prestas-loggedin').style.display = 'none';
-  document.getElementById('prestas-empty').style.display = 'none';
+  document.getElementById('prestas-empty').style.display    = 'none';
   document.getElementById('prestas-nofriend').style.display = 'none';
-  document.getElementById('prestas-loading').style.display = 'block';
-  fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=checkAccess&name=' + encodeURIComponent(name))
+  document.getElementById('prestas-loading').style.display  = 'block';
+  fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=verifyToken&token=' + encodeURIComponent(token) + '&name=' + encodeURIComponent(name))
     .then(function(r){ return r.json(); })
     .then(function(data) {
-      if (data.validated && data.fbId) {
-        localStorage.setItem('switch_access_name', name);
+      document.getElementById('prestas-loading').style.display = 'none';
+      if (data.ok && data.fbId) {
         var fakeMe = { id: data.fbId, name: name, first_name: name.split(' ')[0] };
         loadPrestas(fakeMe);
       } else if (data.pending) {
-        document.getElementById('prestas-loading').style.display = 'none';
         document.getElementById('prestas-nologin').style.display = 'block';
       } else {
-        document.getElementById('prestas-loading').style.display = 'none';
-        localStorage.removeItem('switch_access_name');
-        openSwitchAccess();
+        localStorage.removeItem('sw_token');
+        localStorage.removeItem('sw_name');
+        document.getElementById('prestas-nologin').style.display = 'block';
       }
     })
-    .catch(function(){ document.getElementById('prestas-loading').style.display = 'none'; document.getElementById('prestas-empty').style.display = 'block'; });
+    .catch(function(){
+      document.getElementById('prestas-loading').style.display = 'none';
+      document.getElementById('prestas-nologin').style.display = 'block';
+    });
 }
 
-function loadAccessNames() {
+// Ouvrir modale accès utilisateur
+function swOpenAccess() {
+  var swToken = localStorage.getItem('sw_token');
+  var swName  = localStorage.getItem('sw_name');
+  if (swToken && swName) { swVerifyToken(swToken, swName); return; }
+  swAccReset();
+  swLoadNames();
+  openM('m-sw-access');
+}
+
+function swLoadNames() {
   fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=getAppliNames')
     .then(function(r){ return r.json(); })
-    .then(function(data){ _accessNames = data.names || []; })
-    .catch(function(){ _accessNames = []; });
+    .then(function(data){ _swAccNames = data.names || []; })
+    .catch(function(){ _swAccNames = []; });
 }
 
-function filterAccessNames(val) {
-  var dd = document.getElementById('switch-access-dropdown');
-  _accessNameSelected = val;
+function swAccFilter(val) {
+  var dd  = document.getElementById('sw-acc-dropdown');
+  var btn = document.getElementById('sw-acc-ok-btn');
+  _swAccName = val;
+  btn.style.opacity = val.trim().length >= 2 ? '1' : '0.35';
   if (!val || val.length < 2) { dd.style.display = 'none'; return; }
-  var filtered = _accessNames.filter(function(n){ return n.toLowerCase().includes(val.toLowerCase()); });
+  var filtered = _swAccNames.filter(function(n){ return n.toLowerCase().includes(val.toLowerCase()); });
   if (!filtered.length) { dd.style.display = 'none'; return; }
   dd.innerHTML = ''; dd.style.display = 'block';
-  filtered.slice(0,10).forEach(function(name) {
+  filtered.slice(0,8).forEach(function(name) {
     var item = document.createElement('div');
-    item.style.cssText = 'padding:10px 12px;cursor:pointer;font-size:14px;color:var(--white);border-bottom:1px solid var(--border)';
+    item.style.cssText = 'padding:10px 14px;cursor:pointer;font-size:14px;color:#000;border-bottom:1px solid #eee';
     item.textContent = name;
-    item.onclick = function() { document.getElementById('switch-access-name-input').value = name; _accessNameSelected = name; dd.style.display = 'none'; };
+    item.onclick = function() {
+      document.getElementById('sw-acc-input').value = name;
+      _swAccName = name;
+      dd.style.display = 'none';
+      document.getElementById('sw-acc-ok-btn').style.opacity = '1';
+    };
     dd.appendChild(item);
   });
 }
 
-function accessStep1Validate() {
-  var name = (document.getElementById('switch-access-name-input').value || '').trim();
-  if (!name || name.length < 2) { document.getElementById('switch-access-name-input').style.borderColor = '#e53935'; return; }
-  document.getElementById('switch-access-name-input').style.borderColor = '';
-  _accessNameSelected = name;
-  fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=addAccessRequest&name=' + encodeURIComponent(name));
-  var msg = 'Bonjour Marco, je suis ' + name + ' et je voudrais acceder a mes videos SWiTCH sur laswitch.net';
-  document.getElementById('switch-access-msg').textContent = msg;
+function swAccStep1() {
+  var name = (document.getElementById('sw-acc-input').value || '').trim();
+  if (!name || name.length < 2) {
+    document.getElementById('sw-acc-input').style.borderColor = '#e53935';
+    return;
+  }
+  document.getElementById('sw-acc-input').style.borderColor = '';
+  _swAccName = name;
+  _swAccToken = 'sw' + Date.now() + Math.random().toString(36).substr(2,8);
+  // Enregistrer la demande dans le Sheets
+  fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=addRequest&name=' + encodeURIComponent(name) + '&token=' + encodeURIComponent(_swAccToken));
+  // Préparer le message
+  var msg = 'Hello Marco ! je souhaiterais acceder a mes prestas SWiTCH sous le nom : ' + name;
+  document.getElementById('sw-acc-msg').textContent = msg;
   var enc = encodeURIComponent(msg);
-  document.getElementById('switch-access-messenger').href = 'https://m.me/marco.onlyformusic?text=' + enc;
-  document.getElementById('switch-access-instagram').href = 'https://ig.me/m/marcoonlyformusic';
-  document.getElementById('switch-access-whatsapp').href = 'https://wa.me/33?text=' + enc;
-  document.getElementById('switch-access-step1').style.display = 'none';
-  document.getElementById('switch-access-step2').style.display = 'block';
+  _swAccLinks = {
+    messenger: 'https://m.me/marco.onlyformusic?text=' + enc,
+    instagram:  'https://ig.me/m/marcoonlyformusic',
+    whatsapp:   'https://wa.me/33613634346?text=' + enc
+  };
+  // Passer étape 2
+  document.getElementById('sw-acc-step1').style.display = 'none';
+  document.getElementById('sw-acc-step2').style.display = 'block';
+  document.getElementById('sw-acc-back-btn').style.display = 'block';
+  document.getElementById('sw-acc-social-btns').style.opacity = '0.3';
+  document.getElementById('sw-acc-social-btns').style.pointerEvents = 'none';
+  document.getElementById('sw-acc-sent').style.display = 'none';
+  document.getElementById('sw-acc-copy-btn').textContent = '📋 COPIE LE MESSAGE';
 }
 
-function copyAccessMsg() {
-  var msg = document.getElementById('switch-access-msg').textContent;
-  var btn = document.getElementById('switch-access-copy-btn');
-  var done = function(){ btn.textContent = 'Copie !'; setTimeout(function(){ btn.textContent = 'Copier le message'; }, 2000); };
-  if (navigator.clipboard) { navigator.clipboard.writeText(msg).then(done).catch(function(){ var ta=document.createElement('textarea');ta.value=msg;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){}document.body.removeChild(ta); }); }
-  else { var ta=document.createElement('textarea');ta.value=msg;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){}document.body.removeChild(ta); }
+function swAccCopy() {
+  var msg = document.getElementById('sw-acc-msg').textContent;
+  var btn = document.getElementById('sw-acc-copy-btn');
+  var done = function(){
+    btn.textContent = '✅ MESSAGE COPIE !';
+    // Activer boutons sociaux
+    document.getElementById('sw-acc-social-btns').style.opacity = '1';
+    document.getElementById('sw-acc-social-btns').style.pointerEvents = 'auto';
+    // Mémoriser le token sur cet appareil
+    localStorage.setItem('sw_token', _swAccToken);
+    localStorage.setItem('sw_name',  _swAccName);
+  };
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(msg).then(done).catch(function(){
+      var ta=document.createElement('textarea');ta.value=msg;ta.style.cssText='position:fixed;opacity:0';
+      document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){}document.body.removeChild(ta);
+    });
+  } else {
+    var ta=document.createElement('textarea');ta.value=msg;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){}document.body.removeChild(ta);
+  }
 }
 
-function accessMessageSent() {
-  localStorage.setItem('switch_access_name', _accessNameSelected);
-  closeM('m-switch-access');
-  document.getElementById('prestas-nologin').style.display = 'block';
+function swAccSend(channel) {
+  var url = _swAccLinks[channel] || '';
+  if (url) window.open(url, '_blank');
+  document.getElementById('sw-acc-sent').style.display = 'block';
 }
 
-function accessBackStep1() {
-  document.getElementById('switch-access-step2').style.display = 'none';
-  document.getElementById('switch-access-step1').style.display = 'block';
+function swAccBack() {
+  document.getElementById('sw-acc-step2').style.display = 'none';
+  document.getElementById('sw-acc-step1').style.display = 'block';
+  document.getElementById('sw-acc-back-btn').style.display = 'none';
 }
 
-
-// SYSTEME ACCES SWITCH
-var _accessNames = [];
-var _accessNameSelected = '';
-
-function loadAdminAccess() {
-  var list = document.getElementById('admin-access-list');
-  var count = document.getElementById('admin-access-count');
-  if (!list) return;
-  list.innerHTML = '<div style="color:var(--muted2);font-size:13px;padding:8px">Chargement...</div>';
-  fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=getAccessRequests')
-    .then(function(r){ return r.json(); })
-    .then(function(data) {
-      var rows = data.rows || [];
-      var pending = rows.filter(function(r){ return !r.validated; });
-      if (count) count.textContent = pending.length + ' en attente sur ' + rows.length;
-      list.innerHTML = '';
-      if (!rows.length) { list.innerHTML = '<div style="color:var(--muted2);font-size:13px;padding:8px;text-align:center">Aucune demande</div>'; return; }
-      rows.sort(function(a,b){ return (a.validated?1:0)-(b.validated?1:0)||(b.timestamp||0)-(a.timestamp||0); });
-      rows.forEach(function(row) {
-        var d = document.createElement('div');
-        var isVal = row.validated;
-        var nom = (row.name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
-        d.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:8px';
-        if (isVal) {
-          d.innerHTML = '<div style="flex:1"><div style="font-size:14px;color:var(--muted2)">' + nom + '</div><div style="font-size:11px;color:var(--muted2)">' + (row.date||'') + '</div></div><div style="color:#34d1c0;font-size:13px;font-weight:600">Valide</div>';
-        } else {
-          d.innerHTML = '<div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--white)">' + nom + '</div><div style="font-size:11px;color:var(--muted2)">' + (row.date||'') + '</div></div>';
-          var btn = document.createElement('button');
-          btn.textContent = 'Valider';
-          btn.style.cssText = 'background:#34d1c0;border:none;border-radius:8px;padding:8px 14px;color:#000;font-family:DM Sans,sans-serif;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0';
-          btn.onclick = (function(n,b){ return function(){ validateAccess(n,b); }; })(row.name||'', btn);
-          d.appendChild(btn);
-        }
-        list.appendChild(d);
-      });
-    })
-    .catch(function(){ list.innerHTML = '<div style="color:#e53935;font-size:13px;padding:8px">Erreur</div>'; });
-}
-
-function validateAccess(name, btn) {
-  btn.textContent = '...'; btn.disabled = true;
-  fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=validateAccessRequest&name=' + encodeURIComponent(name))
-    .then(function(r){ return r.json(); })
-    .then(function(data) {
-      if (data.ok) { localStorage.setItem('switch_access_name', name); loadAdminAccess(); }
-      else { btn.textContent = 'Erreur'; btn.disabled = false; }
-    })
-    .catch(function(){ btn.textContent = 'Erreur'; btn.disabled = false; });
-}
-
-function openSwitchAccess() {
-  var savedName = localStorage.getItem('switch_access_name');
-  if (savedName) { checkAndLoadAccess(savedName); return; }
-  loadAccessNames();
-  document.getElementById('switch-access-step1').style.display = 'block';
-  document.getElementById('switch-access-step2').style.display = 'none';
-  document.getElementById('switch-access-name-input').value = '';
-  document.getElementById('switch-access-dropdown').style.display = 'none';
-  _accessNameSelected = '';
-  openM('m-switch-access');
-}
-
-function checkAndLoadAccess(name) {
-  document.getElementById('prestas-nologin').style.display = 'none';
-  document.getElementById('prestas-loggedin').style.display = 'none';
-  document.getElementById('prestas-empty').style.display = 'none';
-  document.getElementById('prestas-nofriend').style.display = 'none';
-  document.getElementById('prestas-loading').style.display = 'block';
-  fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=checkAccess&name=' + encodeURIComponent(name))
-    .then(function(r){ return r.json(); })
-    .then(function(data) {
-      if (data.validated && data.fbId) {
-        localStorage.setItem('switch_access_name', name);
-        var fakeMe = { id: data.fbId, name: name, first_name: name.split(' ')[0] };
-        loadPrestas(fakeMe);
-      } else if (data.pending) {
-        document.getElementById('prestas-loading').style.display = 'none';
-        document.getElementById('prestas-nologin').style.display = 'block';
-      } else {
-        document.getElementById('prestas-loading').style.display = 'none';
-        localStorage.removeItem('switch_access_name');
-        openSwitchAccess();
-      }
-    })
-    .catch(function(){ document.getElementById('prestas-loading').style.display = 'none'; document.getElementById('prestas-empty').style.display = 'block'; });
-}
-
-function loadAccessNames() {
-  fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=getAppliNames')
-    .then(function(r){ return r.json(); })
-    .then(function(data){ _accessNames = data.names || []; })
-    .catch(function(){ _accessNames = []; });
-}
-
-function filterAccessNames(val) {
-  var dd = document.getElementById('switch-access-dropdown');
-  _accessNameSelected = val;
-  if (!val || val.length < 2) { dd.style.display = 'none'; return; }
-  var filtered = _accessNames.filter(function(n){ return n.toLowerCase().includes(val.toLowerCase()); });
-  if (!filtered.length) { dd.style.display = 'none'; return; }
-  dd.innerHTML = ''; dd.style.display = 'block';
-  filtered.slice(0,10).forEach(function(name) {
-    var item = document.createElement('div');
-    item.style.cssText = 'padding:10px 12px;cursor:pointer;font-size:14px;color:var(--white);border-bottom:1px solid var(--border)';
-    item.textContent = name;
-    item.onclick = function() { document.getElementById('switch-access-name-input').value = name; _accessNameSelected = name; dd.style.display = 'none'; };
-    dd.appendChild(item);
-  });
-}
-
-function accessStep1Validate() {
-  var name = (document.getElementById('switch-access-name-input').value || '').trim();
-  if (!name || name.length < 2) { document.getElementById('switch-access-name-input').style.borderColor = '#e53935'; return; }
-  document.getElementById('switch-access-name-input').style.borderColor = '';
-  _accessNameSelected = name;
-  fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=addAccessRequest&name=' + encodeURIComponent(name));
-  var msg = 'Bonjour Marco, je suis ' + name + ' et je voudrais acceder a mes videos SWiTCH sur laswitch.net';
-  document.getElementById('switch-access-msg').textContent = msg;
-  var enc = encodeURIComponent(msg);
-  document.getElementById('switch-access-messenger').href = 'https://m.me/marco.onlyformusic?text=' + enc;
-  document.getElementById('switch-access-instagram').href = 'https://ig.me/m/marcoonlyformusic';
-  document.getElementById('switch-access-whatsapp').href = 'https://wa.me/33?text=' + enc;
-  document.getElementById('switch-access-step1').style.display = 'none';
-  document.getElementById('switch-access-step2').style.display = 'block';
-}
-
-function copyAccessMsg() {
-  var msg = document.getElementById('switch-access-msg').textContent;
-  var btn = document.getElementById('switch-access-copy-btn');
-  var done = function(){ btn.textContent = 'Copie !'; setTimeout(function(){ btn.textContent = 'Copier le message'; }, 2000); };
-  if (navigator.clipboard) { navigator.clipboard.writeText(msg).then(done).catch(function(){ var ta=document.createElement('textarea');ta.value=msg;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){}document.body.removeChild(ta); }); }
-  else { var ta=document.createElement('textarea');ta.value=msg;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){}document.body.removeChild(ta); }
-}
-
-function accessMessageSent() {
-  localStorage.setItem('switch_access_name', _accessNameSelected);
-  closeM('m-switch-access');
-  document.getElementById('prestas-nologin').style.display = 'block';
-}
-
-function accessBackStep1() {
-  document.getElementById('switch-access-step2').style.display = 'none';
-  document.getElementById('switch-access-step1').style.display = 'block';
+function swAccReset() {
+  document.getElementById('sw-acc-step1').style.display = 'block';
+  document.getElementById('sw-acc-step2').style.display = 'none';
+  document.getElementById('sw-acc-back-btn').style.display = 'none';
+  document.getElementById('sw-acc-input').value = '';
+  document.getElementById('sw-acc-dropdown').style.display = 'none';
+  document.getElementById('sw-acc-ok-btn').style.opacity = '0.35';
+  _swAccName = '';
 }
 
 function checkFbSession() {
-  var _sn = localStorage.getItem('switch_access_name');
-  if (_sn && !window._fbUser) { checkAndLoadAccess(_sn); return; }
+  // Auto-login SWiTCH si token mémorisé
+  var swToken = localStorage.getItem('sw_token');
+  var swName  = localStorage.getItem('sw_name');
+  if (swToken && swName && !_fbUser) { swVerifyToken(swToken, swName); return; }
   if (typeof FB === 'undefined') return;
   FB.getLoginStatus(function(response) {
     if (response.status === 'connected' && !_fbUser) {
@@ -4041,97 +3965,81 @@ function checkFbSession() {
         checkFriendshipAndLoad(me);
       });
     } else if (response.status === 'connected' && _fbUser) {
-      // Reconnexion : revérifier l'amitié (la demande est peut-être en cours)
       checkFriendshipAndLoad(_fbUser);
     }
   });
 }
 </script>
 
-<div class="moverlay" id="m-admin-access" onclick="if(event.target===this)closeM('m-admin-access')">
-  <div class="mbox" style="display:flex;flex-direction:column;max-height:88vh;width:100%">
+<!-- MODALE ADMIN : demandes acces SWiTCH -->
+<div class="moverlay" id="m-sw-admin" onclick="if(event.target===this)closeM('m-sw-admin')">
+  <div class="mbox" style="display:flex;flex-direction:column;max-height:calc(88vh - 64px)">
     <div class="mhead" style="text-align:center;flex-shrink:0">
       <h3 style="color:var(--gold)">DEMANDES D'ACCES</h3>
-      <div style="font-size:12px;color:var(--muted2);font-family:'DM Mono',monospace;margin-top:4px" id="admin-access-count">Chargement...</div>
+      <div id="sw-admin-count" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;color:var(--gold);line-height:1.6">Chargement...</div>
     </div>
-    <div class="mbody" style="flex:1;overflow-y:auto;min-height:0;padding:0">
-      <div id="admin-access-list" style="padding:12px 16px"></div>
+    <div class="mbody" style="text-align:center;overflow-y:auto;flex:1;min-height:0">
+      <div id="sw-admin-list"></div>
     </div>
     <div class="mfoot" style="flex-direction:column;gap:8px">
-      <button onclick="loadAdminAccess()" style="width:100%;background:var(--border2);border:none;border-radius:8px;padding:10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer">Actualiser</button>
-      <button onclick="closeM('m-admin-access');nav('p-prestas')" style="width:100%;background:#1877f2;border:none;border-radius:8px;padding:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Voir mes videos</button>
-      <button onclick="closeM('m-admin-access')" style="width:100%;background:none;border:1px solid var(--border2);border-radius:8px;padding:8px;color:var(--muted2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer">Fermer</button>
-    </div>
-  </div>
-</div>
-<div class="moverlay" id="m-switch-access" onclick="if(event.target===this)closeM('m-switch-access')">
-  <div class="mbox" style="display:flex;flex-direction:column;max-height:88vh;width:100%">
-    <div class="mhead" style="text-align:center;flex-shrink:0">
-      <h3 style="color:#1877f2">ACCES MES PRESTAS</h3>
-    </div>
-    <div class="mbody" style="flex:1;overflow-y:auto;min-height:0">
-      <div id="switch-access-step1" style="padding:16px">
-        <div style="font-size:13px;color:var(--muted2);margin-bottom:12px;text-align:center">Selectionne ou saisis ton nom Facebook exact</div>
-        <input type="text" id="switch-access-name-input" placeholder="Ton nom Facebook..." style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--border2);background:var(--card);color:var(--white);font-family:'DM Sans',sans-serif;font-size:15px;box-sizing:border-box;margin-bottom:8px" oninput="filterAccessNames(this.value)" onfocus="filterAccessNames(this.value)">
-        <div id="switch-access-dropdown" style="display:none;background:var(--card);border:1px solid var(--border2);border-radius:10px;max-height:200px;overflow-y:auto;margin-bottom:12px"></div>
-        <button onclick="accessStep1Validate()" style="width:100%;background:#1877f2;border:none;border-radius:10px;padding:14px;color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer">Continuer</button>
-      </div>
-      <div id="switch-access-step2" style="display:none;padding:16px">
-        <div style="font-size:13px;color:var(--muted2);margin-bottom:12px;text-align:center">Envoie ce message a Marco pour obtenir l acces :</div>
-        <div id="switch-access-msg" style="background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:14px;font-size:14px;color:var(--white);line-height:1.6;margin-bottom:10px"></div>
-        <button onclick="copyAccessMsg()" id="switch-access-copy-btn" style="width:100%;background:var(--border2);border:none;border-radius:8px;padding:10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;margin-bottom:10px">Copier le message</button>
-        <div style="display:flex;gap:8px;margin-bottom:16px">
-          <a id="switch-access-messenger" href="#" target="_blank" style="flex:1;background:#0099ff;border-radius:8px;padding:10px;text-align:center;text-decoration:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:#fff">Messenger</a>
-          <a id="switch-access-instagram" href="#" target="_blank" style="flex:1;background:#e1306c;border-radius:8px;padding:10px;text-align:center;text-decoration:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:#fff">Instagram</a>
-          <a id="switch-access-whatsapp" href="#" target="_blank" style="flex:1;background:#25d366;border-radius:8px;padding:10px;text-align:center;text-decoration:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:#fff">WhatsApp</a>
-        </div>
-        <button onclick="accessMessageSent()" style="width:100%;background:#34d1c0;border:none;border-radius:10px;padding:14px;color:#000;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px">Message envoye !</button>
-        <button onclick="accessBackStep1()" style="width:100%;background:none;border:none;padding:10px;color:var(--muted2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer">Retour</button>
-      </div>
+      <button onclick="swLoadAdminRequests()" style="width:100%;background:var(--border2);border:none;border-radius:8px;padding:10px;color:var(--white);font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">ACTUALISER</button>
+      <button onclick="closeM('m-sw-admin');nav('p-prestas')" style="width:100%;background:#1877f2;border:none;border-radius:8px;padding:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">VOIR MES VIDEOS</button>
+      <button class="mbtn sec" onclick="closeM('m-sw-admin')">Fermer</button>
     </div>
   </div>
 </div>
 
-<div class="moverlay" id="m-admin-access" onclick="if(event.target===this)closeM('m-admin-access')">
-  <div class="mbox" style="display:flex;flex-direction:column;max-height:88vh;width:100%">
+<!-- MODALE ACCES : demande utilisateur SWiTCH -->
+<div class="moverlay" id="m-sw-access" onclick="if(event.target===this)closeM('m-sw-access')">
+  <div class="mbox" style="display:flex;flex-direction:column;max-height:calc(88vh - 64px)">
     <div class="mhead" style="text-align:center;flex-shrink:0">
-      <h3 style="color:var(--gold)">DEMANDES D'ACCES</h3>
-      <div style="font-size:12px;color:var(--muted2);font-family:'DM Mono',monospace;margin-top:4px" id="admin-access-count">Chargement...</div>
+      <h3 style="color:#1877f2">MES PRESTAS SWITCH</h3>
     </div>
-    <div class="mbody" style="flex:1;overflow-y:auto;min-height:0;padding:0">
-      <div id="admin-access-list" style="padding:12px 16px"></div>
+    <div class="mbody" style="text-align:center;overflow-y:auto;flex:1;min-height:0">
+
+      <!-- Etape 1 : saisie nom -->
+      <div id="sw-acc-step1" style="padding:0 4px">
+        <p style="font-size:14px;color:var(--muted2);margin-bottom:12px;line-height:1.6">Selectionne ou saisis ton nom Facebook exact</p>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;position:relative">
+          <input type="text" id="sw-acc-input" placeholder="Ton nom Facebook..."
+            oninput="swAccFilter(this.value)" onfocus="swAccFilter(this.value)"
+            style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#fff;color:#000;font-size:15px;font-family:'DM Sans',sans-serif;outline:none">
+          <button id="sw-acc-ok-btn" onclick="swAccStep1()"
+            style="padding:10px 14px;border-radius:8px;border:none;background:var(--gold);color:#000;font-size:20px;cursor:pointer;opacity:0.35">✓</button>
+        </div>
+        <div id="sw-acc-dropdown" style="display:none;background:#fff;border-radius:8px;max-height:160px;overflow-y:auto;margin-bottom:8px;text-align:left"></div>
+      </div>
+
+      <!-- Etape 2 : message + boutons -->
+      <div id="sw-acc-step2" style="display:none;padding:0 4px">
+        <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;margin-bottom:12px;text-align:left">
+          <div id="sw-acc-msg" style="font-size:13px;color:var(--white);line-height:1.5;font-style:italic;margin-bottom:8px"></div>
+          <button id="sw-acc-copy-btn" onclick="swAccCopy()"
+            style="width:100%;background:var(--gold);color:#000;border:none;border-radius:8px;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">📋 COPIE LE MESSAGE</button>
+        </div>
+        <div id="sw-acc-social-btns" style="display:flex;gap:12px;justify-content:center;margin-bottom:4px;opacity:0.3;pointer-events:none">
+          <button onclick="swAccSend('messenger')" style="display:flex;flex-direction:column;align-items:center;gap:6px;border:none;cursor:pointer;border-radius:12px;padding:14px 18px;flex:1;background:#1877f2">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.744 6.614 4.469 8.652V24l4.088-2.242c1.092.3 2.246.464 3.443.464 6.627 0 12-4.974 12-11.111S18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.732 8l3.131 3.259L19.752 8l-6.561 6.963z"/></svg>
+            <span style="color:white;font-size:12px;font-weight:700;font-family:DM Sans,sans-serif">Messenger</span>
+          </button>
+          <button onclick="swAccSend('instagram')" style="display:flex;flex-direction:column;align-items:center;gap:6px;border:none;cursor:pointer;border-radius:12px;padding:14px 18px;flex:1;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            <span style="color:white;font-size:12px;font-weight:700;font-family:DM Sans,sans-serif">Instagram</span>
+          </button>
+          <button onclick="swAccSend('whatsapp')" style="display:flex;flex-direction:column;align-items:center;gap:6px;border:none;cursor:pointer;border-radius:12px;padding:14px 18px;flex:1;background:#25d366">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            <span style="color:white;font-size:12px;font-weight:700;font-family:DM Sans,sans-serif">WhatsApp</span>
+          </button>
+        </div>
+        <div id="sw-acc-sent" style="display:none;text-align:center;padding:10px 0 4px">
+          <div style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;color:var(--cyan)">✅ Message envoye !</div>
+          <div style="font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted2);margin-top:4px">En attente de validation par Marco</div>
+        </div>
+      </div>
     </div>
     <div class="mfoot" style="flex-direction:column;gap:8px">
-      <button onclick="loadAdminAccess()" style="width:100%;background:var(--border2);border:none;border-radius:8px;padding:10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer">Actualiser</button>
-      <button onclick="closeM('m-admin-access');nav('p-prestas')" style="width:100%;background:#1877f2;border:none;border-radius:8px;padding:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Voir mes videos</button>
-      <button onclick="closeM('m-admin-access')" style="width:100%;background:none;border:1px solid var(--border2);border-radius:8px;padding:8px;color:var(--muted2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer">Fermer</button>
-    </div>
-  </div>
-</div>
-<div class="moverlay" id="m-switch-access" onclick="if(event.target===this)closeM('m-switch-access')">
-  <div class="mbox" style="display:flex;flex-direction:column;max-height:88vh;width:100%">
-    <div class="mhead" style="text-align:center;flex-shrink:0">
-      <h3 style="color:#1877f2">ACCES MES PRESTAS</h3>
-    </div>
-    <div class="mbody" style="flex:1;overflow-y:auto;min-height:0">
-      <div id="switch-access-step1" style="padding:16px">
-        <div style="font-size:13px;color:var(--muted2);margin-bottom:12px;text-align:center">Selectionne ou saisis ton nom Facebook exact</div>
-        <input type="text" id="switch-access-name-input" placeholder="Ton nom Facebook..." style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--border2);background:var(--card);color:var(--white);font-family:'DM Sans',sans-serif;font-size:15px;box-sizing:border-box;margin-bottom:8px" oninput="filterAccessNames(this.value)" onfocus="filterAccessNames(this.value)">
-        <div id="switch-access-dropdown" style="display:none;background:var(--card);border:1px solid var(--border2);border-radius:10px;max-height:200px;overflow-y:auto;margin-bottom:12px"></div>
-        <button onclick="accessStep1Validate()" style="width:100%;background:#1877f2;border:none;border-radius:10px;padding:14px;color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer">Continuer</button>
-      </div>
-      <div id="switch-access-step2" style="display:none;padding:16px">
-        <div style="font-size:13px;color:var(--muted2);margin-bottom:12px;text-align:center">Envoie ce message a Marco pour obtenir l acces :</div>
-        <div id="switch-access-msg" style="background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:14px;font-size:14px;color:var(--white);line-height:1.6;margin-bottom:10px"></div>
-        <button onclick="copyAccessMsg()" id="switch-access-copy-btn" style="width:100%;background:var(--border2);border:none;border-radius:8px;padding:10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;margin-bottom:10px">Copier le message</button>
-        <div style="display:flex;gap:8px;margin-bottom:16px">
-          <a id="switch-access-messenger" href="#" target="_blank" style="flex:1;background:#0099ff;border-radius:8px;padding:10px;text-align:center;text-decoration:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:#fff">Messenger</a>
-          <a id="switch-access-instagram" href="#" target="_blank" style="flex:1;background:#e1306c;border-radius:8px;padding:10px;text-align:center;text-decoration:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:#fff">Instagram</a>
-          <a id="switch-access-whatsapp" href="#" target="_blank" style="flex:1;background:#25d366;border-radius:8px;padding:10px;text-align:center;text-decoration:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:#fff">WhatsApp</a>
-        </div>
-        <button onclick="accessMessageSent()" style="width:100%;background:#34d1c0;border:none;border-radius:10px;padding:14px;color:#000;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px">Message envoye !</button>
-        <button onclick="accessBackStep1()" style="width:100%;background:none;border:none;padding:10px;color:var(--muted2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer">Retour</button>
-      </div>
+      <button id="sw-acc-back-btn" onclick="swAccBack()" style="display:none;width:100%;background:none;border:1px solid var(--border2);border-radius:8px;padding:8px;color:var(--muted2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer">← Retour</button>
+      <button class="mbtn sec" onclick="closeM('m-sw-access')">Fermer</button>
     </div>
   </div>
 </div>
