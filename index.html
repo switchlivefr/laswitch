@@ -3659,20 +3659,29 @@ function adminTap() {
 var _prestasClicks = 0;
 var _prestasUnlocked = false;
 function unlockPrestas() {
-  if (_prestasUnlocked) { nav('p-prestas'); return; }
-  _prestasClicks++;
-  if (_prestasClicks >= 10) {
-    if (_adminMode) {
+  // En mode admin : toujours ouvrir la fenetre admin
+  if (_adminMode) {
+    _prestasClicks++;
+    clearTimeout(_prestasTimer);
+    _prestasTimer = setTimeout(function(){ _prestasClicks = 0; }, 1500);
+    if (_prestasClicks >= 10) {
       _prestasClicks = 0;
       swLoadAdminRequests();
       openM('m-sw-admin');
-    } else {
-      _prestasUnlocked = true;
-      var btn = document.getElementById('bn-prestas');
-      btn.style.opacity = '1';
-      btn.onclick = function(){ nav('p-prestas'); };
-      nav('p-prestas');
     }
+    return;
+  }
+  // En mode utilisateur : comportement normal
+  if (_prestasUnlocked) { nav('p-prestas'); return; }
+  _prestasClicks++;
+  clearTimeout(_prestasTimer);
+  _prestasTimer = setTimeout(function(){ _prestasClicks = 0; }, 1500);
+  if (_prestasClicks >= 10) {
+    _prestasUnlocked = true;
+    var btn = document.getElementById('bn-prestas');
+    btn.style.opacity = '1';
+    btn.onclick = function(){ nav('p-prestas'); };
+    nav('p-prestas');
   }
 }
 
