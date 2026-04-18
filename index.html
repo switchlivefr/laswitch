@@ -3728,8 +3728,8 @@ var _accessNames = [];
 var _accessNameSelected = '';
 var _currentMarcoFb = false;
 
-// Long appui 3s sur bn-prestas → admin Marco (uniquement)
-(function() {
+// Long appui 3s sur bn-prestas
+function initPrestasBtn() {
   var btn = document.getElementById('bn-prestas');
   if (!btn) return;
   var pressTimer = null;
@@ -3747,13 +3747,11 @@ var _currentMarcoFb = false;
 
   btn.addEventListener('touchend', function(e) {
     if (longPressTriggered) {
-      // Long appui → déjà traité, rien de plus
       longPressTriggered = false;
       e.preventDefault();
       return;
     }
     if (pressTimer) {
-      // Tap court (< 3s) → compter les taps
       clearTimeout(pressTimer);
       pressTimer = null;
       unlockPrestas();
@@ -3764,13 +3762,18 @@ var _currentMarcoFb = false;
     if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
   });
 
-  // Sur desktop : click droit → admin Marco
   btn.addEventListener('contextmenu', function(e) {
     e.preventDefault();
     loadAdminAccess();
     openM('m-admin-access');
   });
-})();
+
+  // Desktop : click normal → unlockPrestas
+  btn.addEventListener('click', function() {
+    unlockPrestas();
+  });
+}
+document.addEventListener('DOMContentLoaded', initPrestasBtn);
 
 // Charger la liste des demandes dans la fenêtre admin
 function loadAdminAccess() {
