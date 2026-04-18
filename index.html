@@ -3634,10 +3634,23 @@ document.addEventListener('click', function(e) {
 
 var _prestasClicks = 0;
 var _prestasUnlocked = false;
-var _prestasTimer = null;
+
+function unlockPrestas() {
+  if (_prestasUnlocked) { nav('p-prestas'); return; }
+  _prestasClicks++;
+  if (_prestasClicks >= 10) {
+    _prestasUnlocked = true;
+    var btn = document.getElementById('bn-prestas');
+    btn.style.opacity = '1';
+    btn.onclick = function(){ nav('p-prestas'); };
+    nav('p-prestas');
+  }
+}
+
 var _adminMode = false;
 var _adminTapCount = 0;
 var _adminTapTimer = null;
+var _prestasTimer = null;
 
 function adminTap() {
   _adminTapCount++;
@@ -3647,14 +3660,24 @@ function adminTap() {
     _adminTapCount = 0;
     clearTimeout(_adminTapTimer);
     _adminMode = !_adminMode;
-    // Toast discret
     var t = document.createElement('div');
-    t.textContent = _adminMode ? '🔧 Mode Admin' : '👤 Mode Utilisateur';
-    t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;z-index:9999;font-family:DM Sans,sans-serif';
+    t.textContent = _adminMode ? '🔧 MODE ADMIN ACTIF' : '👤 MODE UTILISATEUR';
+    t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:' + (_adminMode?'#e53935':'#1877f2') + ';color:#fff;padding:10px 22px;border-radius:20px;font-size:14px;font-weight:700;z-index:9999;font-family:DM Sans,sans-serif';
     document.body.appendChild(t);
-    setTimeout(function(){ document.body.removeChild(t); }, 2000);
+    setTimeout(function(){ if(t.parentNode)t.parentNode.removeChild(t); }, 2500);
   }
 }
+
+function openAdminOrUser() {
+  if (_adminMode) {
+    loadAdminAccess();
+    openM('m-admin-access');
+  } else {
+    nav('p-prestas');
+    openSwitchAccess();
+  }
+}
+
 function unlockPrestas() {
   _prestasClicks++;
   clearTimeout(_prestasTimer);
