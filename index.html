@@ -3643,6 +3643,11 @@ function adminTap() {
   if (_adminTapCount >= 5) {
     _adminTapCount = 0;
     _adminMode = !_adminMode;
+    // Reset le déverrouillage pour que les 10 clics fonctionnent dans le nouveau mode
+    _prestasUnlocked = false;
+    _prestasClicks = 0;
+    var btn = document.getElementById('bn-prestas');
+    if (btn) btn.style.opacity = '0.35';
     var t = document.createElement('div');
     t.textContent = _adminMode ? '🔧 MODE ADMIN ACTIF' : '👤 MODE UTILISATEUR';
     t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:' + (_adminMode ? '#e53935' : '#1877f2') + ';color:#fff;padding:10px 24px;border-radius:20px;font-size:15px;font-weight:700;z-index:9999;font-family:DM Sans,sans-serif';
