@@ -3634,49 +3634,44 @@ document.addEventListener('click', function(e) {
 
 var _prestasClicks = 0;
 var _prestasUnlocked = false;
-
 function unlockPrestas() {
   if (_prestasUnlocked) { nav('p-prestas'); return; }
   _prestasClicks++;
   if (_prestasClicks >= 10) {
-    _prestasUnlocked = true;
-    var btn = document.getElementById('bn-prestas');
-    btn.style.opacity = '1';
-    btn.onclick = function(){ nav('p-prestas'); };
-    nav('p-prestas');
+    _prestasClicks = 0;
+    if (_adminMode) {
+      // Mode admin → fenêtre demandes
+      loadAdminAccess();
+      openM('m-admin-access');
+    } else {
+      // Mode utilisateur → accès SWiTCH
+      _prestasUnlocked = true;
+      var btn = document.getElementById('bn-prestas');
+      btn.style.opacity = '1';
+      btn.onclick = function(){ nav('p-prestas'); };
+      nav('p-prestas');
+    }
   }
 }
 
 var _adminMode = false;
 var _adminTapCount = 0;
 var _adminTapTimer = null;
-var _prestasTimer = null;
-
 function adminTap() {
   _adminTapCount++;
   clearTimeout(_adminTapTimer);
   _adminTapTimer = setTimeout(function(){ _adminTapCount = 0; }, 1500);
   if (_adminTapCount >= 5) {
     _adminTapCount = 0;
-    clearTimeout(_adminTapTimer);
     _adminMode = !_adminMode;
     var t = document.createElement('div');
-    t.textContent = _adminMode ? '🔧 MODE ADMIN ACTIF' : '👤 MODE UTILISATEUR';
-    t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:' + (_adminMode?'#e53935':'#1877f2') + ';color:#fff;padding:10px 22px;border-radius:20px;font-size:14px;font-weight:700;z-index:9999;font-family:DM Sans,sans-serif';
+    t.textContent = _adminMode ? '🔧 MODE ADMIN' : '👤 MODE UTILISATEUR';
+    t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:' + (_adminMode ? '#e53935' : '#1877f2') + ';color:#fff;padding:10px 24px;border-radius:20px;font-size:15px;font-weight:700;z-index:9999;font-family:DM Sans,sans-serif;letter-spacing:1px';
     document.body.appendChild(t);
-    setTimeout(function(){ if(t.parentNode)t.parentNode.removeChild(t); }, 2500);
+    setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 3000);
   }
 }
 
-function openAdminOrUser() {
-  if (_adminMode) {
-    loadAdminAccess();
-    openM('m-admin-access');
-  } else {
-    nav('p-prestas');
-    openSwitchAccess();
-  }
-}
 
 function unlockPrestas() {
   _prestasClicks++;
