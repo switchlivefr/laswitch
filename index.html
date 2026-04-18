@@ -3823,7 +3823,7 @@ function swLoadAdminRequests() {
         var nom = (row.name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
         var d = document.createElement('div');
         d.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:8px';
-        var info = '<div style="flex:1"><div style="font-size:14px;font-weight:700;color:' + (isVal?'var(--muted2)':'var(--white)') + '">' + nom + '</div><div style="font-size:11px;color:var(--muted2);font-family:DM Mono,monospace">' + (row.date||'') + '</div></div>';
+        var info = '<div style="flex:1"><div style="font-size:14px;font-weight:700;color:' + (isVal?'var(--muted2)':'var(--white)') + '">' + nom + '</div><div style="font-size:11px;color:var(--muted2);font-family:DM Mono,monospace">' + (row.date||'').replace(/\s*\(.*\)\s*/,'') + '</div></div>';
         d.innerHTML = info;
         if (isVal) {
           var tag = document.createElement('div');
