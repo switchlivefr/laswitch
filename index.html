@@ -3663,13 +3663,11 @@ function unlockPrestas() {
     _prestasClicks = 0;
     clearTimeout(_prestasTimer);
     if (_adminMode) {
-      // Mode admin → fenêtre demandes
       loadAdminAccess();
       openM('m-admin-access');
     } else {
-      // Mode utilisateur → accès SWiTCH
       nav('p-prestas');
-      setTimeout(function(){ openSwitchAccess(); }, 100);
+      openSwitchAccess();
     }
   }
 }
@@ -3816,21 +3814,16 @@ function validateAccess(name, btn) {
 // ---- FLUX UTILISATEUR ----
 
 function openSwitchAccess() {
-  // Vérifier si déjà mémorisé
   var savedName = localStorage.getItem('switch_access_name');
   if (savedName) {
-    // Déjà connu → vérifier validation et charger
-    nav('p-prestas');
     checkAndLoadAccess(savedName);
     return;
   }
-  // Nouveau → ouvrir la modale
   openSwitchAccessFresh();
 }
 
 // Vérifier si validé puis charger
 function checkAndLoadAccess(name) {
-  nav('p-prestas');
   document.getElementById('prestas-nologin').style.display = 'none';
   document.getElementById('prestas-loggedin').style.display = 'none';
   document.getElementById('prestas-empty').style.display = 'none';
@@ -3976,7 +3969,7 @@ function accessMessageSent() {
 
 
 function checkFbSession() {
-  // Vérifier d'abord le localStorage SWiTCH (accès sans Facebook)
+  // Accès SWiTCH mémorisé (sans Facebook)
   var savedName = localStorage.getItem('switch_access_name');
   if (savedName && !_fbUser) {
     checkAndLoadAccess(savedName);
@@ -3990,7 +3983,6 @@ function checkFbSession() {
         checkFriendshipAndLoad(me);
       });
     } else if (response.status === 'connected' && _fbUser) {
-      // Reconnexion : revérifier l'amitié (la demande est peut-être en cours)
       checkFriendshipAndLoad(_fbUser);
     }
   });
