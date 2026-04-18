@@ -3892,6 +3892,21 @@ function swLoadNames() {
     .catch(function(){ _swAccNames = []; });
 }
 
+var _swAccSelectedFromList = false;
+
+function swAccFilterFocus(val) {
+  // Au focus : si une valeur du menu avait été sélectionnée, vider le champ
+  if (_swAccSelectedFromList) {
+    document.getElementById('sw-acc-input').value = '';
+    _swAccSelectedFromList = false;
+    _swAccName = '';
+    document.getElementById('sw-acc-ok-btn').style.opacity = '0.35';
+    document.getElementById('sw-acc-dropdown').style.display = 'none';
+    return;
+  }
+  swAccFilter(val);
+}
+
 function swAccFilter(val) {
   var dd  = document.getElementById('sw-acc-dropdown');
   var btn = document.getElementById('sw-acc-ok-btn');
@@ -3908,6 +3923,7 @@ function swAccFilter(val) {
     item.onclick = function() {
       document.getElementById('sw-acc-input').value = name;
       _swAccName = name;
+      _swAccSelectedFromList = true;
       dd.style.display = 'none';
       document.getElementById('sw-acc-ok-btn').style.opacity = '1';
     };
@@ -3986,6 +4002,7 @@ function swAccReset() {
   var okbtn = document.getElementById('sw-acc-ok-btn');
   if (okbtn) okbtn.style.opacity = '0.35';
   _swAccName = '';
+  _swAccSelectedFromList = false;
 }
 
 function checkFbSession() {
@@ -4033,14 +4050,16 @@ function checkFbSession() {
     <div class="mbody" style="text-align:center;overflow-y:auto;flex:1;min-height:0">
       <div id="sw-acc-step1" style="padding:0 4px">
         <p style="font-size:14px;color:var(--muted2);margin-bottom:12px;line-height:1.6">Selectionne ou saisis ton nom Facebook exact</p>
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-          <input type="text" id="sw-acc-input" placeholder="Ton nom Facebook..."
-            oninput="swAccFilter(this.value)" onfocus="swAccFilter(this.value)"
-            style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#fff;color:#000;font-size:15px;font-family:'DM Sans',sans-serif;outline:none">
-          <button id="sw-acc-ok-btn" onclick="swAccStep1()"
-            style="padding:10px 14px;border-radius:8px;border:none;background:var(--gold);color:#000;font-size:20px;cursor:pointer;opacity:0.35">✓</button>
+        <div style="position:relative;margin-bottom:8px">
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="text" id="sw-acc-input" placeholder="Ton nom Facebook..."
+              oninput="swAccFilter(this.value)" onfocus="swAccFilterFocus(this.value)"
+              style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#fff;color:#000;font-size:15px;font-family:'DM Sans',sans-serif;outline:none">
+            <button id="sw-acc-ok-btn" onclick="swAccStep1()"
+              style="padding:10px 14px;border-radius:8px;border:none;background:var(--gold);color:#000;font-size:20px;cursor:pointer;opacity:0.35">✓</button>
+          </div>
+          <div id="sw-acc-dropdown" style="display:none;position:absolute;top:100%;left:0;right:40px;background:#fff;border-radius:8px;max-height:180px;overflow-y:auto;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.3);text-align:left;margin-top:2px"></div>
         </div>
-        <div id="sw-acc-dropdown" style="display:none;background:#fff;border-radius:8px;max-height:160px;overflow-y:auto;margin-bottom:8px;text-align:left"></div>
       </div>
       <div id="sw-acc-step2" style="display:none;padding:0 4px">
         <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;margin-bottom:12px;text-align:left">
