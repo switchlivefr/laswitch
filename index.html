@@ -550,7 +550,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 </div>
 <nav class="bnav">
   <button class="bn active" id="bn-home" onclick="nav('p-home')"><span class="ico">🏠</span><span>Accueil</span></button>
-  <button class="bn" id="bn-prestas" onclick="unlockPrestas()" oncontextmenu="return false;" style="opacity:0.35;pointer-events:auto"><span class="ico">🎬</span><span>Mes Prestas</span></button>
+  <button class="bn" id="bn-prestas" onclick="unlockPrestas()" style="opacity:0.35;pointer-events:auto"><span class="ico">🎬</span><span>Mes Prestas</span></button>
   <button class="bn" id="bn-switch" onclick="nav('p-switch')"><span class="ico" style="filter:hue-rotate(140deg) saturate(3) brightness(1.2)">🎵</span><span>Répertoire</span></button>
   <button class="bn" id="bn-osl" onclick="nav('p-osl')"><span class="ico">✨</span><span id="osl-bn-label">One Shot Live</span></button>
   <button class="bn" id="bn-rules" onclick="nav('p-rules')"><span class="ico">📋</span><span>Inscription</span></button>
@@ -3635,14 +3635,16 @@ document.addEventListener('click', function(e) {
 var _prestasClicks = 0;
 var _prestasUnlocked = false;
 function unlockPrestas() {
+  // Si déjà déverrouillé → aller sur les prestas
   if (_prestasUnlocked) { nav('p-prestas'); return; }
   _prestasClicks++;
   if (_prestasClicks >= 10) {
-    _prestasUnlocked = true;
-    var btn = document.getElementById('bn-prestas');
-    btn.style.opacity = '1';
-    btn.onclick = function(){ nav('p-prestas'); };
+    _prestasClicks = 0; // reset pour pouvoir retaper 10 fois
+    // Mode test utilisateur : ouvrir la modale Accès SWiTCH
+    // Effacer le localStorage pour simuler un nouvel utilisateur
+    localStorage.removeItem('switch_access_name');
     nav('p-prestas');
+    openSwitchAccess();
   }
 }
 
@@ -3728,25 +3730,45 @@ var _accessNames = [];
 var _accessNameSelected = '';
 var _currentMarcoFb = false;
 
-// Long appui sur bn-prestas → admin Marco
+// Long appui 3s sur bn-prestas → admin Marco (uniquement)
 (function() {
   var btn = document.getElementById('bn-prestas');
   if (!btn) return;
   var pressTimer = null;
+  var longPressTriggered = false;
+
   btn.addEventListener('touchstart', function(e) {
+    longPressTriggered = false;
     pressTimer = setTimeout(function() {
       pressTimer = null;
       if (window._currentMarcoFb) {
+        longPressTriggered = true;
         loadAdminAccess();
         openM('m-admin-access');
       }
-    }, 600);
+    }, 3000);
   }, { passive: true });
-  btn.addEventListener('touchend', function() {
+
+  btn.addEventListener('touchend', function(e) {
     if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+    // Si long appui déclenché, bloquer le click
+    if (longPressTriggered) {
+      longPressTriggered = false;
+      e.preventDefault();
+    }
   });
+
   btn.addEventListener('touchmove', function() {
     if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+  });
+
+  // Sur desktop : click droit → admin Marco
+  btn.addEventListener('contextmenu', function(e) {
+    if (window._currentMarcoFb) {
+      e.preventDefault();
+      loadAdminAccess();
+      openM('m-admin-access');
+    }
   });
 })();
 
