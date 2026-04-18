@@ -3632,6 +3632,9 @@ document.addEventListener('click', function(e) {
 });
 
 
+var _adminMode = false;
+var _adminTapCount = 0;
+var _adminTapTimer = null;
 var _prestasClicks = 0;
 var _prestasUnlocked = false;
 function unlockPrestas() {
@@ -3654,9 +3657,6 @@ function unlockPrestas() {
   }
 }
 
-var _adminMode = false;
-var _adminTapCount = 0;
-var _adminTapTimer = null;
 function adminTap() {
   _adminTapCount++;
   clearTimeout(_adminTapTimer);
