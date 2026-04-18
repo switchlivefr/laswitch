@@ -3635,16 +3635,14 @@ document.addEventListener('click', function(e) {
 var _prestasClicks = 0;
 var _prestasUnlocked = false;
 function unlockPrestas() {
-  // Si déjà déverrouillé → aller sur les prestas
   if (_prestasUnlocked) { nav('p-prestas'); return; }
   _prestasClicks++;
   if (_prestasClicks >= 10) {
-    _prestasClicks = 0; // reset pour pouvoir retaper 10 fois
-    // Mode test utilisateur : ouvrir la modale Accès SWiTCH
-    // Effacer le localStorage pour simuler un nouvel utilisateur
-    localStorage.removeItem('switch_access_name');
+    _prestasClicks = 0;
+    // Mode test : ouvrir directement la modale sans effacer localStorage
+    // L'utilisateur choisit son nom → mémorisé
     nav('p-prestas');
-    openSwitchAccess();
+    setTimeout(function(){ openSwitchAccessFresh(); }, 100);
   }
 }
 
@@ -3818,8 +3816,11 @@ function validateAccess(name, btn) {
   fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=validateAccessRequest&name=' + encodeURIComponent(name))
     .then(function(r){ return r.json(); })
     .then(function(data) {
-      if (data.ok) loadAdminAccess();
-      else { btn.textContent = 'Erreur'; btn.disabled = false; }
+      if (data.ok) {
+        // Mémoriser ce nom comme utilisateur courant (remplace l'ancien)
+        localStorage.setItem('switch_access_name', name);
+        loadAdminAccess();
+      } else { btn.textContent = 'Erreur'; btn.disabled = false; }
     })
     .catch(function() { btn.textContent = 'Erreur'; btn.disabled = false; });
 }
@@ -3827,20 +3828,16 @@ function validateAccess(name, btn) {
 // ---- FLUX UTILISATEUR ----
 
 function openSwitchAccess() {
-  // Vérifier si déjà mémorisé et validé
+  // Vérifier si déjà mémorisé
   var savedName = localStorage.getItem('switch_access_name');
   if (savedName) {
+    // Déjà connu → vérifier validation et charger
+    nav('p-prestas');
     checkAndLoadAccess(savedName);
     return;
   }
-  loadAccessNames();
-  document.getElementById('switch-access-step1').style.display = 'block';
-  document.getElementById('switch-access-step2').style.display = 'none';
-  document.getElementById('switch-access-step-num').textContent = '1';
-  document.getElementById('switch-access-name-input').value = '';
-  document.getElementById('switch-access-dropdown').style.display = 'none';
-  _accessNameSelected = '';
-  openM('m-switch-access');
+  // Nouveau → ouvrir la modale
+  openSwitchAccessFresh();
 }
 
 // Vérifier si validé puis charger
@@ -3991,6 +3988,12 @@ function accessMessageSent() {
 
 
 function checkFbSession() {
+  // Vérifier d'abord le localStorage SWiTCH (accès sans Facebook)
+  var savedName = localStorage.getItem('switch_access_name');
+  if (savedName && !_fbUser) {
+    checkAndLoadAccess(savedName);
+    return;
+  }
   if (typeof FB === 'undefined') return;
   FB.getLoginStatus(function(response) {
     if (response.status === 'connected' && !_fbUser) {
