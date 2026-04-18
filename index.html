@@ -3763,15 +3763,31 @@ var _swAccLinks = {};
 
 function swAdminVoirVideos() {
   closeM('m-sw-admin');
-  // En mode admin : charger les videos de Marco directement
-  var marcoMe = { id: '100027512771366', name: 'Marco', first_name: 'Marco' };
+  nav('p-prestas');
   document.getElementById('prestas-nologin').style.display  = 'none';
   document.getElementById('prestas-loggedin').style.display = 'none';
   document.getElementById('prestas-empty').style.display    = 'none';
   document.getElementById('prestas-nofriend').style.display = 'none';
   document.getElementById('prestas-loading').style.display  = 'block';
-  nav('p-prestas');
-  loadPrestas(marcoMe);
+  // Mode admin : charger TOUTES les videos sans filtre
+  fetch('/api?action=getVideos&fbid=ALL&nom=&fullname=')
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      document.getElementById('prestas-loading').style.display = 'none';
+      var videos = data.videos || [];
+      if (!videos.length) { document.getElementById('prestas-empty').style.display = 'block'; return; }
+      document.getElementById('prestas-avatar').textContent = 'M';
+      document.getElementById('prestas-username').textContent = 'Marco — toutes les videos';
+      document.getElementById('prestas-count').textContent = videos.length + ' PRESTATIONS SWiTCH';
+      document.getElementById('prestas-sub').textContent = videos.length + ' prestations';
+      renderVideoList(videos);
+      document.getElementById('prestas-loggedin').style.display = 'flex';
+      document.getElementById('prestas-loggedin').style.flexDirection = 'column';
+    })
+    .catch(function(){
+      document.getElementById('prestas-loading').style.display = 'none';
+      document.getElementById('prestas-empty').style.display = 'block';
+    });
 }
 
 function swLoadAdminRequests() {
