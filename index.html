@@ -3761,6 +3761,19 @@ var _swAccName  = '';
 var _swAccToken = '';
 var _swAccLinks = {};
 
+function swAdminVoirVideos() {
+  closeM('m-sw-admin');
+  // En mode admin : charger les videos de Marco directement
+  var marcoMe = { id: '100027512771366', name: 'Marco', first_name: 'Marco' };
+  document.getElementById('prestas-nologin').style.display  = 'none';
+  document.getElementById('prestas-loggedin').style.display = 'none';
+  document.getElementById('prestas-empty').style.display    = 'none';
+  document.getElementById('prestas-nofriend').style.display = 'none';
+  document.getElementById('prestas-loading').style.display  = 'block';
+  nav('p-prestas');
+  loadPrestas(marcoMe);
+}
+
 function swLoadAdminRequests() {
   var list  = document.getElementById('sw-admin-list');
   var count = document.getElementById('sw-admin-count');
@@ -3989,7 +4002,7 @@ function checkFbSession() {
     </div>
     <div class="mfoot" style="flex-direction:column;gap:8px">
       <button onclick="swLoadAdminRequests()" style="width:100%;background:var(--border2);border:none;border-radius:8px;padding:10px;color:var(--white);font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">ACTUALISER</button>
-      <button onclick="closeM('m-sw-admin');nav('p-prestas')" style="width:100%;background:#1877f2;border:none;border-radius:8px;padding:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">VOIR MES VIDEOS</button>
+      <button onclick="swAdminVoirVideos()" style="width:100%;background:#1877f2;border:none;border-radius:8px;padding:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">VOIR MES VIDEOS</button>
       <button class="mbtn sec" onclick="closeM('m-sw-admin')">Fermer</button>
     </div>
   </div>
