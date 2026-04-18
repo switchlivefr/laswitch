@@ -261,6 +261,31 @@ async function handleRequest(request, env) {
     }
   }
 
+  // GET fbId depuis un nom (pour Accès SWiTCH sans Facebook)
+  if (request.method === 'GET' && action === 'getFbIdFromName') {
+    try {
+      const name = (url.searchParams.get('name') || '').trim().toLowerCase();
+      const sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/IDS_FBK?key=${API_KEY}`;
+      const r = await fetch(sheetUrl);
+      const data = await r.json();
+      const rows = (data.values || []).slice(1);
+      for (const row of rows) {
+        if ((row[1] || '').trim().toLowerCase() === name) {
+          return new Response(JSON.stringify({ fbId: row[0] }), {
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+          });
+        }
+      }
+      return new Response(JSON.stringify({ fbId: '' }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    } catch(e) {
+      return new Response(JSON.stringify({ fbId: '' }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
+  }
+
   // GET videos par ID Facebook
   if (request.method === 'GET' && action === 'getVideos') {
     try {
