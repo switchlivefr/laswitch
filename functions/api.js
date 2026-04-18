@@ -293,12 +293,12 @@ async function handleRequest(request, env) {
       const nom = (url.searchParams.get('nom') || '').trim().toLowerCase();
       const fullname = (url.searchParams.get('fullname') || '').trim().toLowerCase();
 
+      // fbid=ALL = mode admin → toutes les vidéos
+      const isAdmin = fbId === 'ALL';
+
       if (!fbId) return new Response(JSON.stringify({ videos: [] }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
-
-      // Marco = admin → toutes les vidéos
-      const isAdmin = nom === 'marco' && fullname.includes('switch');
 
       const sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(VIDEOS_SHEET)}?key=${API_KEY}`;
       const r = await fetch(sheetUrl);
