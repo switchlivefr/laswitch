@@ -3902,9 +3902,11 @@ function swLoadNames() {
 var _swAccSelectedFromList = false;
 
 function swAccFilterFocus(val) {
-  // Au focus : si une valeur du menu avait été sélectionnée, vider le champ
   if (_swAccSelectedFromList) {
-    document.getElementById('sw-acc-input').value = '';
+    var inp = document.getElementById('sw-acc-input');
+    inp.value = '';
+    inp.removeAttribute('readonly');
+    inp.style.caretColor = '';
     _swAccSelectedFromList = false;
     _swAccName = '';
     document.getElementById('sw-acc-ok-btn').style.opacity = '0.35';
@@ -3918,8 +3920,8 @@ function swAccFilter(val) {
   var dd  = document.getElementById('sw-acc-dropdown');
   var btn = document.getElementById('sw-acc-ok-btn');
   _swAccName = val;
-  btn.style.opacity = val.trim().length >= 2 ? '1' : '0.35';
-  if (!val || val.length < 2) { dd.style.display = 'none'; return; }
+  btn.style.opacity = val.trim().length >= 1 ? '1' : '0.35';
+  if (!val || val.length < 1) { dd.style.display = 'none'; return; }
   var filtered = _swAccNames.filter(function(n){ return n.toLowerCase().includes(val.toLowerCase()); });
   if (!filtered.length) { dd.style.display = 'none'; return; }
   dd.innerHTML = ''; dd.style.display = 'block';
@@ -3928,11 +3930,15 @@ function swAccFilter(val) {
     item.style.cssText = 'padding:10px 14px;cursor:pointer;font-size:14px;color:#000;border-bottom:1px solid #eee';
     item.textContent = name;
     item.onclick = function() {
-      document.getElementById('sw-acc-input').value = name;
+      var inp = document.getElementById('sw-acc-input');
+      inp.value = name;
+      inp.setAttribute('readonly', 'readonly');
+      inp.style.caretColor = 'transparent';
       _swAccName = name;
       _swAccSelectedFromList = true;
       dd.style.display = 'none';
       document.getElementById('sw-acc-ok-btn').style.opacity = '1';
+      inp.blur();
     };
     dd.appendChild(item);
   });
@@ -4010,6 +4016,8 @@ function swAccReset() {
   if (okbtn) okbtn.style.opacity = '0.35';
   _swAccName = '';
   _swAccSelectedFromList = false;
+  var inp2 = document.getElementById('sw-acc-input');
+  if (inp2) { inp2.removeAttribute('readonly'); inp2.style.caretColor = ''; }
 }
 
 function checkFbSession() {
@@ -4049,15 +4057,15 @@ function checkFbSession() {
   </div>
 </div>
 
-<div class="moverlay" id="m-sw-access" onclick="if(event.target===this)closeM('m-sw-access')">
-  <div class="mbox" style="display:flex;flex-direction:column;max-height:calc(88vh - 64px)">
-    <div class="mhead" style="text-align:center;flex-shrink:0">
-      <h3 style="color:#1877f2">MES PRESTAS SWITCH</h3>
+<div class="moverlay" id="m-sw-access" onclick="if(event.target===this)closeM('m-sw-access')" style="align-items:flex-start;padding-top:40px">
+  <div class="mbox" style="display:flex;flex-direction:column;max-height:52vh;width:100%;margin-top:0">
+    <div class="mhead" style="text-align:center;flex-shrink:0;padding:12px 18px 8px">
+      <h3 style="color:#1877f2;margin:0">MES PRESTAS SWITCH</h3>
     </div>
-    <div class="mbody" style="text-align:center;overflow-y:auto;flex:1;min-height:0">
-      <div id="sw-acc-step1" style="padding:0 4px">
-        <p style="font-size:14px;color:var(--muted2);margin-bottom:12px;line-height:1.6">Selectionne ou saisis ton nom Facebook exact</p>
-        <div style="position:relative;margin-bottom:8px">
+    <div class="mbody" style="text-align:center;overflow:visible;flex:1;padding:8px 16px">
+      <div id="sw-acc-step1" style="padding:0">
+        <p style="font-size:13px;color:var(--muted2);margin-bottom:10px;line-height:1.5">Selectionne ou saisis ton nom Facebook exact</p>
+        <div style="position:relative;margin-bottom:4px">
           <div style="display:flex;gap:8px;align-items:center">
             <input type="text" id="sw-acc-input" placeholder="Ton nom Facebook..."
               oninput="swAccFilter(this.value)" onfocus="swAccFilterFocus(this.value)"
@@ -4065,7 +4073,7 @@ function checkFbSession() {
             <button id="sw-acc-ok-btn" onclick="swAccStep1()"
               style="padding:10px 14px;border-radius:8px;border:none;background:var(--gold);color:#000;font-size:20px;cursor:pointer;opacity:0.35">✓</button>
           </div>
-          <div id="sw-acc-dropdown" style="display:none;position:absolute;top:100%;left:0;right:40px;background:#fff;border-radius:8px;max-height:180px;overflow-y:auto;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.3);text-align:left;margin-top:2px"></div>
+          <div id="sw-acc-dropdown" style="display:none;position:absolute;top:100%;left:0;right:48px;background:#fff;border-radius:8px;max-height:200px;overflow-y:auto;z-index:1000;box-shadow:0 4px 16px rgba(0,0,0,.4);text-align:left;margin-top:2px"></div>
         </div>
       </div>
       <div id="sw-acc-step2" style="display:none;padding:0 4px">
