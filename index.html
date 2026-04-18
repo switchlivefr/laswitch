@@ -3953,7 +3953,6 @@ function swAccStep1() {
   document.getElementById('sw-acc-input').style.borderColor = '';
   _swAccName = name;
   _swAccToken = 'sw' + Date.now() + Math.random().toString(36).substr(2,8);
-  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(name) + '&token=' + encodeURIComponent(_swAccToken));
   var msg = 'Hello Marco ! je souhaiterais acceder a mes prestas SWiTCH sous le nom : ' + name;
   document.getElementById('sw-acc-msg').textContent = msg;
   var enc = encodeURIComponent(msg);
@@ -3993,6 +3992,10 @@ function swAccCopy() {
 }
 
 function swAccSend(channel) {
+  // Ecrire dans IDS_APPLI et mémoriser token uniquement au clic sur réseau
+  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken));
+  localStorage.setItem('sw_token', _swAccToken);
+  localStorage.setItem('sw_name', _swAccName);
   var url = _swAccLinks[channel] || '';
   if (url) window.open(url, '_blank');
   document.getElementById('sw-acc-sent').style.display = 'block';
@@ -4057,12 +4060,12 @@ function checkFbSession() {
   </div>
 </div>
 
-<div class="moverlay" id="m-sw-access" onclick="if(event.target===this)closeM('m-sw-access')" style="align-items:flex-start;padding-top:40px">
-  <div class="mbox" style="display:flex;flex-direction:column;max-height:52vh;width:100%;margin-top:0">
+<div class="moverlay" id="m-sw-access" onclick="if(event.target===this)closeM('m-sw-access')" style="align-items:flex-start;padding-top:20px">
+  <div class="mbox" style="display:flex;flex-direction:column;width:100%;overflow:visible">
     <div class="mhead" style="text-align:center;flex-shrink:0;padding:12px 18px 8px">
       <h3 style="color:#1877f2;margin:0">MES PRESTAS SWITCH</h3>
     </div>
-    <div class="mbody" style="text-align:center;overflow:visible;flex:1;padding:8px 16px">
+    <div class="mbody" style="text-align:center;overflow:visible;padding:8px 16px">
       <div id="sw-acc-step1" style="padding:0">
         <p style="font-size:13px;color:var(--muted2);margin-bottom:10px;line-height:1.5">Selectionne ou saisis ton nom Facebook exact</p>
         <div style="position:relative;margin-bottom:4px">
@@ -4102,7 +4105,7 @@ function checkFbSession() {
         </div>
       </div>
     </div>
-    <div class="mfoot" style="flex-direction:column;gap:8px">
+    <div class="mfoot" style="flex-direction:column;gap:8px;flex-shrink:0">
       <button id="sw-acc-back-btn" onclick="swAccBack()" style="display:none;width:100%;background:none;border:1px solid var(--border2);border-radius:8px;padding:8px;color:var(--muted2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer">Retour</button>
       <button class="mbtn sec" onclick="closeM('m-sw-access')">Fermer</button>
     </div>
