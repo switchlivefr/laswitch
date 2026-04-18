@@ -3924,7 +3924,14 @@ function swAccFilter(val) {
   if (!val || val.length < 1) { dd.style.display = 'none'; return; }
   var filtered = _swAccNames.filter(function(n){ return n.toLowerCase().includes(val.toLowerCase()); });
   if (!filtered.length) { dd.style.display = 'none'; return; }
-  dd.innerHTML = ''; dd.style.display = 'block';
+  dd.innerHTML = '';
+  // Positionner en fixed sous l'input
+  var inp = document.getElementById('sw-acc-input');
+  if (inp) {
+    var rect = inp.getBoundingClientRect();
+    dd.style.top = (rect.bottom + 2) + 'px';
+  }
+  dd.style.display = 'block';
   filtered.slice(0,8).forEach(function(name) {
     var item = document.createElement('div');
     item.style.cssText = 'padding:10px 14px;cursor:pointer;font-size:14px;color:#000;border-bottom:1px solid #eee';
@@ -4060,15 +4067,15 @@ function checkFbSession() {
   </div>
 </div>
 
-<div class="moverlay" id="m-sw-access" onclick="if(event.target===this)closeM('m-sw-access')" style="align-items:flex-start;padding-top:20px">
-  <div class="mbox" style="display:flex;flex-direction:column;width:100%;overflow:visible">
+<div class="moverlay" id="m-sw-access" onclick="if(event.target===this)closeM('m-sw-access')" style="align-items:flex-start;padding-top:20px;overflow:hidden">
+  <div class="mbox" style="display:flex;flex-direction:column;width:100%;overflow:hidden">
     <div class="mhead" style="text-align:center;flex-shrink:0;padding:12px 18px 8px">
       <h3 style="color:#1877f2;margin:0">MES PRESTAS SWITCH</h3>
     </div>
-    <div class="mbody" style="text-align:center;overflow:visible;padding:8px 16px">
+    <div class="mbody" style="text-align:center;overflow:hidden;padding:8px 16px">
       <div id="sw-acc-step1" style="padding:0">
         <p style="font-size:13px;color:var(--muted2);margin-bottom:10px;line-height:1.5">Selectionne ou saisis ton nom Facebook exact</p>
-        <div style="position:relative;margin-bottom:4px">
+        <div style="margin-bottom:4px">
           <div style="display:flex;gap:8px;align-items:center">
             <input type="text" id="sw-acc-input" placeholder="Ton nom Facebook..."
               oninput="swAccFilter(this.value)" onfocus="swAccFilterFocus(this.value)"
@@ -4076,7 +4083,7 @@ function checkFbSession() {
             <button id="sw-acc-ok-btn" onclick="swAccStep1()"
               style="padding:10px 14px;border-radius:8px;border:none;background:var(--gold);color:#000;font-size:20px;cursor:pointer;opacity:0.35">✓</button>
           </div>
-          <div id="sw-acc-dropdown" style="display:none;position:absolute;top:100%;left:0;right:48px;background:#fff;border-radius:8px;max-height:200px;overflow-y:auto;z-index:1000;box-shadow:0 4px 16px rgba(0,0,0,.4);text-align:left;margin-top:2px"></div>
+          <div id="sw-acc-dropdown" style="display:none;position:fixed;background:#fff;border-radius:8px;max-height:200px;overflow-y:auto;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.5);text-align:left;left:16px;right:16px"></div>
         </div>
       </div>
       <div id="sw-acc-step2" style="display:none;padding:0 4px">
