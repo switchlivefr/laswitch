@@ -2695,7 +2695,7 @@ function soumettreinscription() {
   btn._ok = false;
   btn.style.opacity = '0.35';
   btn.textContent = '\u2026';
-  var url = 'https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec'
+  var url = 'https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec'
     + '?titre=' + encodeURIComponent(titre)
     + '&nom=' + encodeURIComponent(nom);
   var okEl = document.getElementById('m-inscription-ok');
@@ -3773,7 +3773,7 @@ function swLoadAdminRequests() {
   if (!list) return;
   list.innerHTML = '<div style="color:var(--muted2);font-size:13px;padding:12px">Chargement...</div>';
   var limit = Date.now() - 48 * 3600 * 1000;
-  fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=getAccessRequests')
+  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=getAccessRequests')
     .then(function(r){ return r.json(); })
     .then(function(data) {
       var rows = (data.rows || []).filter(function(r){
@@ -3818,7 +3818,7 @@ function swLoadAdminRequests() {
 
 function swAdminValidate(name, btn) {
   btn.textContent = '...'; btn.disabled = true;
-  fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=validateRequest&name=' + encodeURIComponent(name))
+  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=validateRequest&name=' + encodeURIComponent(name))
     .then(function(r){ return r.json(); })
     .then(function(data) {
       if (data.ok) swLoadAdminRequests();
@@ -3834,7 +3834,7 @@ function swVerifyToken(token, name) {
   document.getElementById('prestas-empty').style.display    = 'none';
   document.getElementById('prestas-nofriend').style.display = 'none';
   document.getElementById('prestas-loading').style.display  = 'block';
-  fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=verifyToken&token=' + encodeURIComponent(token) + '&name=' + encodeURIComponent(name))
+  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=verifyToken&token=' + encodeURIComponent(token) + '&name=' + encodeURIComponent(name))
     .then(function(r){ return r.json(); })
     .then(function(data) {
       document.getElementById('prestas-loading').style.display = 'none';
@@ -3866,7 +3866,7 @@ function swOpenAccess() {
 }
 
 function swLoadNames() {
-  fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=getAppliNames')
+  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=getAppliNames')
     .then(function(r){ return r.json(); })
     .then(function(data){ _swAccNames = data.names || []; })
     .catch(function(){ _swAccNames = []; });
@@ -3905,7 +3905,7 @@ function swAccStep1() {
   _swAccName = name;
   _swAccToken = 'sw' + Date.now() + Math.random().toString(36).substr(2,8);
   // Enregistrer la demande dans le Sheets
-  fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=addRequest&name=' + encodeURIComponent(name) + '&token=' + encodeURIComponent(_swAccToken));
+  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(name) + '&token=' + encodeURIComponent(_swAccToken));
   // Préparer le message
   var msg = 'Hello Marco ! je souhaiterais acceder a mes prestas SWiTCH sous le nom : ' + name;
   document.getElementById('sw-acc-msg').textContent = msg;
