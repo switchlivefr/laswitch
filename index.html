@@ -3632,30 +3632,20 @@ document.addEventListener('click', function(e) {
 });
 
 
-var _adminMode = false;
-var _adminTapCount = 0;
-var _adminTapTimer = null;
 var _prestasClicks = 0;
 var _prestasUnlocked = false;
 function unlockPrestas() {
   if (_prestasUnlocked) { nav('p-prestas'); return; }
   _prestasClicks++;
   if (_prestasClicks >= 10) {
-    _prestasClicks = 0;
-    if (_adminMode) {
-      // Mode admin → fenêtre demandes
-      loadAdminAccess();
-      openM('m-admin-access');
-    } else {
-      // Mode utilisateur → accès SWiTCH
-      _prestasUnlocked = true;
-      var btn = document.getElementById('bn-prestas');
-      btn.style.opacity = '1';
-      btn.onclick = function(){ nav('p-prestas'); };
-      nav('p-prestas');
-    }
+    _prestasUnlocked = true;
+    var btn = document.getElementById('bn-prestas');
+    btn.style.opacity = '1';
+    btn.onclick = function(){ nav('p-prestas'); };
+    nav('p-prestas');
   }
 }
+
 
 function adminTap() {
   _adminTapCount++;
