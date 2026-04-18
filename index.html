@@ -3719,22 +3719,14 @@ function fallbackCopy(text, btn) {
 }
 
 
+
 // ============================================================
-// SYSTÈME ACCÈS SWiTCH (sans Facebook)
+// SYSTÈME ACCÈS SWiTCH v2 — validation par Marco
 // ============================================================
 
 var _accessNames = [];
 var _accessNameSelected = '';
 var _currentMarcoFb = false;
-
-function computeAccessCode(name) {
-  var s = name.trim().toLowerCase();
-  var hash = 0;
-  for (var i = 0; i < s.length; i++) {
-    hash = (hash * 31 + s.charCodeAt(i)) & 0xffffffff;
-  }
-  return String(((Math.abs(hash) % 9000) + 1000));
-}
 
 // Long appui sur bn-prestas → admin Marco
 (function() {
@@ -3758,6 +3750,7 @@ function computeAccessCode(name) {
   });
 })();
 
+// Charger la liste des demandes dans la fenêtre admin
 function loadAdminAccess() {
   var list = document.getElementById('admin-access-list');
   var count = document.getElementById('admin-access-count');
@@ -3767,36 +3760,55 @@ function loadAdminAccess() {
     .then(function(r){ return r.json(); })
     .then(function(data) {
       var rows = data.rows || [];
+      var pending = rows.filter(function(r){ return !r.validated; });
+      var validated = rows.filter(function(r){ return r.validated; });
+      if (count) count.textContent = pending.length + ' en attente · ' + validated.length + ' validées';
+      list.innerHTML = '';
       if (rows.length === 0) {
         list.innerHTML = '<div style="color:var(--muted2);font-size:13px;padding:8px;text-align:center">Aucune demande</div>';
-        if (count) count.textContent = 'Aucune demande en attente';
         return;
       }
-      if (count) count.textContent = rows.length + ' demande' + (rows.length > 1 ? 's' : '');
-      list.innerHTML = '';
-      rows.sort(function(a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
+      // En attente d'abord
+      rows.sort(function(a,b){ return (a.validated?1:0)-(b.validated?1:0)||(b.timestamp||0)-(a.timestamp||0); });
       rows.forEach(function(row) {
-        var code = computeAccessCode(row.name || '');
         var d = document.createElement('div');
-        d.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)';
-        d.innerHTML = '<div>'
-          + '<div style="font-size:14px;font-weight:600;color:var(--white)">' + (row.name || '') + '</div>'
-          + '<div style="font-size:11px;color:var(--muted2);font-family:\'DM Mono\',monospace">' + (row.date || '') + '</div>'
+        var isVal = row.validated;
+        d.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:8px';
+        d.innerHTML = '<div style="flex:1">'
+          + '<div style="font-size:14px;font-weight:600;color:' + (isVal ? 'var(--muted2)' : 'var(--white)') + '">' + (row.name||'') + '</div>'
+          + '<div style="font-size:11px;color:var(--muted2);font-family:\'DM Mono\',monospace">' + (row.date||'') + '</div>'
           + '</div>'
-          + '<div style="background:#1877f2;border-radius:8px;padding:6px 12px;font-size:18px;font-weight:700;color:#fff;letter-spacing:2px;font-family:\'DM Mono\',monospace">' + code + '</div>';
+          + (isVal
+            ? '<div style="color:#34d1c0;font-size:13px;font-weight:600">✅ Validé</div>'
+            : '<button onclick="validateAccess('' + (row.name||'').replace(/'/g,"\'") + '',this)" style="background:#34d1c0;border:none;border-radius:8px;padding:8px 14px;color:#000;font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Valider</button>');
         list.appendChild(d);
       });
     })
     .catch(function() {
-      list.innerHTML = '<div style="color:#e53935;font-size:13px;padding:8px">Erreur de chargement</div>';
+      list.innerHTML = '<div style="color:#e53935;font-size:13px;padding:8px">Erreur</div>';
     });
 }
 
+// Marco valide une demande
+function validateAccess(name, btn) {
+  btn.textContent = '...';
+  btn.disabled = true;
+  fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=validateAccessRequest&name=' + encodeURIComponent(name))
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (data.ok) loadAdminAccess();
+      else { btn.textContent = 'Erreur'; btn.disabled = false; }
+    })
+    .catch(function() { btn.textContent = 'Erreur'; btn.disabled = false; });
+}
+
+// ---- FLUX UTILISATEUR ----
+
 function openSwitchAccess() {
+  // Vérifier si déjà mémorisé et validé
   var savedName = localStorage.getItem('switch_access_name');
-  var savedCode = localStorage.getItem('switch_access_code');
-  if (savedName && savedCode) {
-    loadPrestasFromName(savedName);
+  if (savedName) {
+    checkAndLoadAccess(savedName);
     return;
   }
   loadAccessNames();
@@ -3809,24 +3821,79 @@ function openSwitchAccess() {
   openM('m-switch-access');
 }
 
+// Vérifier si validé puis charger
+function checkAndLoadAccess(name) {
+  nav('p-prestas');
+  document.getElementById('prestas-nologin').style.display = 'none';
+  document.getElementById('prestas-loggedin').style.display = 'none';
+  document.getElementById('prestas-empty').style.display = 'none';
+  document.getElementById('prestas-nofriend').style.display = 'none';
+  document.getElementById('prestas-loading').style.display = 'block';
+
+  fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=checkAccess&name=' + encodeURIComponent(name))
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (data.validated && data.fbId) {
+        localStorage.setItem('switch_access_name', name);
+        var fakeMe = { id: data.fbId, name: name, first_name: name.split(' ')[0] };
+        loadPrestas(fakeMe);
+      } else if (data.pending) {
+        // Demande envoyée mais pas encore validée
+        document.getElementById('prestas-loading').style.display = 'none';
+        showAccessPending(name);
+      } else {
+        // Pas connu → ouvrir la modale
+        document.getElementById('prestas-loading').style.display = 'none';
+        openSwitchAccessFresh();
+      }
+    })
+    .catch(function() {
+      document.getElementById('prestas-loading').style.display = 'none';
+      document.getElementById('prestas-empty').style.display = 'block';
+    });
+}
+
+function showAccessPending(name) {
+  // Afficher un écran d'attente de validation
+  document.getElementById('prestas-nologin').style.display = 'block';
+  var phrase = document.querySelector('#prestas-nologin div[style*="muted2"]');
+  if (phrase) phrase.innerHTML = 'Ta demande est en attente de validation par Marco.<br>Reviens ici après avoir reçu sa confirmation !';
+  var btns = document.querySelectorAll('#prestas-nologin button');
+  btns.forEach(function(b){ b.style.display = 'none'; });
+  // Bouton réessayer
+  var retry = document.createElement('button');
+  retry.textContent = '🔄 Vérifier à nouveau';
+  retry.style.cssText = 'width:100%;background:var(--border2);border:none;border-radius:12px;padding:14px;color:var(--white);font-family:\'DM Sans\',sans-serif;font-size:15px;cursor:pointer;margin-top:8px';
+  retry.onclick = function(){ checkAndLoadAccess(name); };
+  document.getElementById('prestas-nologin').appendChild(retry);
+}
+
+function openSwitchAccessFresh() {
+  loadAccessNames();
+  document.getElementById('switch-access-step1').style.display = 'block';
+  document.getElementById('switch-access-step2').style.display = 'none';
+  document.getElementById('switch-access-step-num').textContent = '1';
+  document.getElementById('switch-access-name-input').value = '';
+  _accessNameSelected = '';
+  openM('m-switch-access');
+}
+
 function loadAccessNames() {
   fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=getAppliNames')
     .then(function(r){ return r.json(); })
-    .then(function(data) { _accessNames = data.names || []; })
-    .catch(function() { _accessNames = []; });
+    .then(function(data){ _accessNames = data.names || []; })
+    .catch(function(){ _accessNames = []; });
 }
 
 function filterAccessNames(val) {
   var dd = document.getElementById('switch-access-dropdown');
   _accessNameSelected = val;
   if (!val || val.length < 2) { dd.style.display = 'none'; return; }
-  var filtered = _accessNames.filter(function(n) {
-    return n.toLowerCase().includes(val.toLowerCase());
-  });
+  var filtered = _accessNames.filter(function(n){ return n.toLowerCase().includes(val.toLowerCase()); });
   if (filtered.length === 0) { dd.style.display = 'none'; return; }
   dd.innerHTML = '';
   dd.style.display = 'block';
-  filtered.slice(0, 10).forEach(function(name) {
+  filtered.slice(0,10).forEach(function(name) {
     var item = document.createElement('div');
     item.style.cssText = 'padding:10px 12px;cursor:pointer;font-size:14px;color:var(--white);border-bottom:1px solid var(--border)';
     item.textContent = name;
@@ -3851,18 +3918,19 @@ function accessStep1Validate() {
   }
   document.getElementById('switch-access-name-input').style.borderColor = '';
   _accessNameSelected = name;
+  // Enregistrer la demande
   fetch('https://script.google.com/macros/s/AKfycbwc2yyp9VSZjNgyXTLHW8GAwzaetjpypD6fD1M-5dsPFpLOEikB1_9ZlnIiOmeMU5-R/exec?action=addAccessRequest&name=' + encodeURIComponent(name));
+  // Préparer le message
   var msg = 'Bonjour Marco, je suis ' + name + ' et je voudrais acceder a mes videos SWiTCH sur laswitch.net';
   document.getElementById('switch-access-msg').textContent = msg;
   var encoded = encodeURIComponent(msg);
   document.getElementById('switch-access-messenger').href = 'https://m.me/marco.onlyformusic?text=' + encoded;
   document.getElementById('switch-access-instagram').href = 'https://ig.me/m/marcoonlyformusic';
   document.getElementById('switch-access-whatsapp').href = 'https://wa.me/33?text=' + encoded;
+  // Étape 2
   document.getElementById('switch-access-step1').style.display = 'none';
   document.getElementById('switch-access-step2').style.display = 'block';
   document.getElementById('switch-access-step-num').textContent = '2';
-  document.querySelectorAll('#switch-access-code-inputs .pin-digit').forEach(function(el){ el.value = ''; });
-  document.getElementById('switch-access-code-error').style.display = 'none';
 }
 
 function copyAccessMsg() {
@@ -3870,51 +3938,20 @@ function copyAccessMsg() {
   var btn = document.getElementById('switch-access-copy-btn');
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(msg).then(function() {
-      btn.textContent = 'Copie !';
-      setTimeout(function(){ btn.textContent = 'Copier le message'; }, 2000);
-    }).catch(function(){ fallbackCopyAccess(msg, btn); });
-  } else { fallbackCopyAccess(msg, btn); }
+      btn.textContent = '✅ Copie !';
+      setTimeout(function(){ btn.textContent = '📋 Copier le message'; }, 2000);
+    }).catch(function(){ fallbackCopyMsg(msg, btn); });
+  } else { fallbackCopyMsg(msg, btn); }
 }
 
-function fallbackCopyAccess(msg, btn) {
+function fallbackCopyMsg(msg, btn) {
   var ta = document.createElement('textarea');
   ta.value = msg;
   ta.style.cssText = 'position:fixed;opacity:0';
   document.body.appendChild(ta);
   ta.select();
-  try { document.execCommand('copy'); btn.textContent = 'Copie !'; setTimeout(function(){ btn.textContent = 'Copier le message'; }, 2000); } catch(e) {}
+  try { document.execCommand('copy'); btn.textContent = '✅ Copie !'; setTimeout(function(){ btn.textContent = '📋 Copier le message'; },2000); } catch(e){}
   document.body.removeChild(ta);
-}
-
-function pinDigitInput(el, idx) {
-  el.value = el.value.replace(/[^0-9]/g, '').slice(-1);
-  var digits = document.querySelectorAll('#switch-access-code-inputs .pin-digit');
-  if (el.value && idx < 3) digits[idx + 1].focus();
-  if (idx === 3 && el.value) accessValidateCode();
-}
-
-function pinDigitKey(el, idx, e) {
-  if (e.key === 'Backspace' && !el.value && idx > 0) {
-    document.querySelectorAll('#switch-access-code-inputs .pin-digit')[idx - 1].focus();
-  }
-}
-
-function accessValidateCode() {
-  var digits = document.querySelectorAll('#switch-access-code-inputs .pin-digit');
-  var entered = Array.from(digits).map(function(d){ return d.value; }).join('');
-  if (entered.length < 4) return;
-  var expected = computeAccessCode(_accessNameSelected);
-  if (entered === expected) {
-    localStorage.setItem('switch_access_name', _accessNameSelected);
-    localStorage.setItem('switch_access_code', entered);
-    closeM('m-switch-access');
-    loadPrestasFromName(_accessNameSelected);
-  } else {
-    document.getElementById('switch-access-code-error').style.display = 'block';
-    digits.forEach(function(d){ d.value = ''; d.style.borderColor = '#e53935'; });
-    digits[0].focus();
-    setTimeout(function(){ digits.forEach(function(d){ d.style.borderColor = ''; }); }, 1500);
-  }
 }
 
 function accessBackStep1() {
@@ -3923,30 +3960,13 @@ function accessBackStep1() {
   document.getElementById('switch-access-step-num').textContent = '1';
 }
 
-function loadPrestasFromName(name) {
-  nav('p-prestas');
-  document.getElementById('prestas-nologin').style.display = 'none';
-  document.getElementById('prestas-loggedin').style.display = 'none';
-  document.getElementById('prestas-empty').style.display = 'none';
-  document.getElementById('prestas-nofriend').style.display = 'none';
-  document.getElementById('prestas-loading').style.display = 'block';
-  fetch('/api?action=getFbIdFromName&name=' + encodeURIComponent(name))
-    .then(function(r){ return r.json(); })
-    .then(function(data) {
-      var fbId = data.fbId || '';
-      if (!fbId) {
-        document.getElementById('prestas-loading').style.display = 'none';
-        document.getElementById('prestas-empty').style.display = 'block';
-        return;
-      }
-      var fakeMe = { id: fbId, name: name, first_name: name.split(' ')[0] };
-      loadPrestas(fakeMe);
-    })
-    .catch(function() {
-      document.getElementById('prestas-loading').style.display = 'none';
-      document.getElementById('prestas-empty').style.display = 'block';
-    });
+// Après envoi du message — bouton "J'ai envoyé le message"
+function accessMessageSent() {
+  localStorage.setItem('switch_access_name', _accessNameSelected);
+  closeM('m-switch-access');
+  showAccessPending(_accessNameSelected);
 }
+
 
 function checkFbSession() {
   if (typeof FB === 'undefined') return;
@@ -4012,16 +4032,9 @@ function checkFbSession() {
           <a id="switch-access-instagram" href="#" target="_blank" style="flex:1;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);border-radius:8px;padding:10px;text-align:center;text-decoration:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:#fff">Instagram</a>
           <a id="switch-access-whatsapp" href="#" target="_blank" style="flex:1;background:#25d366;border-radius:8px;padding:10px;text-align:center;text-decoration:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:#fff">WhatsApp</a>
         </div>
-        <div style="font-size:13px;color:var(--muted2);text-align:center;margin-bottom:8px">Entre le code à 4 chiffres reçu de Marco :</div>
-        <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px" id="switch-access-code-inputs">
-          <input type="tel" maxlength="1" class="pin-digit" style="width:52px;height:52px;text-align:center;font-size:22px;font-weight:700;border-radius:10px;border:1px solid var(--border2);background:var(--card);color:var(--white)" oninput="pinDigitInput(this,0)" onkeydown="pinDigitKey(this,0,event)">
-          <input type="tel" maxlength="1" class="pin-digit" style="width:52px;height:52px;text-align:center;font-size:22px;font-weight:700;border-radius:10px;border:1px solid var(--border2);background:var(--card);color:var(--white)" oninput="pinDigitInput(this,1)" onkeydown="pinDigitKey(this,1,event)">
-          <input type="tel" maxlength="1" class="pin-digit" style="width:52px;height:52px;text-align:center;font-size:22px;font-weight:700;border-radius:10px;border:1px solid var(--border2);background:var(--card);color:var(--white)" oninput="pinDigitInput(this,2)" onkeydown="pinDigitKey(this,2,event)">
-          <input type="tel" maxlength="1" class="pin-digit" style="width:52px;height:52px;text-align:center;font-size:22px;font-weight:700;border-radius:10px;border:1px solid var(--border2);background:var(--card);color:var(--white)" oninput="pinDigitInput(this,3)" onkeydown="pinDigitKey(this,3,event)">
-        </div>
-        <div id="switch-access-code-error" style="display:none;color:#e53935;font-size:13px;text-align:center;margin-bottom:8px">Code incorrect — réessaie</div>
-        <button onclick="accessValidateCode()" style="width:100%;background:#1877f2;border:none;border-radius:10px;padding:14px;color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer">✅ Valider le code</button>
-        <button onclick="accessBackStep1()" style="width:100%;background:none;border:none;padding:10px;color:var(--muted2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;margin-top:4px">← Retour</button>
+        <div style="font-size:13px;color:var(--muted2);text-align:center;margin-bottom:16px">Une fois ton message envoyé, Marco va valider ta demande. Clique ci-dessous pour confirmer l'envoi.</div>
+        <button onclick="accessMessageSent()" style="width:100%;background:#34d1c0;border:none;border-radius:10px;padding:14px;color:#000;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px">✅ Message envoyé !</button>
+        <button onclick="accessBackStep1()" style="width:100%;background:none;border:none;padding:10px;color:var(--muted2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer">← Retour</button>
       </div>
 
     </div>
