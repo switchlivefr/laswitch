@@ -3757,6 +3757,13 @@ function fallbackCopy(text, btn) {
 
 // SYSTEME ACCES SWITCH
 var _swAccNames = [];
+// Charger les noms IDS_APPLI au démarrage
+(function() {
+  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=getAppliNames')
+    .then(function(r){ return r.json(); })
+    .then(function(data){ _swAccNames = data.names || []; console.log('IDS_APPLI chargé:', _swAccNames.length, 'noms'); })
+    .catch(function(e){ console.warn('Erreur chargement noms:', e); });
+})();
 var _swAccName  = '';
 var _swAccToken = '';
 var _swAccLinks = {};
