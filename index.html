@@ -316,7 +316,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
   <div id="home-prc-col"><div class="mbody" id="home-prc-text"></div></div>
   <div id="home-app-center-wrap">
   <div class="home-hero">
-    <div class="eyebrow">Spectacle Musical Participatif</div>
+    <div class="eyebrow" onclick="adminTap()" style="cursor:pointer">Spectacle Musical Participatif</div>
     <div class="htitle" id="home-title-tap" onclick="secretTap()" style="position:relative;z-index:1">SWITCH</div>
     <div class="hslogan"><span class="hslogan-l1">Le tour de manège pour</span><span class="hslogan-l2">s'éclater tous ensemble</span></div>
     <div class="hmeta" style="overflow:hidden;width:100%;position:relative;z-index:1">
@@ -3634,15 +3634,43 @@ document.addEventListener('click', function(e) {
 
 var _prestasClicks = 0;
 var _prestasUnlocked = false;
+var _prestasTimer = null;
+var _adminMode = false;
+var _adminTapCount = 0;
+var _adminTapTimer = null;
+
+function adminTap() {
+  _adminTapCount++;
+  clearTimeout(_adminTapTimer);
+  _adminTapTimer = setTimeout(function(){ _adminTapCount = 0; }, 1500);
+  if (_adminTapCount >= 5) {
+    _adminTapCount = 0;
+    clearTimeout(_adminTapTimer);
+    _adminMode = !_adminMode;
+    // Toast discret
+    var t = document.createElement('div');
+    t.textContent = _adminMode ? '🔧 Mode Admin' : '👤 Mode Utilisateur';
+    t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;z-index:9999;font-family:DM Sans,sans-serif';
+    document.body.appendChild(t);
+    setTimeout(function(){ document.body.removeChild(t); }, 2000);
+  }
+}
 function unlockPrestas() {
-  if (_prestasUnlocked) { nav('p-prestas'); return; }
   _prestasClicks++;
-  if (_prestasClicks >= 10) {
+  clearTimeout(_prestasTimer);
+  _prestasTimer = setTimeout(function(){ _prestasClicks = 0; }, 1500);
+  if (_prestasClicks >= 5) {
     _prestasClicks = 0;
-    // Mode test : ouvrir directement la modale sans effacer localStorage
-    // L'utilisateur choisit son nom → mémorisé
-    nav('p-prestas');
-    setTimeout(function(){ openSwitchAccessFresh(); }, 100);
+    clearTimeout(_prestasTimer);
+    if (_adminMode) {
+      // Mode admin → fenêtre demandes
+      loadAdminAccess();
+      openM('m-admin-access');
+    } else {
+      // Mode utilisateur → accès SWiTCH
+      nav('p-prestas');
+      setTimeout(function(){ openSwitchAccess(); }, 100);
+    }
   }
 }
 
@@ -3728,49 +3756,7 @@ var _accessNames = [];
 var _accessNameSelected = '';
 var _currentMarcoFb = false;
 
-// Long appui 3s sur bn-prestas
-function initPrestasBtn() {
-  var btn = document.getElementById('bn-prestas');
-  if (!btn) return;
-  var pressTimer = null;
-  var longPressTriggered = false;
 
-  btn.addEventListener('touchstart', function(e) {
-    longPressTriggered = false;
-    pressTimer = setTimeout(function() {
-      pressTimer = null;
-      longPressTriggered = true;
-      loadAdminAccess();
-      openM('m-admin-access');
-    }, 3000);
-  }, { passive: true });
-
-  btn.addEventListener('touchend', function(e) {
-    if (longPressTriggered) {
-      longPressTriggered = false;
-      e.preventDefault();
-      return;
-    }
-    if (pressTimer) {
-      clearTimeout(pressTimer);
-      pressTimer = null;
-      unlockPrestas();
-    }
-  });
-
-  btn.addEventListener('touchmove', function() {
-    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
-  });
-
-  btn.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-    loadAdminAccess();
-    openM('m-admin-access');
-  });
-
-}
-// Appeler après le chargement du DOM (le script est en bas du body)
-initPrestasBtn();
 
 // Charger la liste des demandes dans la fenêtre admin
 function loadAdminAccess() {
