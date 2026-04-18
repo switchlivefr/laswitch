@@ -550,7 +550,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 </div>
 <nav class="bnav">
   <button class="bn active" id="bn-home" onclick="nav('p-home')"><span class="ico">🏠</span><span>Accueil</span></button>
-  <button class="bn" id="bn-prestas" onclick="unlockPrestas()" style="opacity:0.35;pointer-events:auto"><span class="ico">🎬</span><span>Mes Prestas</span></button>
+  <button class="bn" id="bn-prestas" style="opacity:0.35;pointer-events:auto"><span class="ico">🎬</span><span>Mes Prestas</span></button>
   <button class="bn" id="bn-switch" onclick="nav('p-switch')"><span class="ico" style="filter:hue-rotate(140deg) saturate(3) brightness(1.2)">🎵</span><span>Répertoire</span></button>
   <button class="bn" id="bn-osl" onclick="nav('p-osl')"><span class="ico">✨</span><span id="osl-bn-label">One Shot Live</span></button>
   <button class="bn" id="bn-rules" onclick="nav('p-rules')"><span class="ico">📋</span><span>Inscription</span></button>
@@ -3739,20 +3739,24 @@ var _currentMarcoFb = false;
     longPressTriggered = false;
     pressTimer = setTimeout(function() {
       pressTimer = null;
-      if (window._currentMarcoFb) {
-        longPressTriggered = true;
-        loadAdminAccess();
-        openM('m-admin-access');
-      }
+      longPressTriggered = true;
+      loadAdminAccess();
+      openM('m-admin-access');
     }, 3000);
   }, { passive: true });
 
   btn.addEventListener('touchend', function(e) {
-    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
-    // Si long appui déclenché, bloquer le click
     if (longPressTriggered) {
+      // Long appui → déjà traité, rien de plus
       longPressTriggered = false;
       e.preventDefault();
+      return;
+    }
+    if (pressTimer) {
+      // Tap court (< 3s) → compter les taps
+      clearTimeout(pressTimer);
+      pressTimer = null;
+      unlockPrestas();
     }
   });
 
@@ -3762,11 +3766,9 @@ var _currentMarcoFb = false;
 
   // Sur desktop : click droit → admin Marco
   btn.addEventListener('contextmenu', function(e) {
-    if (window._currentMarcoFb) {
-      e.preventDefault();
-      loadAdminAccess();
-      openM('m-admin-access');
-    }
+    e.preventDefault();
+    loadAdminAccess();
+    openM('m-admin-access');
   });
 })();
 
