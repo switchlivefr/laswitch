@@ -157,29 +157,13 @@ async function handleRequest(request, env) {
         } catch(e) { photos = []; }
       }
 
-      // Videos : R2 videos/switch/events/ en priorité, fallback GitHub
-      let videosData = [];
-      if (env.R2_BUCKET) {
-        try {
-          const videosListed = await env.R2_BUCKET.list({ prefix: 'videos/switch/events/', delimiter: '/' });
-          videosData = videosListed.objects
-            .filter(obj => obj.key.match(/\.(mp4|webm|ogg)$/i))
-            .map(obj => {
-              const name = obj.key.split('/').pop();
-              return { name, url: `https://www.laswitch.net/videos/switch/events/${encodeURIComponent(name)}` };
-            });
-        } catch(e) { videosData = []; }
-      }
-      // Fallback GitHub si R2 vide
-      let assetsData = null;
-      if (!videosData.length) {
-        try {
-          const videosRes = await fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets', {
-            headers: { 'User-Agent': 'laswitch-app' }
-          });
-          assetsData = await videosRes.json();
-        } catch(e) { assetsData = null; }
-      }
+      // Videos et Gifs depuis GitHub (inchangé)
+      const [videosRes] = await Promise.all([
+        fetch('https://api.github.com/repos/switchlivefr/laswitch/contents/assets', {
+          headers: { 'User-Agent': 'laswitch-app' }
+        })
+      ]);
+      const assetsData = await videosRes.json();
 
       // Gifs depuis R2
       let gifsData = [];
@@ -205,12 +189,10 @@ async function handleRequest(request, env) {
         } catch(e) { gifsData = []; }
       }
 
-      const videos = videosData.length
-        ? videosData
-        : (Array.isArray(assetsData)
-            ? assetsData.filter(f => f.name.match(/\.mp4$/i))
-                .map(f => ({ name: f.name, url: f.download_url }))
-            : []);
+      const videos = Array.isArray(assetsData)
+        ? assetsData.filter(f => f.name.match(/\.mp4$/i))
+            .map(f => ({ name: f.name, url: f.download_url }))
+        : [];
       const gifs = Array.isArray(gifsData)
         ? gifsData.filter(f => f.name && f.name.match(/\.(gif|jpg|jpeg|png|webp)$/i) && f.name !== '.gitkeep')
             .map(f => ({ name: f.name, url: f.url || f.download_url }))
