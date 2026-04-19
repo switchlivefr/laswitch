@@ -3860,6 +3860,41 @@ function swAdminValidate(name, btn) {
     .catch(function(){ btn.textContent = 'ERREUR'; btn.disabled = false; });
 }
 
+function swShowPending(token, name) {
+  // Afficher la modale avec sablier immédiatement
+  var msgEl = document.getElementById('m-sw-pending-msg');
+  if (msgEl) msgEl.style.display = 'none';
+  var loadEl = document.getElementById('m-sw-pending-load');
+  if (loadEl) loadEl.style.display = 'block';
+  openM('m-sw-pending');
+  // Vérifier en arrière-plan
+  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=verifyToken&token=' + encodeURIComponent(token) + '&name=' + encodeURIComponent(name))
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (data.ok && data.fbId) {
+        // Validé : charger les vidéos sous la modale puis fermer
+        window._swLoaded = true;
+        nav('p-prestas');
+        var fakeMe = { id: data.fbId, name: name, first_name: name.split(' ')[0] };
+        loadPrestas(fakeMe);
+        setTimeout(function(){ closeM('m-sw-pending'); }, 800);
+      } else {
+        // Encore en attente : afficher le message
+        if (loadEl) loadEl.style.display = 'none';
+        if (msgEl) msgEl.style.display = 'block';
+        if (!data.pending) {
+          localStorage.removeItem('sw_token');
+          localStorage.removeItem('sw_name');
+          window._swLoaded = false;
+        }
+      }
+    })
+    .catch(function(){
+      if (loadEl) loadEl.style.display = 'none';
+      if (msgEl) msgEl.style.display = 'block';
+    });
+}
+
 function swVerifyToken(token, name) {
   document.getElementById('prestas-nologin').style.display  = 'none';
   document.getElementById('prestas-loggedin').style.display = 'none';
@@ -3893,7 +3928,11 @@ function swVerifyToken(token, name) {
 function swOpenAccess() {
   var swToken = localStorage.getItem('sw_token');
   var swName  = localStorage.getItem('sw_name');
-  if (swToken && swName) { swVerifyToken(swToken, swName); return; }
+  if (swToken && swName) {
+    // Ouvrir la fenetre d'attente immédiatement avec sablier
+    swShowPending(swToken, swName);
+    return;
+  }
   swAccReset();
   swLoadNames();
   openM('m-sw-access');
@@ -4010,12 +4049,14 @@ function swAccCopy() {
 }
 
 function swAccSend(channel) {
-  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken));
-  localStorage.setItem('sw_token', _swAccToken);
-  localStorage.setItem('sw_name', _swAccName);
+  // Priorité : ouvrir le réseau immédiatement
   var url = _swAccLinks[channel] || '';
   if (url) window.open(url, '_blank');
   document.getElementById('sw-acc-sent').style.display = 'block';
+  // Sheets et localStorage en arrière-plan
+  localStorage.setItem('sw_token', _swAccToken);
+  localStorage.setItem('sw_name', _swAccName);
+  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken));
 }
 
 function swAccBack() {
@@ -4137,9 +4178,15 @@ function checkFbSession() {
       <h3 style="color:#1877f2;margin:0">DEMANDE D'ACCES</h3>
     </div>
     <div class="mbody" style="text-align:center;padding:20px 18px;overflow:hidden">
-      <div style="font-size:48px;margin-bottom:16px">⏳</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:10px">EN ATTENTE DE VALIDATION</div>
-      <div style="font-size:14px;color:var(--muted2);line-height:1.6">Ta demande a bien été envoyée à Marco.<br>Tu recevras l'accès dès qu'il l'aura validée.</div>
+      <div id="m-sw-pending-load" style="display:block">
+        <div style="width:40px;height:40px;border:3px solid var(--border2);border-top-color:#1877f2;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px"></div>
+        <div style="font-size:14px;color:var(--muted2)">Vérification en cours...</div>
+      </div>
+      <div id="m-sw-pending-msg" style="display:none">
+        <div style="font-size:48px;margin-bottom:16px">⏳</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:10px">EN ATTENTE DE VALIDATION</div>
+        <div style="font-size:14px;color:var(--muted2);line-height:1.6">Ta demande a bien été envoyée à Marco.<br>Tu recevras l'accès dès qu'il l'aura validée.</div>
+      </div>
     </div>
     <div class="mfoot" style="flex-shrink:0">
       <button class="mbtn sec" onclick="closeM('m-sw-pending')">Fermer</button>
