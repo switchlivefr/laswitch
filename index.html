@@ -3278,13 +3278,14 @@ function fbLogin() {
 function fbLogout() {
   stopPrestasVideo();
   _fbUser = null;
-  document.getElementById('prestas-nologin').style.display = 'block';
-  document.getElementById('prestas-loggedin').style.display = 'none';
-  document.getElementById('prestas-empty').style.display = 'none';
-  document.getElementById('prestas-nofriend').style.display = 'none';
-  document.getElementById('prestas-loading').style.display = 'none';
-  document.getElementById('prestas-sub').textContent = 'Tes prestations SWiTCH';
-  FB.logout(function(){});
+  window._swLoaded = false;
+  localStorage.removeItem('sw_token');
+  localStorage.removeItem('sw_name');
+  _prestasUnlocked = false;
+  var btn = document.getElementById('bn-prestas');
+  if (btn) btn.style.opacity = '0.35';
+  if (typeof FB !== 'undefined') FB.logout(function(){});
+  nav('p-home');
 }
 
 function showNoFriend(me) {
