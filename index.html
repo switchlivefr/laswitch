@@ -3298,6 +3298,14 @@ function fbLogout() {
   _prestasUnlocked = false;
   window._swLoaded = false;
   if (typeof FB !== 'undefined') FB.logout(function(){});
+  // Rester sur p-prestas et rouvrir la saisie de nom
+  if (currentPage !== 'p-prestas') nav('p-prestas');
+  // Masquer tous les états pour que seule la modale de saisie soit visible
+  ['prestas-nologin','prestas-loggedin','prestas-loading','prestas-empty','prestas-nofriend'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.style.display = 'none';
+  });
+  swAccReset();
+  openM('m-sw-access');
 }
 
 function showNoFriend(me) {
