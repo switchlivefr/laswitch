@@ -3283,6 +3283,8 @@ function fbLogout() {
   window._swLoaded = false;
   localStorage.removeItem('sw_token');
   localStorage.removeItem('sw_name');
+  localStorage.removeItem('sw_fbId');
+  _swAccHasPinCache = {}; // invalider le cache pour forcer une revérif à la prochaine saisie
   _prestasUnlocked = false;
   var btn = document.getElementById('bn-prestas');
   if (btn) btn.style.opacity = '0.35';
@@ -3867,6 +3869,9 @@ function swShowPending(token, name) {
   if (msgEl) msgEl.style.display = 'none';
   var loadEl = document.getElementById('m-sw-pending-load');
   if (loadEl) loadEl.style.display = 'block';
+  // Restaurer le titre par défaut (peut avoir été changé par swAccVerifyPinConnect)
+  var titleEl = document.getElementById('m-sw-pending-title');
+  if (titleEl) titleEl.textContent = "DEMANDE D'ACCES";
   openM('m-sw-pending');
   // Vérifier en arrière-plan
   fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=verifyToken&token=' + encodeURIComponent(token) + '&name=' + encodeURIComponent(name))
@@ -3966,9 +3971,9 @@ function swAccFilterFocus(val) {
     _swAccSelectedFromList = false;
     _swAccName = '';
     var db = document.getElementById('sw-acc-demande-btn');
-    if (db) db.style.opacity = '0.35';
+    if (db) { db.style.opacity = '0.35'; db.disabled = true; }
     var cb = document.getElementById('sw-acc-connect-btn');
-    if (cb) cb.style.opacity = '0.35';
+    if (cb) { cb.style.opacity = '0.35'; cb.disabled = true; }
     document.getElementById('sw-acc-dropdown').style.display = 'none';
     return;
   }
@@ -4059,39 +4064,84 @@ function swAccFilter(val) {
   });
 }
 
+// ============================================================
+// SABLIER OVERLAY dans m-sw-access (bloque toute interaction)
+// ============================================================
+function swAccShowLoading(msg) {
+  var el = document.getElementById('sw-acc-loading');
+  var m = document.getElementById('sw-acc-loading-msg');
+  if (m) m.textContent = msg || 'Vérification…';
+  if (el) el.style.display = 'flex';
+}
+function swAccHideLoading() {
+  var el = document.getElementById('sw-acc-loading');
+  if (el) el.style.display = 'none';
+}
+
 // Met à jour l'état des boutons Demande d'accès / Connexion selon le nom saisi
-// Demande d'accès : actif dès qu'il y a du texte
-// Connexion : actif seulement si le nom a un PIN enregistré en colonne F (appel Apps Script hasPin)
+// Règle : si PIN existe → Connexion active (rouge), Demande grisée + désactivée
+//        sinon → Demande active (bleu), Connexion grisée
+// Sablier affiché immédiatement pendant la vérification (imperceptible si rapide, visible si lent)
 var _swAccHasPinCache = {};
-var _swAccHasPinTimer = null;
+var _swAccHasPinSeq = 0; // séquence pour ignorer les réponses obsolètes
 function swAccUpdateButtons(name) {
   var demandeBtn = document.getElementById('sw-acc-demande-btn');
   var connectBtn = document.getElementById('sw-acc-connect-btn');
   var n = (name || '').trim();
-  if (demandeBtn) demandeBtn.style.opacity = n.length >= 1 ? '1' : '0.35';
-  // Connexion : grisé par défaut, activé si PIN existe
-  if (connectBtn) connectBtn.style.opacity = '0.35';
-  if (!n) return;
-  // Cache pour éviter les appels répétés
-  if (_swAccHasPinCache[n.toLowerCase()] !== undefined) {
-    if (connectBtn && _swAccHasPinCache[n.toLowerCase()]) connectBtn.style.opacity = '1';
+  if (!n) {
+    if (demandeBtn) { demandeBtn.style.opacity = '0.35'; demandeBtn.disabled = true; }
+    if (connectBtn) { connectBtn.style.opacity = '0.35'; connectBtn.disabled = true; }
     return;
   }
-  // Debounce : attendre que l'utilisateur arrête de taper 400ms avant de requêter
-  clearTimeout(_swAccHasPinTimer);
-  _swAccHasPinTimer = setTimeout(function(){
-    fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=hasPin&name=' + encodeURIComponent(n))
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        _swAccHasPinCache[n.toLowerCase()] = !!data.hasPin;
-        // Vérifier que le nom dans l'input n'a pas changé entre-temps
-        var currentName = (document.getElementById('sw-acc-input').value || '').trim();
-        if (currentName.toLowerCase() === n.toLowerCase() && data.hasPin && connectBtn) {
-          connectBtn.style.opacity = '1';
-        }
-      })
-      .catch(function(){ _swAccHasPinCache[n.toLowerCase()] = false; });
-  }, 400);
+  // Cache disponible : appliquer immédiatement sans sablier
+  var cached = _swAccHasPinCache[n.toLowerCase()];
+  if (cached !== undefined) {
+    _applyBtnState(cached);
+    return;
+  }
+  // État transitoire : désactiver les 2 boutons pendant la vérif (pas de grisage total,
+  // on laisse Demande active visuellement mais désactivée pour pouvoir traiter le cas rapide)
+  if (demandeBtn) demandeBtn.disabled = true;
+  if (connectBtn) connectBtn.disabled = true;
+  // Sablier différé : n'apparaît QUE si la requête prend >250ms (pour éviter flash)
+  var seq = ++_swAccHasPinSeq;
+  var loadingTimer = setTimeout(function(){
+    if (seq === _swAccHasPinSeq) swAccShowLoading('Vérification…');
+  }, 250);
+  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=hasPin&name=' + encodeURIComponent(n))
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      clearTimeout(loadingTimer);
+      if (seq !== _swAccHasPinSeq) return; // réponse obsolète
+      _swAccHasPinCache[n.toLowerCase()] = !!data.hasPin;
+      // Vérifier que le nom dans l'input n'a pas changé
+      var currentName = (document.getElementById('sw-acc-input').value || '').trim();
+      if (currentName.toLowerCase() !== n.toLowerCase()) { swAccHideLoading(); return; }
+      _applyBtnState(!!data.hasPin);
+      swAccHideLoading();
+    })
+    .catch(function(){
+      clearTimeout(loadingTimer);
+      if (seq !== _swAccHasPinSeq) return;
+      _swAccHasPinCache[n.toLowerCase()] = false;
+      _applyBtnState(false);
+      swAccHideLoading();
+    });
+}
+
+// Applique l'état final des 2 boutons selon le résultat hasPin
+function _applyBtnState(hasPin) {
+  var demandeBtn = document.getElementById('sw-acc-demande-btn');
+  var connectBtn = document.getElementById('sw-acc-connect-btn');
+  if (hasPin) {
+    // PIN existe : Connexion active, Demande grisée ET désactivée
+    if (connectBtn) { connectBtn.style.opacity = '1'; connectBtn.disabled = false; }
+    if (demandeBtn) { demandeBtn.style.opacity = '0.35'; demandeBtn.disabled = true; }
+  } else {
+    // Pas de PIN : Demande active, Connexion grisée
+    if (demandeBtn) { demandeBtn.style.opacity = '1'; demandeBtn.disabled = false; }
+    if (connectBtn) { connectBtn.style.opacity = '0.35'; connectBtn.disabled = true; }
+  }
 }
 
 // ============================================================
@@ -4100,6 +4150,8 @@ function swAccUpdateButtons(name) {
 var _swPinDemande = '';    // PIN saisi par l'utilisateur (mémorisé pour être envoyé lors du click réseau social)
 
 function swAccGoDemande() {
+  var btn = document.getElementById('sw-acc-demande-btn');
+  if (btn && btn.disabled) return; // Sécurité : refuse si un PIN existe déjà
   var name = (document.getElementById('sw-acc-input').value || '').trim();
   if (!name || name.length < 2) {
     document.getElementById('sw-acc-input').style.borderColor = '#e53935';
@@ -4170,7 +4222,7 @@ function swAccValidatePinDemande() {
 function swAccGoConnect() {
   // Vérifier que le bouton est actif (PIN existe pour ce nom)
   var btn = document.getElementById('sw-acc-connect-btn');
-  if (!btn || parseFloat(btn.style.opacity || '0.35') < 1) return;
+  if (!btn || btn.disabled) return;
   var name = (document.getElementById('sw-acc-input').value || '').trim();
   if (!name || name.length < 2) return;
   _swAccName = name;
@@ -4205,20 +4257,37 @@ function swPinConnectInput(idx, el) {
 }
 
 function swAccVerifyPinConnect(pin) {
+  swAccShowLoading('Vérification du code…');
   fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=checkPin&name=' + encodeURIComponent(_swAccName) + '&pin=' + encodeURIComponent(pin))
     .then(function(r){ return r.json(); })
     .then(function(data){
       if (data.ok && data.fbId) {
-        // PIN correct + validé : basculer sur les vidéos
-        localStorage.setItem('sw_token', _swAccToken || ('sw' + Date.now()));
+        // PIN correct + validé : mémoire persistante (fbId + name) puis bascule sur les vidéos
+        // Le sablier reste affiché pendant la bascule pour éviter les clics sur les boutons
+        swAccShowLoading('Chargement de tes prestations…');
+        localStorage.setItem('sw_fbId', data.fbId);
         localStorage.setItem('sw_name', _swAccName);
+        localStorage.setItem('sw_token', _swAccToken || ('sw' + Date.now()));
         window._swLoaded = true;
         swAccCleanupAndClose();
         nav('p-prestas');
         var fakeMe = { id: data.fbId, name: _swAccName, first_name: _swAccName.split(' ')[0] };
         loadPrestas(fakeMe);
+      } else if (data.reason === 'not_validated') {
+        // PIN correct MAIS Marco n'a pas encore validé : fermer m-sw-access puis afficher
+        // la modale m-sw-pending avec titre "DEMANDE D'ACCES DÉJÀ" (pas de CODE ERRONÉ)
+        swAccHideLoading();
+        swAccCleanupAndClose();
+        var loadEl2 = document.getElementById('m-sw-pending-load');
+        if (loadEl2) loadEl2.style.display = 'none';
+        var msgEl2 = document.getElementById('m-sw-pending-msg');
+        if (msgEl2) msgEl2.style.display = 'block';
+        var titleEl2 = document.getElementById('m-sw-pending-title');
+        if (titleEl2) titleEl2.textContent = "DEMANDE D'ACCES DÉJÀ";
+        openM('m-sw-pending');
       } else {
         // Mauvais PIN : afficher CODE ERRONÉ 2s puis reset (comme dans m-pin)
+        swAccHideLoading();
         var t = document.getElementById('sw-pin-c-title');
         if (t) { t.textContent = 'CODE ERRONÉ'; t.style.color = '#e84057'; }
         setTimeout(function(){
@@ -4234,6 +4303,7 @@ function swAccVerifyPinConnect(pin) {
       }
     })
     .catch(function(){
+      swAccHideLoading();
       var t = document.getElementById('sw-pin-c-title');
       if (t) { t.textContent = 'ERREUR RÉSEAU'; t.style.color = '#e84057'; }
     });
@@ -4286,11 +4356,11 @@ function swAccReset() {
   if (inp) { inp.value = ''; inp.removeAttribute('readonly'); inp.style.caretColor = ''; inp.style.borderColor = ''; }
   var dd = document.getElementById('sw-acc-dropdown');
   if (dd) { dd.style.display = 'none'; if (dd._outsideTapHandler) { document.removeEventListener('touchstart', dd._outsideTapHandler); dd._outsideTapHandler = null; } }
-  // Reset boutons Demande/Connexion à grisé
+  // Reset boutons Demande/Connexion à grisé ET disabled
   var db = document.getElementById('sw-acc-demande-btn');
-  if (db) db.style.opacity = '0.35';
+  if (db) { db.style.opacity = '0.35'; db.disabled = true; }
   var cb = document.getElementById('sw-acc-connect-btn');
-  if (cb) cb.style.opacity = '0.35';
+  if (cb) { cb.style.opacity = '0.35'; cb.disabled = true; }
   // Reset cases PIN demande + connect
   for (var i = 0; i < 4; i++) {
     var d = document.getElementById('sw-pin-d-' + i);
@@ -4300,6 +4370,10 @@ function swAccReset() {
   }
   var tc = document.getElementById('sw-pin-c-title');
   if (tc) { tc.textContent = 'Connexion'; tc.style.color = 'var(--white)'; }
+  // Invalider le cache hasPin : à chaque réouverture de la modale, on revérifiera
+  // (nécessaire pour que la validation de Marco soit prise en compte dans la même session)
+  _swAccHasPinCache = {};
+  swAccHideLoading();
   _swAccName = '';
   _swAccSelectedFromList = false;
   _swPinDemande = '';
@@ -4323,8 +4397,18 @@ function swAccCleanupAndClose() {
 function checkFbSession() {
   if (_adminMode) return;
   if (window._swLoaded) return;
+  var swFbId = localStorage.getItem('sw_fbId');
+  var swName = localStorage.getItem('sw_name');
+  // Mémoire persistante : si un fbId est déjà validé en mémoire, on charge directement
+  // les vidéos sans repasser par la vérification Apps Script.
+  if (swFbId && swName) {
+    window._swLoaded = true;
+    var fakeMe = { id: swFbId, name: swName, first_name: swName.split(' ')[0] };
+    loadPrestas(fakeMe);
+    return;
+  }
+  // Fallback ancien flux (token en attente de validation par Marco)
   var swToken = localStorage.getItem('sw_token');
-  var swName  = localStorage.getItem('sw_name');
   if (swToken && swName && !_fbUser) { swVerifyToken(swToken, swName); return; }
   if (typeof FB === 'undefined') return;
   FB.getLoginStatus(function(response) {
@@ -4359,7 +4443,12 @@ function checkFbSession() {
 </div>
 
 <div class="moverlay" id="m-sw-access" style="align-items:flex-start;padding-top:20px;overflow:hidden">
-  <div class="mbox" style="display:flex;flex-direction:column;width:100%;overflow:hidden">
+  <div class="mbox" style="display:flex;flex-direction:column;width:100%;overflow:hidden;position:relative">
+    <!-- Sablier overlay : bloque toute interaction pendant les vérifications réseau -->
+    <div id="sw-acc-loading" style="display:none;position:absolute;inset:0;background:rgba(19,19,31,.85);z-index:10;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+      <div style="width:36px;height:36px;border:3px solid rgba(52,209,192,.2);border-top:3px solid var(--cyan);border-radius:50%;animation:spin .8s linear infinite"></div>
+      <div id="sw-acc-loading-msg" style="font-size:13px;color:var(--muted2)">Vérification…</div>
+    </div>
     <div class="mhead" style="text-align:center;flex-shrink:0;padding:12px 18px 8px">
       <h3 style="color:#1877f2;margin:0;font-size:28px">MES PRESTAS SWITCH</h3>
     </div>
@@ -4444,7 +4533,7 @@ function checkFbSession() {
       <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto"></div>
     </div>
     <div id="m-sw-pending-msg" style="display:none">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:6px">DEMANDE D'ACCES</div>
+      <div id="m-sw-pending-title" style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:6px">DEMANDE D'ACCES</div>
       <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px">EN ATTENTE DE VALIDATION</div>
     </div>
   </div>
