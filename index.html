@@ -3968,13 +3968,22 @@ function swNormalize(str) {
   return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
+// Chaque token saisi doit commencer un mot du nom candidat (AND entre tokens, OR entre mots du nom)
+function swMatchTokens(candidate, input) {
+  var inputTokens = swNormalize(input).trim().split(/\s+/).filter(function(t){ return t.length > 0; });
+  var nameWords   = swNormalize(candidate).split(/\s+/).filter(function(w){ return w.length > 0; });
+  return inputTokens.every(function(token) {
+    return nameWords.some(function(word) { return word.indexOf(token) === 0; });
+  });
+}
+
 function swAccFilter(val) {
   var dd  = document.getElementById('sw-acc-dropdown');
   var btn = document.getElementById('sw-acc-ok-btn');
   _swAccName = val;
   btn.style.opacity = val.trim().length >= 1 ? '1' : '0.35';
   if (!val || val.length < 1) { dd.style.display = 'none'; return; }
-  var filtered = _swAccNames.filter(function(n){ return swNormalize(n).includes(swNormalize(val)); });
+  var filtered = _swAccNames.filter(function(n){ return swMatchTokens(n, val); });
   if (!filtered.length) { dd.style.display = 'none'; return; }
   dd.innerHTML = '';
   // Positionner en fixed sous l'input
