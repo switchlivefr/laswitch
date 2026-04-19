@@ -454,7 +454,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
     <div class="shsub" id="prestas-sub" style="color:var(--white)">Tes prestations SWiTCH</div>
   </div>
   <!-- État : non connecté -->
-  <div id="prestas-nologin" style="display:none;padding:32px 20px;text-align:center">
+  <div id="prestas-nologin" style="padding:32px 20px;text-align:center">
     <div style="font-size:52px;margin-bottom:16px">🎬</div>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:8px">Tes vidéos SWiTCH</div>
     <div style="font-size:14px;color:var(--muted2);line-height:1.7;margin-bottom:28px">Connecte-toi avec Facebook pour accéder<br>à tes prestations SWiTCH en un clin d'œil</div>
@@ -3936,10 +3936,6 @@ function swVerifyToken(token, name) {
     })
     .catch(function(){
       document.getElementById('prestas-loading').style.display = 'none';
-      // Erreur réseau : on efface le token pour ne pas rester bloqué au prochain démarrage.
-      // L'utilisateur verra prestas-nologin et pourra rouvrir la modale d'accès.
-      localStorage.removeItem('sw_token');
-      localStorage.removeItem('sw_name');
       document.getElementById('prestas-nologin').style.display = 'block';
     });
 }
@@ -4340,11 +4336,8 @@ function swAccCopy() {
     btn.textContent = 'MESSAGE COPIE !';
     document.getElementById('sw-acc-social-btns').style.opacity = '1';
     document.getElementById('sw-acc-social-btns').style.pointerEvents = 'auto';
-    // Protection : ne pas écraser la session d'un utilisateur déjà pleinement connecté
-    if (localStorage.getItem('sw_loggedIn') !== '1') {
-      localStorage.setItem('sw_token', _swAccToken);
-      localStorage.setItem('sw_name',  _swAccName);
-    }
+    localStorage.setItem('sw_token', _swAccToken);
+    localStorage.setItem('sw_name',  _swAccName);
   };
   if (navigator.clipboard) {
     navigator.clipboard.writeText(msg).then(done).catch(function(){
@@ -4363,12 +4356,8 @@ function swAccSend(channel) {
   if (url) window.open(url, '_blank');
   document.getElementById('sw-acc-sent').style.display = 'block';
   // Sheets et localStorage en arrière-plan (IMPORTANT : transmettre le PIN pour écriture colonne F)
-  // NE PAS écraser sw_token / sw_name si un utilisateur est déjà pleinement connecté (sw_loggedIn="1")
-  // sinon on casse la mémoire persistante de cet utilisateur
-  if (localStorage.getItem('sw_loggedIn') !== '1') {
-    localStorage.setItem('sw_token', _swAccToken);
-    localStorage.setItem('sw_name', _swAccName);
-  }
+  localStorage.setItem('sw_token', _swAccToken);
+  localStorage.setItem('sw_name', _swAccName);
   fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken) + '&pin=' + encodeURIComponent(_swPinDemande || ''));
 }
 
@@ -4427,26 +4416,21 @@ function swAccCleanupAndClose() {
 
 function checkFbSession() {
   if (_adminMode) return;
-  if (window._swLoaded) return;
-  // Mémoire persistante : flag sw_loggedIn="1" signifie "utilisateur authentifié par PIN + validé".
-  // Ce flag ne dépend pas de la présence de vidéos (sw_fbId peut être vide chaîne).
-  // Il reste jusqu'à déconnexion manuelle via le bouton sur la page vidéo.
+  var dbg = document.getElementById('prestas-sub');
+  if (window._swLoaded) { if(dbg) dbg.textContent='[DBG] _swLoaded=true, skip'; return; }
   var swLoggedIn = localStorage.getItem('sw_loggedIn');
   var swName = localStorage.getItem('sw_name');
+  var swToken = localStorage.getItem('sw_token');
+  var swFbId = localStorage.getItem('sw_fbId');
+  if(dbg) dbg.textContent='[DBG] loggedIn='+swLoggedIn+' name='+swName+' token='+(swToken?'oui':'non')+' fbId='+swFbId;
   if (swLoggedIn === '1' && swName) {
     window._swLoaded = true;
-    var swFbId = localStorage.getItem('sw_fbId') || '';
-    var fakeMe = { id: swFbId, name: swName, first_name: swName.split(' ')[0] };
+    var fakeMe = { id: swFbId || '', name: swName, first_name: swName.split(' ')[0] };
     loadPrestas(fakeMe);
     return;
   }
-  // Fallback ancien flux (token en attente de validation par Marco — AVANT que le PIN ne soit inventé)
-  var swToken = localStorage.getItem('sw_token');
   if (swToken && swName && !_fbUser) { swVerifyToken(swToken, swName); return; }
-  if (typeof FB === 'undefined') {
-    var nl = document.getElementById('prestas-nologin'); if (nl) nl.style.display = 'block';
-    return;
-  }
+  if (typeof FB === 'undefined') return;
   FB.getLoginStatus(function(response) {
     if (response.status === 'connected' && !_fbUser) {
       FB.api('/me', { fields: 'id,name,first_name' }, function(me) {
@@ -4455,8 +4439,6 @@ function checkFbSession() {
       });
     } else if (response.status === 'connected' && _fbUser) {
       checkFriendshipAndLoad(_fbUser);
-    } else {
-      var nl2 = document.getElementById('prestas-nologin'); if (nl2) nl2.style.display = 'block';
     }
   });
 }
