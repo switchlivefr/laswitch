@@ -167,7 +167,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .moverlay.open{display:flex}
 .mbody a,.mbody a *{-webkit-touch-callout:none !important;-webkit-user-select:none !important;user-select:none !important}
 .mbody a{display:block}
-.mbox{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);width:100%;max-width:460px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;touch-action:auto}#m-sw-access .mbox{max-height:none}#m-sw-access{overflow:hidden}#m-sw-access .mbody{overflow:hidden;flex:none}
+.mbox{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);width:100%;max-width:460px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden}#m-sw-access .mbox{max-height:none}#m-sw-access{overflow:hidden}#m-sw-access .mbody{overflow:hidden;flex:none}
 /* Modale pitch : layout avec colonne photos gauche */
 #m-home-pitch .mbox,#m-pitch-big .mbox{max-width:460px;flex-direction:column}
 #m-home-pitch .mbox-inner,#m-pitch-big .mbox-inner{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
@@ -182,7 +182,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .mhead{padding:16px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .mhead h3{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--cyan)}
 .mhead h3.amber{color:var(--amber)}
-.mbody{padding:16px 18px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.mbody{padding:16px 18px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .mbody p{font-size:15px;line-height:1.4;color:#b0adc4;margin-bottom:6px}
 .mbody p:last-child{margin-bottom:0}
 .mbody .sec{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--cyan);margin:14px 0 3px}
@@ -4178,7 +4178,7 @@ function checkFbSession() {
             <button id="sw-acc-ok-btn" onclick="swAccStep1()"
               style="padding:10px 14px;border-radius:8px;border:none;background:var(--gold);color:#000;font-size:20px;cursor:pointer;opacity:0.35">✓</button>
           </div>
-          <div id="sw-acc-dropdown" style="display:none;position:fixed;background:#fff;border-radius:8px;max-height:200px;overflow-y:auto;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.5);text-align:left;left:16px;right:16px"></div>
+          <div id="sw-acc-dropdown" style="display:none;position:fixed;background:#fff;border-radius:8px;max-height:200px;overflow-y:auto;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.5);text-align:left;left:16px;right:16px;touch-action:pan-y"></div>
         </div>
       </div>
       <div id="sw-acc-step2" style="display:none;padding:0 4px">
