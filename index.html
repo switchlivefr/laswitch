@@ -3936,6 +3936,10 @@ function swVerifyToken(token, name) {
     })
     .catch(function(){
       document.getElementById('prestas-loading').style.display = 'none';
+      // Erreur réseau : on efface le token pour ne pas rester bloqué au prochain démarrage.
+      // L'utilisateur verra prestas-nologin et pourra rouvrir la modale d'accès.
+      localStorage.removeItem('sw_token');
+      localStorage.removeItem('sw_name');
       document.getElementById('prestas-nologin').style.display = 'block';
     });
 }
@@ -4336,8 +4340,11 @@ function swAccCopy() {
     btn.textContent = 'MESSAGE COPIE !';
     document.getElementById('sw-acc-social-btns').style.opacity = '1';
     document.getElementById('sw-acc-social-btns').style.pointerEvents = 'auto';
-    localStorage.setItem('sw_token', _swAccToken);
-    localStorage.setItem('sw_name',  _swAccName);
+    // Protection : ne pas écraser la session d'un utilisateur déjà pleinement connecté
+    if (localStorage.getItem('sw_loggedIn') !== '1') {
+      localStorage.setItem('sw_token', _swAccToken);
+      localStorage.setItem('sw_name',  _swAccName);
+    }
   };
   if (navigator.clipboard) {
     navigator.clipboard.writeText(msg).then(done).catch(function(){
@@ -4356,8 +4363,12 @@ function swAccSend(channel) {
   if (url) window.open(url, '_blank');
   document.getElementById('sw-acc-sent').style.display = 'block';
   // Sheets et localStorage en arrière-plan (IMPORTANT : transmettre le PIN pour écriture colonne F)
-  localStorage.setItem('sw_token', _swAccToken);
-  localStorage.setItem('sw_name', _swAccName);
+  // NE PAS écraser sw_token / sw_name si un utilisateur est déjà pleinement connecté (sw_loggedIn="1")
+  // sinon on casse la mémoire persistante de cet utilisateur
+  if (localStorage.getItem('sw_loggedIn') !== '1') {
+    localStorage.setItem('sw_token', _swAccToken);
+    localStorage.setItem('sw_name', _swAccName);
+  }
   fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken) + '&pin=' + encodeURIComponent(_swPinDemande || ''));
 }
 
