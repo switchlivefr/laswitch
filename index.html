@@ -879,8 +879,8 @@ var BNM={'p-home':'bn-home','p-prestas':'bn-prestas','p-switch':'bn-switch','p-o
 function nav(id,direction){
   var oldId=currentPage;
   if(oldId&&oldId!==id){var o=document.getElementById(oldId);if(o){o.style.display='none';o.classList.remove('active');}}
-  if(id!=='p-home'){muteVideo();_videoMuted=true;pauseHomeVideo();}
-  if(id==='p-home'){applyVideoSound();resumeHomeVideo();}
+  if(id!=='p-home'){muteVideo();_videoMuted=true;}
+  if(id==='p-home')applyVideoSound();
   // Desktop pellicules : max-width none uniquement sur accueil
   if(window.innerWidth>=900){
     if(id==='p-home'){document.body.classList.add('home-desktop');setTimeout(alignDesktopNav,50);
@@ -1666,7 +1666,6 @@ function openM(id){
   }
   var el=document.getElementById(id);el.classList.add('open');
   document.body.style.overflow='hidden';document.body.classList.add('modal-open');
-  pauseHomeVideo();
   // Pour m-marco : réserver l'espace du bouton Plus de détails en bas
   if(id==='m-marco'){
     var rmb=document.getElementById('rules-more-btn');
@@ -1701,7 +1700,6 @@ function closeM(id){
   var closedEl=document.getElementById(id);closedEl.classList.remove('open');closedEl.style.bottom='';
   if(!document.querySelector('.moverlay.open')&&!document.querySelector('.coverlay.open')){
     document.body.style.overflow='';document.body.classList.remove('modal-open');
-    resumeHomeVideo();
     // Relancer les scroll hints si on est sur p-rules
     if(currentPage==='p-rules')setTimeout(initScrollHints,100);
   }
@@ -3082,15 +3080,13 @@ function applyHomeMode(mode){
   if(mp)mp.style.display=(mode==='photos')?'block':'none';
   if(mode!=='photos'){stopFlipShow();_bandeauLoaded=false;}
   if(mode==='video'){clearInterval(_altInterval);_altInterval=null;_lastKnownServerMode='video';
-    resumeHomeVideo();
+    // rien
   } else if(mode==='gif'){
     muteVideo();
-    pauseHomeVideo();
     applyGif(window._gifIndex||0);
     initGifLongPress();
   } else if(mode==='photos'){
     muteVideo();
-    pauseHomeVideo();
     loadBandeau();
   }
 }
@@ -3109,24 +3105,6 @@ function applyVideoSound(){
   if(!v)return;v.muted=_videoMuted;if(b)b.textContent=_videoMuted?'\uD83D\uDD07':'\uD83D\uDD0A';
 }
 
-// Met en pause la vidéo d'accueil (libère CPU/GPU quand elle n'est pas visible)
-function pauseHomeVideo(){
-  var v=document.getElementById('fb-video');
-  if(v&&!v.paused)try{v.pause();}catch(e){}
-}
-
-// Relance la vidéo d'accueil UNIQUEMENT si les conditions sont réunies :
-// - on est sur la page d'accueil
-// - le mode vidéo est affiché (pas gif/photos)
-// - aucune modale n'est ouverte
-function resumeHomeVideo(){
-  if(currentPage!=='p-home')return;
-  var mv=document.getElementById('home-mode-video');
-  if(!mv||mv.style.display==='none')return;
-  if(document.body.classList.contains('modal-open'))return;
-  var v=document.getElementById('fb-video');
-  if(v&&v.paused)try{v.play();}catch(e){}
-}
 var _inVideoMode=false;
 function secretTap2(){
   _tap2Count++;clearTimeout(_tap2Timer);_tap2Timer=setTimeout(function(){_tap2Count=0;},1500);
