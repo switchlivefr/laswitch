@@ -1665,8 +1665,7 @@ function openM(id){
     else{if(_mg)_mg.style.display='none';if(_mn)_mn.style.display='';}
   }
   var el=document.getElementById(id);el.classList.add('open');
-  document.body.style.overflow='hidden';
-  document.body.classList.add('modal-open');
+  var _sy=window.scrollY||window.pageYOffset;document.body.style.top='-'+_sy+'px';document.body.style.position='fixed';document.body.style.width='100%';document.body.classList.add('modal-open');
   // Pour m-marco : réserver l'espace du bouton Plus de détails en bas
   if(id==='m-marco'){
     var rmb=document.getElementById('rules-more-btn');
@@ -1700,8 +1699,7 @@ function closeM(id){
   document.body.classList.remove('coverlay-open');
   var closedEl=document.getElementById(id);closedEl.classList.remove('open');closedEl.style.bottom='';
   if(!document.querySelector('.moverlay.open')&&!document.querySelector('.coverlay.open')){
-    document.body.style.overflow='';
-    document.body.classList.remove('modal-open');
+    var _top=parseFloat(document.body.style.top||'0');document.body.style.position='';document.body.style.top='';document.body.style.width='';document.body.classList.remove('modal-open');window.scrollTo(0,-_top);
     // Relancer les scroll hints si on est sur p-rules
     if(currentPage==='p-rules')setTimeout(initScrollHints,100);
   }
@@ -2393,8 +2391,7 @@ window.addEventListener('beforeinstallprompt', function(e){
 function pwaQuit(){
   var m=document.getElementById('m-pwa');
   if(m){m.style.opacity='0';m.classList.remove('open');m.style.pointerEvents='none';}
-  document.body.style.overflow='';
-  document.body.classList.remove('modal-open');
+  var _top=parseFloat(document.body.style.top||'0');document.body.style.position='';document.body.style.top='';document.body.style.width='';document.body.classList.remove('modal-open');window.scrollTo(0,-_top);
   doQuit();
 }
 var _pwaContext='repertoire';
@@ -2414,8 +2411,7 @@ function openPwaModal(ctx){
   });
   m.style.pointerEvents='auto';
   m.classList.add('open');
-  document.body.style.overflow='hidden';
-  document.body.classList.add('modal-open');
+  var _sy=window.scrollY||window.pageYOffset;document.body.style.top='-'+_sy+'px';document.body.style.position='fixed';document.body.style.width='100%';document.body.classList.add('modal-open');
   setTimeout(function(){m.style.opacity='1';},20);
   var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.MSStream;
   if(_deferredPrompt){document.getElementById('pwa-install-btn').style.display='';}
@@ -2433,8 +2429,7 @@ function closePwaModal(){
   setTimeout(function(){
     m.classList.remove('open');
     m.style.pointerEvents = 'none';
-    document.body.style.overflow = '';
-    document.body.classList.remove('modal-open');
+    var _top=parseFloat(document.body.style.top||'0');document.body.style.position='';document.body.style.top='';document.body.style.width='';document.body.classList.remove('modal-open');window.scrollTo(0,-_top);
     showHint();
     // Annuler tout timer précédent et masquer le bandeau s'il est déjà visible
     clearTimeout(window._reperSideHintTimer);
@@ -2739,7 +2734,7 @@ function doQuit(){
   var cq=document.getElementById('c-quit');if(cq)cq.classList.remove('open');
   var mp=document.getElementById('m-pwa');if(mp){mp.classList.remove('open');mp.style.opacity='0';mp.style.pointerEvents='none';}
   document.body.classList.remove('coverlay-open','modal-open');
-  document.body.style.overflow='';
+  var _top=parseFloat(document.body.style.top||'0');document.body.style.position='';document.body.style.top='';document.body.style.width='';window.scrollTo(0,-_top);
   if(quitUrl){window.open(quitUrl,'_blank');quitUrl=null;return;}
   // Tenter window.close() d'abord (fonctionne en PWA standalone)
   window.close();
