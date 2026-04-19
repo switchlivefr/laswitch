@@ -3670,7 +3670,7 @@ function unlockPrestas() {
     }
     return;
   }
-  if (_prestasUnlocked) { nav('p-prestas'); return; }
+  if (_prestasUnlocked) { swOpenAccess(); return; }
   _prestasClicks++;
   clearTimeout(_prestasTimer);
   _prestasTimer = setTimeout(function(){ _prestasClicks = 0; }, 1500);
@@ -3678,7 +3678,7 @@ function unlockPrestas() {
     _prestasUnlocked = true;
     var btn = document.getElementById('bn-prestas');
     btn.style.opacity = '1';
-    nav('p-prestas');
+    swOpenAccess();
   }
 }
 
@@ -3870,6 +3870,7 @@ function swVerifyToken(token, name) {
     .then(function(data) {
       document.getElementById('prestas-loading').style.display = 'none';
       if (data.ok && data.fbId) {
+        nav('p-prestas');
         var fakeMe = { id: data.fbId, name: name, first_name: name.split(' ')[0] };
         loadPrestas(fakeMe);
       } else if (data.pending) {
@@ -4006,7 +4007,6 @@ function swAccCopy() {
 }
 
 function swAccSend(channel) {
-  // Ecrire dans IDS_APPLI et mémoriser token uniquement au clic sur réseau
   fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken));
   localStorage.setItem('sw_token', _swAccToken);
   localStorage.setItem('sw_name', _swAccName);
