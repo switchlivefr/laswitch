@@ -453,6 +453,15 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
     <div class="sht" style="color:#1877f2;text-shadow:0 0 40px rgba(24,119,242,.35)">MES PRESTAS</div>
     <div class="shsub" id="prestas-sub" style="color:var(--white)">Tes prestations SWiTCH</div>
   </div>
+  <!-- État par défaut : non connecté, pas de mémoire → bouton pour ouvrir la modale d'accès -->
+  <div id="prestas-noauth" style="display:none;padding:40px 20px;text-align:center">
+    <div style="font-size:52px;margin-bottom:16px">🎬</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:28px">Accède à tes vidéos SWiTCH</div>
+    <button onclick="swOpenAccess()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#1877f2;border:none;border-radius:12px;padding:14px;cursor:pointer">
+      <span style="font-size:20px">🎬</span>
+      <span style="color:#fff;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif">Accès SWiTCH</span>
+    </button>
+  </div>
   <!-- État : chargement -->
   <div id="prestas-loading" style="display:none;padding:48px 20px;text-align:center">
     <div style="width:36px;height:36px;border:3px solid rgba(52,209,192,.2);border-top:3px solid var(--cyan);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px"></div>
@@ -3281,6 +3290,7 @@ function fbLogout() {
 
 function showNoFriend(me) {
   document.getElementById('prestas-loading').style.display = 'none';
+  var __na = document.getElementById('prestas-noauth'); if (__na) __na.style.display = 'none';
   document.getElementById('prestas-loggedin').style.display = 'none';
   document.getElementById('prestas-empty').style.display = 'none';
   document.getElementById('prestas-nofriend').style.display = 'block';
@@ -3317,6 +3327,7 @@ function sendFriendRequest() {
 }
 
 function checkFriendshipAndLoad(me) {
+  var __na = document.getElementById('prestas-noauth'); if (__na) __na.style.display = 'none';
   document.getElementById('prestas-loggedin').style.display = 'none';
   document.getElementById('prestas-empty').style.display = 'none';
   document.getElementById('prestas-nofriend').style.display = 'none';
@@ -3354,6 +3365,7 @@ function checkFriendshipAndLoad(me) {
 }
 
 function loadPrestas(me) {
+  var __na = document.getElementById('prestas-noauth'); if (__na) __na.style.display = 'none';
   document.getElementById('prestas-loggedin').style.display = 'none';
   document.getElementById('prestas-empty').style.display = 'none';
   document.getElementById('prestas-nofriend').style.display = 'none';
@@ -3765,6 +3777,7 @@ var _swAccLinks = {};
 function swAdminVoirVideos() {
   closeM('m-sw-admin');
   nav('p-prestas');
+  var __na = document.getElementById('prestas-noauth'); if (__na) __na.style.display = 'none';
   document.getElementById('prestas-loggedin').style.display = 'none';
   document.getElementById('prestas-empty').style.display    = 'none';
   document.getElementById('prestas-nofriend').style.display = 'none';
@@ -3893,6 +3906,7 @@ function swShowPending(token, name) {
 }
 
 function swVerifyToken(token, name) {
+  var __na = document.getElementById('prestas-noauth'); if (__na) __na.style.display = 'none';
   document.getElementById('prestas-loggedin').style.display = 'none';
   document.getElementById('prestas-empty').style.display    = 'none';
   document.getElementById('prestas-nofriend').style.display = 'none';
@@ -4404,7 +4418,7 @@ function checkFbSession() {
   var swName = localStorage.getItem('sw_name');
   // Déjà chargé dans cette session ET flag toujours valide : rien à faire
   if (window._swLoaded && swLoggedIn === '1' && swName) return;
-  // État incohérent (flag _swLoaded résiduel d'une session précédente) : le remettre à false
+  // État incohérent (flag _swLoaded résiduel) : le remettre à false
   if (window._swLoaded && !(swLoggedIn === '1' && swName)) window._swLoaded = false;
   if (swLoggedIn === '1' && swName) {
     window._swLoaded = true;
@@ -4413,10 +4427,12 @@ function checkFbSession() {
     loadPrestas(fakeMe);
     return;
   }
-  // Fallback ancien flux (token en attente de validation par Marco — AVANT que le PIN ne soit inventé)
+  // Fallback ancien flux (token pré-PIN)
   var swToken = localStorage.getItem('sw_token');
   if (swToken && swName && !_fbUser) { swVerifyToken(swToken, swName); return; }
-  // Session Facebook déjà ouverte ?
+  // Pas de mémoire valide : afficher le bloc par défaut avec bouton Accès SWiTCH
+  showNoAuth();
+  // Si SDK FB présent et session connectée, on bascule en admin/ami
   if (typeof FB !== 'undefined') {
     FB.getLoginStatus(function(response) {
       if (response.status === 'connected' && !_fbUser) {
@@ -4424,18 +4440,20 @@ function checkFbSession() {
           _fbUser = me;
           checkFriendshipAndLoad(me);
         });
-        return;
       } else if (response.status === 'connected' && _fbUser) {
         checkFriendshipAndLoad(_fbUser);
-        return;
       }
-      // Pas connecté : ouvrir la modale d'accès (remplace l'ancienne page prestas-nologin)
-      swOpenAccess();
     });
-    return;
   }
-  // Pas de SDK FB : ouvrir direct la modale d'accès
-  swOpenAccess();
+}
+
+// Affiche le bloc par défaut quand aucune authentification n'est active
+function showNoAuth() {
+  var n = document.getElementById('prestas-noauth');       if (n) n.style.display = 'block';
+  var l = document.getElementById('prestas-loggedin');     if (l) l.style.display = 'none';
+  var e = document.getElementById('prestas-empty');        if (e) e.style.display = 'none';
+  var f = document.getElementById('prestas-nofriend');     if (f) f.style.display = 'none';
+  var ld= document.getElementById('prestas-loading');      if (ld) ld.style.display = 'none';
 }
 
 </script>
