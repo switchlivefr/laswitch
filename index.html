@@ -498,8 +498,8 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
     <div id="prestas-header-info" style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0">
       <div id="prestas-avatar" style="width:34px;height:34px;border-radius:50%;background:#1877f2;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0">?</div>
       <div>
-        <div id="prestas-username" style="font-size:13px;font-weight:700;color:var(--white)">—</div>
-        <div id="prestas-count" style="font-size:11px;color:var(--white);font-weight:600">—</div>
+        <div id="prestas-username" style="font-size:13px;font-weight:700;color:var(--white)"></div>
+        <div id="prestas-count" style="font-size:11px;color:var(--white);font-weight:600;display:none"></div>
       </div>
       <button onclick="fbLogout()" title="Déconnecter" style="margin-left:auto;background:none;border:1px solid rgba(229,57,53,.4);border-radius:8px;padding:6px 8px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e53935" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -542,10 +542,8 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
   </div>
   <!-- État : aucune vidéo trouvée -->
   <div id="prestas-empty" style="display:none;padding:40px 20px;text-align:center">
-    <div style="font-size:40px;margin-bottom:14px">🎤</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--white);margin-bottom:8px">Aucune prestation trouvée</div>
-    <div style="font-size:13px;color:var(--muted2);line-height:1.6">Ton nom Facebook ne correspond pas encore à une prestation enregistrée. Contacte Marco !</div>
-    <button onclick="fbLogout()" style="margin-top:20px;background:none;border:1px solid var(--border2);border-radius:8px;padding:8px 16px;font-size:13px;color:var(--muted2);cursor:pointer;font-family:'DM Sans',sans-serif">Changer de compte</button>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--white);margin-bottom:24px;letter-spacing:1px">Aucune prestation trouvée</div>
+    <button onclick="fbLogout()" style="margin-top:0;background:none;border:1px solid var(--border2);border-radius:10px;padding:14px 28px;font-size:16px;font-weight:700;color:var(--white);cursor:pointer;font-family:'DM Sans',sans-serif">Changer de compte</button>
   </div>
 </div>
 <nav class="bnav">
@@ -3375,6 +3373,11 @@ function loadPrestas(me) {
   document.getElementById('prestas-empty').style.display = 'none';
   document.getElementById('prestas-nofriend').style.display = 'none';
   document.getElementById('prestas-loading').style.display = 'block';
+  // Masquer les infos du compte précédent le temps du chargement
+  document.getElementById('prestas-username').textContent = '';
+  document.getElementById('prestas-count').style.display = 'none';
+  document.getElementById('prestas-count').textContent = '';
+  document.getElementById('prestas-sub').textContent = 'Tes prestations SWiTCH';
 
   var prenom = (me.first_name || me.name || '').toLowerCase();
   fetch('/api?action=getVideos&fbid=' + encodeURIComponent(me.id) + '&nom=' + encodeURIComponent(prenom) + '&fullname=' + encodeURIComponent((me.name||'').toLowerCase()))
@@ -3391,7 +3394,9 @@ function loadPrestas(me) {
       var initials = (me.name || '?').split(' ').map(function(w){ return w[0]; }).join('').substring(0,2).toUpperCase();
       document.getElementById('prestas-avatar').textContent = initials;
       document.getElementById('prestas-username').textContent = me.name;
-      document.getElementById('prestas-count').textContent = videos.length + ' PRESTATION' + (videos.length > 1 ? 'S' : '') + ' SWiTCH';
+      var countEl = document.getElementById('prestas-count');
+      countEl.textContent = videos.length + ' PRESTATION' + (videos.length > 1 ? 'S' : '') + ' SWiTCH';
+      countEl.style.display = '';
       document.getElementById('prestas-sub').textContent = videos.length + ' prestation' + (videos.length > 1 ? 's' : '');
 
       // Mode admin : activer la barre de recherche et charger IDS_FBK
@@ -3796,7 +3801,9 @@ function swAdminVoirVideos() {
       if (!videos.length) { document.getElementById('prestas-empty').style.display = 'block'; return; }
       document.getElementById('prestas-avatar').textContent = 'M';
       document.getElementById('prestas-username').textContent = 'Marco — toutes les videos';
-      document.getElementById('prestas-count').textContent = videos.length + ' PRESTATIONS SWiTCH';
+      var countElA = document.getElementById('prestas-count');
+      countElA.textContent = videos.length + ' PRESTATIONS SWiTCH';
+      countElA.style.display = '';
       document.getElementById('prestas-sub').textContent = videos.length + ' prestations';
       // Afficher la barre de recherche admin
       document.getElementById('prestas-search-bar').style.display = 'block';
@@ -4118,19 +4125,21 @@ function swAccUpdateButtons(name) {
     _applyBtnState(cached);
     return;
   }
-  // État transitoire : désactiver les 2 boutons pendant la vérif (pas de grisage total,
-  // on laisse Demande active visuellement mais désactivée pour pouvoir traiter le cas rapide)
+  // État transitoire : désactiver les 2 boutons pendant la vérif
   if (demandeBtn) demandeBtn.disabled = true;
   if (connectBtn) connectBtn.disabled = true;
-  // Sablier différé : n'apparaît QUE si la requête prend >250ms (pour éviter flash)
+  // Sablier UNIQUEMENT si la sélection vient du dropdown (pas pendant la frappe)
   var seq = ++_swAccHasPinSeq;
-  var loadingTimer = setTimeout(function(){
-    if (seq === _swAccHasPinSeq) swAccShowLoading('Vérification…');
-  }, 250);
+  var loadingTimer = null;
+  if (_swAccSelectedFromList) {
+    loadingTimer = setTimeout(function(){
+      if (seq === _swAccHasPinSeq) swAccShowLoading('Vérification…');
+    }, 250);
+  }
   fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=hasPin&name=' + encodeURIComponent(n))
     .then(function(r){ return r.json(); })
     .then(function(data){
-      clearTimeout(loadingTimer);
+      if (loadingTimer) clearTimeout(loadingTimer);
       if (seq !== _swAccHasPinSeq) return; // réponse obsolète
       _swAccHasPinCache[n.toLowerCase()] = !!data.hasPin;
       // Vérifier que le nom dans l'input n'a pas changé
@@ -4140,7 +4149,7 @@ function swAccUpdateButtons(name) {
       swAccHideLoading();
     })
     .catch(function(){
-      clearTimeout(loadingTimer);
+      if (loadingTimer) clearTimeout(loadingTimer);
       if (seq !== _swAccHasPinSeq) return;
       _swAccHasPinCache[n.toLowerCase()] = false;
       _applyBtnState(false);
