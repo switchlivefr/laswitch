@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="La SWiTCH">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -3945,12 +3945,6 @@ function swOpenAccess() {
   swAccReset();
   swLoadNames();
   openM('m-sw-access');
-  // Anti-scroll : le clavier virtuel iOS/Android fait remonter la page derrière la modale.
-  // Tant que m-sw-access est ouvert, on force window à rester en haut.
-  if (!window._swAccScrollLock) {
-    window._swAccScrollLock = function() { if (window.scrollY !== 0) window.scrollTo(0, 0); };
-    window.addEventListener('scroll', window._swAccScrollLock, { passive: true });
-  }
 }
 
 function swLoadNames() {
@@ -4150,11 +4144,6 @@ function swAccCleanupAndClose() {
   if (dd && dd._outsideTapHandler) {
     document.removeEventListener('touchstart', dd._outsideTapHandler);
     dd._outsideTapHandler = null;
-  }
-  // Retirer le listener anti-scroll
-  if (window._swAccScrollLock) {
-    window.removeEventListener('scroll', window._swAccScrollLock);
-    window._swAccScrollLock = null;
   }
   closeM('m-sw-access');
   if (_swAccReturnPage && _swAccReturnPage !== currentPage) {
