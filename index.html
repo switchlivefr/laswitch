@@ -3941,17 +3941,7 @@ function swLoadNames() {
 }
 
 var _swAccSelectedFromList = false;
-var _swAccDropdownOpen = false;
 
-// Bloquer le scroll de la page entière quand le dropdown d'accès est ouvert
-// passive:false obligatoire pour pouvoir appeler preventDefault
-// Exception : autoriser le scroll interne du dropdown lui-même
-document.addEventListener('touchmove', function(e) {
-  if (!_swAccDropdownOpen) return;
-  var dd = document.getElementById('sw-acc-dropdown');
-  if (dd && dd.contains(e.target)) return; // laisser le dropdown défiler en interne
-  e.preventDefault();
-}, { passive: false });
 
 function swAccFilterFocus(val) {
   if (_swAccSelectedFromList) {
@@ -4011,7 +4001,7 @@ function swAccFilter(val) {
   var btn = document.getElementById('sw-acc-ok-btn');
   _swAccName = val;
   btn.style.opacity = val.trim().length >= 1 ? '1' : '0.35';
-  if (!val || val.length < 1) { dd.style.display = 'none'; _swAccDropdownOpen = false; return; }
+  if (!val || val.length < 1) { dd.style.display = 'none'; return; }
   var filtered = _swAccNames.filter(function(n){ return swMatchTokens(n, val); });
   if (!filtered.length) { dd.style.display = 'none'; return; }
   dd.innerHTML = '';
@@ -4022,11 +4012,16 @@ function swAccFilter(val) {
     dd.style.top = (rect.bottom + 2) + 'px';
   }
   dd.style.display = 'block';
-  _swAccDropdownOpen = true;
-  // Bloquer le scroll de la page pendant que le dropdown est ouvert
-  if (!dd._touchLocked) {
-    dd._touchLocked = true;
-    dd.addEventListener('touchmove', function(e) { e.stopPropagation(); }, { passive: true });
+  // Attacher un listener one-shot : touch ailleurs = fermer le dropdown
+  if (!dd._outsideTapHandler) {
+    dd._outsideTapHandler = function(e) {
+      if (!dd.contains(e.target) && e.target.id !== 'sw-acc-input') {
+        dd.style.display = 'none';
+        document.removeEventListener('touchstart', dd._outsideTapHandler);
+        dd._outsideTapHandler = null;
+      }
+    };
+    document.addEventListener('touchstart', dd._outsideTapHandler, { passive: true });
   }
   filtered.slice(0,8).forEach(function(name) {
     var item = document.createElement('div');
@@ -4040,7 +4035,7 @@ function swAccFilter(val) {
       _swAccName = name;
       _swAccSelectedFromList = true;
       dd.style.display = 'none';
-      _swAccDropdownOpen = false;
+      if (dd._outsideTapHandler) { document.removeEventListener('touchstart', dd._outsideTapHandler); dd._outsideTapHandler = null; }
       document.getElementById('sw-acc-ok-btn').style.opacity = '1';
       inp.blur();
     };
@@ -4119,8 +4114,7 @@ function swAccReset() {
   var inp = document.getElementById('sw-acc-input');
   if (inp) inp.value = '';
   var dd = document.getElementById('sw-acc-dropdown');
-  if (dd) dd.style.display = 'none';
-  _swAccDropdownOpen = false;
+  if (dd) { dd.style.display = 'none'; if (dd._outsideTapHandler) { document.removeEventListener('touchstart', dd._outsideTapHandler); dd._outsideTapHandler = null; } }
   var okbtn = document.getElementById('sw-acc-ok-btn');
   if (okbtn) okbtn.style.opacity = '0.35';
   _swAccName = '';
@@ -4215,7 +4209,7 @@ function checkFbSession() {
     </div>
     <div class="mfoot" style="flex-direction:column;gap:8px;flex-shrink:0">
       <button id="sw-acc-back-btn" onclick="swAccBack()" style="display:none;width:100%;background:none;border:1px solid var(--border2);border-radius:8px;padding:8px;color:var(--muted2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer">Retour</button>
-      <button class="mbtn sec" onclick="_swAccDropdownOpen=false;closeM('m-sw-access')">Fermer</button>
+      <button class="mbtn sec" onclick="closeM('m-sw-access')">Fermer</button>
     </div>
   </div>
 </div>
