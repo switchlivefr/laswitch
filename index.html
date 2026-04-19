@@ -4399,12 +4399,13 @@ function swAccCleanupAndClose() {
 
 function checkFbSession() {
   if (_adminMode) return;
-  if (window._swLoaded) return;
   // Mémoire persistante : flag sw_loggedIn="1" signifie "utilisateur authentifié par PIN + validé".
-  // Ce flag ne dépend pas de la présence de vidéos (sw_fbId peut être vide chaîne).
-  // Il reste jusqu'à déconnexion manuelle via le bouton sur la page vidéo.
   var swLoggedIn = localStorage.getItem('sw_loggedIn');
   var swName = localStorage.getItem('sw_name');
+  // Déjà chargé dans cette session ET flag toujours valide : rien à faire
+  if (window._swLoaded && swLoggedIn === '1' && swName) return;
+  // État incohérent (flag _swLoaded résiduel d'une session précédente) : le remettre à false
+  if (window._swLoaded && !(swLoggedIn === '1' && swName)) window._swLoaded = false;
   if (swLoggedIn === '1' && swName) {
     window._swLoaded = true;
     var swFbId = localStorage.getItem('sw_fbId') || '';
