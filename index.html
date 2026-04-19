@@ -1790,7 +1790,7 @@ function _renderPrcRows(el, rows, cs, ce, ci){
         vid.muted=true;
         vid.loop=true;
         vid.playsInline=true;
-        vid.preload='metadata';
+        vid.preload=inModal?'auto':'metadata';
         vid.style.cssText=cssBase+';height:auto';
         el.appendChild(vid);
       } else {
