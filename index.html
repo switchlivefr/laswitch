@@ -1690,7 +1690,7 @@ function openM(id){
       }
     },300);
   }
-  if(id!=='m-marco'&&id!=='m-pin'&&id!=='m-prc'&&id!=='m-resa'&&id!=='m-renseignements'&&id!=='m-sw-access'&&id!=='m-sw-admin'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
+  if(id!=='m-marco'&&id!=='m-pin'&&id!=='m-prc'&&id!=='m-resa'&&id!=='m-renseignements'&&id!=='m-sw-access'&&id!=='m-sw-admin'&&id!=='m-sw-pending'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
 }
 function closeM(id){
   if(id==='m-resa'){clearTimeout(_prcTimer);_prcTimer=null;}
@@ -3874,7 +3874,7 @@ function swVerifyToken(token, name) {
         var fakeMe = { id: data.fbId, name: name, first_name: name.split(' ')[0] };
         loadPrestas(fakeMe);
       } else if (data.pending) {
-        document.getElementById('prestas-nologin').style.display = 'block';
+        openM('m-sw-pending');
       } else {
         localStorage.removeItem('sw_token');
         localStorage.removeItem('sw_name');
