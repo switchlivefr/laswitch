@@ -1664,8 +1664,8 @@ function openM(id){
   }
   var el=document.getElementById(id);el.classList.add('open');
   document.body.style.overflow='hidden';document.body.classList.add('modal-open');
-  // Lancer les vidéos contenues dans la modale (elles ne sont plus en autoplay)
-  try { el.querySelectorAll('video').forEach(function(v){ try { v.play(); } catch(e) {} }); } catch(e) {}
+  // Lancer les vidéos de la modale en garantissant loop+muted
+  try { el.querySelectorAll('video').forEach(function(v){ v.loop=true;v.muted=true;try{v.play();}catch(e){} }); } catch(e) {}
   // Pour m-marco : réserver l'espace du bouton Plus de détails en bas
   if(id==='m-marco'){
     var rmb=document.getElementById('rules-more-btn');
@@ -1746,9 +1746,13 @@ function renderPrcCol(){
   var rows=d.rows;
   var cs=_resaOff?3:0, ce=_resaOff?4:1, ci=_resaOff?5:2;
   _renderPrcRows(el, rows, cs, ce, ci);
-  // Mettre à jour aussi la modale mobile si elle existe
+  // Ne reconstruire m-prc-mobile-body que si la modale est fermee
+  // (evite de couper les videos en cours lors du silentRefresh toutes les 30s)
   var mob=document.getElementById('m-prc-mobile-body');
-  if(mob){mob.innerHTML='';_renderPrcRows(mob, rows, cs, ce, ci);_appendPrcMapsBtn(mob);}
+  var moverlay=document.getElementById('m-prc-mobile');
+  if(mob&&!(moverlay&&moverlay.classList.contains('open'))){
+    mob.innerHTML='';_renderPrcRows(mob, rows, cs, ce, ci);_appendPrcMapsBtn(mob);
+  }
 }
 
 function _appendPrcMapsBtn(mob){
@@ -1812,13 +1816,17 @@ function _renderPrcRows(el, rows, cs, ce, ci){
 function openPrcMobile(){
   var mob=document.getElementById('m-prc-mobile-body');
   if(mob){
-    mob.innerHTML='';
-    if(RAW.proRaceCafe&&!RAW.proRaceCafe.error){
-      var rows=RAW.proRaceCafe.rows;
-      var cs=_resaOff?3:0, ce=_resaOff?4:1, ci=_resaOff?5:2;
-      _renderPrcRows(mob, rows, cs, ce, ci);
+    // Ne reconstruire que si le contenu est vide (premiere ouverture)
+    // Si la modale a deja ete construite, on repart du contenu existant
+    // pour ne pas couper les videos en cours
+    if(!mob.hasChildNodes()){
+      if(RAW.proRaceCafe&&!RAW.proRaceCafe.error){
+        var rows=RAW.proRaceCafe.rows;
+        var cs=_resaOff?3:0, ce=_resaOff?4:1, ci=_resaOff?5:2;
+        _renderPrcRows(mob, rows, cs, ce, ci);
+      }
+      _appendPrcMapsBtn(mob);
     }
-    _appendPrcMapsBtn(mob);
     mob.scrollTop=0;
   }
   openM('m-prc-mobile');
@@ -1902,12 +1910,15 @@ function renderContactSw(){
 function renderPromoSw(){
   var el=document.getElementById('m-promo-sw-body');
   if(!el)return;
+  // Ne pas reconstruire si la modale est ouverte (evite de couper les videos)
+  var moverlay=document.getElementById('m-renseignements');
+  if(moverlay&&moverlay.classList.contains('open'))return;
   el.innerHTML='';
   var d=RAW.promoSw;
   if(!d||d.error)return;
   var rows=d.rows;
   _renderPrcRows(el, rows, 0, 1, 2);
-  // Forcer le centrage sur les éléments T
+  // Forcer le centrage sur les elements T
   el.querySelectorAll('.sec-osl-t').forEach(function(t){t.style.textAlign='center';});
 }
 
