@@ -3284,6 +3284,7 @@ function fbLogout() {
   localStorage.removeItem('sw_token');
   localStorage.removeItem('sw_name');
   localStorage.removeItem('sw_fbId');
+  localStorage.removeItem('sw_loggedIn');
   _swAccHasPinCache = {}; // invalider le cache pour forcer une revérif à la prochaine saisie
   _prestasUnlocked = false;
   var btn = document.getElementById('bn-prestas');
@@ -3674,6 +3675,12 @@ function unlockPrestas() {
     }
     return;
   }
+  // Utilisateur déjà connecté : ne pas relancer de recherche ni ouvrir la modale d'accès
+  // On se contente de basculer sur p-prestas si on n'y est pas déjà
+  if (window._swLoaded) {
+    if (currentPage !== 'p-prestas') nav('p-prestas');
+    return;
+  }
   if (_prestasUnlocked) { swOpenAccess(); return; }
   _prestasClicks++;
   clearTimeout(_prestasTimer);
@@ -3936,6 +3943,13 @@ function swVerifyToken(token, name) {
 var _swAccReturnPage = null;
 
 function swOpenAccess() {
+  // Priorité absolue : utilisateur déjà connecté par PIN → bascule directe sur p-prestas
+  // (garde-fou en plus de celui de unlockPrestas, pour tous les chemins d'appel)
+  if (localStorage.getItem('sw_loggedIn') === '1' && localStorage.getItem('sw_name')) {
+    window._swLoaded = true;
+    if (currentPage !== 'p-prestas') nav('p-prestas');
+    return;
+  }
   var swToken = localStorage.getItem('sw_token');
   var swName  = localStorage.getItem('sw_name');
   if (swToken && swName) {
@@ -4026,11 +4040,15 @@ function swAccFilter(val) {
   var filtered = _swAccNames.filter(function(n){ return swMatchTokens(n, val); });
   if (!filtered.length) { dd.style.display = 'none'; return; }
   dd.innerHTML = '';
-  // Positionner en fixed sous l'input
+  // Positionner en fixed sous l'input, avec left et width calés sur l'input lui-même
+  // (important en desktop où la modale est plus étroite que la fenêtre)
   var inp = document.getElementById('sw-acc-input');
   if (inp) {
     var rect = inp.getBoundingClientRect();
     dd.style.top = (rect.bottom + 2) + 'px';
+    dd.style.left = rect.left + 'px';
+    dd.style.width = rect.width + 'px';
+    dd.style.right = 'auto';
   }
   dd.style.display = 'block';
   // Attacher un listener one-shot : touch ailleurs = fermer le dropdown
@@ -4261,17 +4279,19 @@ function swAccVerifyPinConnect(pin) {
   fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=checkPin&name=' + encodeURIComponent(_swAccName) + '&pin=' + encodeURIComponent(pin))
     .then(function(r){ return r.json(); })
     .then(function(data){
-      if (data.ok && data.fbId) {
-        // PIN correct + validé : mémoire persistante (fbId + name) puis bascule sur les vidéos
-        // Le sablier reste affiché pendant la bascule pour éviter les clics sur les boutons
+      if (data.ok) {
+        // PIN correct + validé : mémoire persistante (fbId peut être vide si aucune vidéo).
+        // Le flag sw_loggedIn="1" indique que l'utilisateur est authentifié, indépendamment
+        // de la présence ou non de vidéos. loadPrestas affichera prestas-empty si 0 vidéo.
         swAccShowLoading('Chargement de tes prestations…');
-        localStorage.setItem('sw_fbId', data.fbId);
+        localStorage.setItem('sw_loggedIn', '1');
+        localStorage.setItem('sw_fbId', data.fbId || '');
         localStorage.setItem('sw_name', _swAccName);
         localStorage.setItem('sw_token', _swAccToken || ('sw' + Date.now()));
         window._swLoaded = true;
         swAccCleanupAndClose();
         nav('p-prestas');
-        var fakeMe = { id: data.fbId, name: _swAccName, first_name: _swAccName.split(' ')[0] };
+        var fakeMe = { id: data.fbId || '', name: _swAccName, first_name: _swAccName.split(' ')[0] };
         loadPrestas(fakeMe);
       } else if (data.reason === 'not_validated') {
         // PIN correct MAIS Marco n'a pas encore validé : fermer m-sw-access puis afficher
@@ -4397,17 +4417,19 @@ function swAccCleanupAndClose() {
 function checkFbSession() {
   if (_adminMode) return;
   if (window._swLoaded) return;
-  var swFbId = localStorage.getItem('sw_fbId');
+  // Mémoire persistante : flag sw_loggedIn="1" signifie "utilisateur authentifié par PIN + validé".
+  // Ce flag ne dépend pas de la présence de vidéos (sw_fbId peut être vide chaîne).
+  // Il reste jusqu'à déconnexion manuelle via le bouton sur la page vidéo.
+  var swLoggedIn = localStorage.getItem('sw_loggedIn');
   var swName = localStorage.getItem('sw_name');
-  // Mémoire persistante : si un fbId est déjà validé en mémoire, on charge directement
-  // les vidéos sans repasser par la vérification Apps Script.
-  if (swFbId && swName) {
+  if (swLoggedIn === '1' && swName) {
     window._swLoaded = true;
+    var swFbId = localStorage.getItem('sw_fbId') || '';
     var fakeMe = { id: swFbId, name: swName, first_name: swName.split(' ')[0] };
     loadPrestas(fakeMe);
     return;
   }
-  // Fallback ancien flux (token en attente de validation par Marco)
+  // Fallback ancien flux (token en attente de validation par Marco — AVANT que le PIN ne soit inventé)
   var swToken = localStorage.getItem('sw_token');
   if (swToken && swName && !_fbUser) { swVerifyToken(swToken, swName); return; }
   if (typeof FB === 'undefined') return;
@@ -4462,7 +4484,7 @@ function checkFbSession() {
               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
               style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#fff;color:#000;font-size:15px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
-          <div id="sw-acc-dropdown" style="display:none;position:fixed;background:#fff;border-radius:8px;max-height:200px;overflow-y:auto;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.5);text-align:left;left:16px;right:16px"></div>
+          <div id="sw-acc-dropdown" style="display:none;position:fixed;background:#fff;border-radius:8px;max-height:200px;overflow-y:auto;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.5);text-align:left"></div>
           <!-- Deux boutons : Demande d'accès (bleu) + Connexion (rouge) -->
           <div style="display:flex;gap:10px;margin-top:12px">
             <button id="sw-acc-demande-btn" onclick="swAccGoDemande()"
