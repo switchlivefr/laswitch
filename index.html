@@ -3965,7 +3965,10 @@ function swAccFilterFocus(val) {
     inp.style.caretColor = '';
     _swAccSelectedFromList = false;
     _swAccName = '';
-    document.getElementById('sw-acc-ok-btn').style.opacity = '0.35';
+    var db = document.getElementById('sw-acc-demande-btn');
+    if (db) db.style.opacity = '0.35';
+    var cb = document.getElementById('sw-acc-connect-btn');
+    if (cb) cb.style.opacity = '0.35';
     document.getElementById('sw-acc-dropdown').style.display = 'none';
     return;
   }
@@ -4012,9 +4015,8 @@ function swMatchSong(artist, title, input) {
 
 function swAccFilter(val) {
   var dd  = document.getElementById('sw-acc-dropdown');
-  var btn = document.getElementById('sw-acc-ok-btn');
   _swAccName = val;
-  btn.style.opacity = val.trim().length >= 1 ? '1' : '0.35';
+  swAccUpdateButtons(val);
   if (!val || val.length < 1) { dd.style.display = 'none'; return; }
   var filtered = _swAccNames.filter(function(n){ return swMatchTokens(n, val); });
   if (!filtered.length) { dd.style.display = 'none'; return; }
@@ -4050,14 +4052,54 @@ function swAccFilter(val) {
       _swAccSelectedFromList = true;
       dd.style.display = 'none';
       if (dd._outsideTapHandler) { document.removeEventListener('touchstart', dd._outsideTapHandler); dd._outsideTapHandler = null; }
-      document.getElementById('sw-acc-ok-btn').style.opacity = '1';
+      swAccUpdateButtons(name);
       inp.blur();
     };
     dd.appendChild(item);
   });
 }
 
-function swAccStep1() {
+// Met à jour l'état des boutons Demande d'accès / Connexion selon le nom saisi
+// Demande d'accès : actif dès qu'il y a du texte
+// Connexion : actif seulement si le nom a un PIN enregistré en colonne F (appel Apps Script hasPin)
+var _swAccHasPinCache = {};
+var _swAccHasPinTimer = null;
+function swAccUpdateButtons(name) {
+  var demandeBtn = document.getElementById('sw-acc-demande-btn');
+  var connectBtn = document.getElementById('sw-acc-connect-btn');
+  var n = (name || '').trim();
+  if (demandeBtn) demandeBtn.style.opacity = n.length >= 1 ? '1' : '0.35';
+  // Connexion : grisé par défaut, activé si PIN existe
+  if (connectBtn) connectBtn.style.opacity = '0.35';
+  if (!n) return;
+  // Cache pour éviter les appels répétés
+  if (_swAccHasPinCache[n.toLowerCase()] !== undefined) {
+    if (connectBtn && _swAccHasPinCache[n.toLowerCase()]) connectBtn.style.opacity = '1';
+    return;
+  }
+  // Debounce : attendre que l'utilisateur arrête de taper 400ms avant de requêter
+  clearTimeout(_swAccHasPinTimer);
+  _swAccHasPinTimer = setTimeout(function(){
+    fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=hasPin&name=' + encodeURIComponent(n))
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        _swAccHasPinCache[n.toLowerCase()] = !!data.hasPin;
+        // Vérifier que le nom dans l'input n'a pas changé entre-temps
+        var currentName = (document.getElementById('sw-acc-input').value || '').trim();
+        if (currentName.toLowerCase() === n.toLowerCase() && data.hasPin && connectBtn) {
+          connectBtn.style.opacity = '1';
+        }
+      })
+      .catch(function(){ _swAccHasPinCache[n.toLowerCase()] = false; });
+  }, 400);
+}
+
+// ============================================================
+// FLUX DEMANDE D'ACCÈS (CAS 1)
+// ============================================================
+var _swPinDemande = '';    // PIN saisi par l'utilisateur (mémorisé pour être envoyé lors du click réseau social)
+
+function swAccGoDemande() {
   var name = (document.getElementById('sw-acc-input').value || '').trim();
   if (!name || name.length < 2) {
     document.getElementById('sw-acc-input').style.borderColor = '#e53935';
@@ -4065,22 +4107,136 @@ function swAccStep1() {
   }
   document.getElementById('sw-acc-input').style.borderColor = '';
   _swAccName = name;
+  // Cacher step1 et afficher la saisie PIN demande
+  document.getElementById('sw-acc-step1').style.display = 'none';
+  document.getElementById('sw-acc-step-pin-demande').style.display = 'block';
+  // Afficher le bouton "Valider le code PIN" dans le footer
+  var vbtn = document.getElementById('sw-acc-pin-validate-btn');
+  if (vbtn) { vbtn.style.display = 'block'; vbtn.style.opacity = '0.35'; vbtn.disabled = true; }
+  // Reset cases PIN
+  for (var i = 0; i < 4; i++) {
+    var el = document.getElementById('sw-pin-d-' + i);
+    if (el) { el.value = ''; el.style.borderColor = 'var(--border2)'; }
+  }
+  _swPinDemande = '';
+  setTimeout(function(){ var f = document.getElementById('sw-pin-d-0'); if (f) f.focus(); }, 100);
+}
+
+function swPinDemandeInput(idx, el) {
+  el.value = el.value.replace(/[^0-9]/g, '');
+  if (el.value.length === 1 && idx < 3) {
+    var next = document.getElementById('sw-pin-d-' + (idx + 1));
+    if (next) next.focus();
+  }
+  // Recomposer le code et activer le bouton Valider si les 4 cases sont pleines
+  var code = '';
+  for (var i = 0; i < 4; i++) {
+    var v = document.getElementById('sw-pin-d-' + i);
+    code += v ? v.value : '';
+  }
+  var vbtn = document.getElementById('sw-acc-pin-validate-btn');
+  if (vbtn) {
+    if (code.length === 4) { vbtn.style.opacity = '1'; vbtn.disabled = false; }
+    else { vbtn.style.opacity = '0.35'; vbtn.disabled = true; }
+  }
+  _swPinDemande = code;
+}
+
+function swAccValidatePinDemande() {
+  if (!_swPinDemande || _swPinDemande.length !== 4) return;
+  // Préparer le message + liens sociaux + token + bascule vers step2
   _swAccToken = 'sw' + Date.now() + Math.random().toString(36).substr(2,8);
-  var msg = 'Hello Marco ! je souhaiterais acceder a mes prestas SWiTCH sous le nom : ' + name;
+  var msg = 'Hello Marco ! je souhaiterais acceder a mes prestas SWiTCH sous le nom : ' + _swAccName;
   document.getElementById('sw-acc-msg').textContent = msg;
   var enc = encodeURIComponent(msg);
   _swAccLinks = {
     messenger: 'https://m.me/marco.onlyformusic?text=' + enc,
-    instagram:  'https://ig.me/m/marcoonlyformusic',
-    whatsapp:   'https://wa.me/33613634346?text=' + enc
+    instagram: 'https://ig.me/m/marcoonlyformusic',
+    whatsapp:  'https://wa.me/33613634346?text=' + enc
   };
-  document.getElementById('sw-acc-step1').style.display = 'none';
+  // Cacher step-pin-demande et bouton Valider, afficher step2
+  document.getElementById('sw-acc-step-pin-demande').style.display = 'none';
+  document.getElementById('sw-acc-pin-validate-btn').style.display = 'none';
   document.getElementById('sw-acc-step2').style.display = 'block';
-  document.getElementById('sw-acc-back-btn').style.display = 'block';
   document.getElementById('sw-acc-social-btns').style.opacity = '0.3';
   document.getElementById('sw-acc-social-btns').style.pointerEvents = 'none';
   document.getElementById('sw-acc-sent').style.display = 'none';
   document.getElementById('sw-acc-copy-btn').textContent = 'COPIE LE MESSAGE';
+}
+
+// ============================================================
+// FLUX CONNEXION (CAS 2)
+// ============================================================
+function swAccGoConnect() {
+  // Vérifier que le bouton est actif (PIN existe pour ce nom)
+  var btn = document.getElementById('sw-acc-connect-btn');
+  if (!btn || parseFloat(btn.style.opacity || '0.35') < 1) return;
+  var name = (document.getElementById('sw-acc-input').value || '').trim();
+  if (!name || name.length < 2) return;
+  _swAccName = name;
+  // Cacher step1 et afficher la saisie PIN connexion
+  document.getElementById('sw-acc-step1').style.display = 'none';
+  document.getElementById('sw-acc-step-pin-connect').style.display = 'block';
+  // Reset titre + cases
+  var t = document.getElementById('sw-pin-c-title');
+  if (t) { t.textContent = 'Connexion'; t.style.color = 'var(--white)'; }
+  for (var i = 0; i < 4; i++) {
+    var el = document.getElementById('sw-pin-c-' + i);
+    if (el) { el.value = ''; el.style.borderColor = 'var(--border2)'; }
+  }
+  setTimeout(function(){ var f = document.getElementById('sw-pin-c-0'); if (f) f.focus(); }, 100);
+}
+
+function swPinConnectInput(idx, el) {
+  el.value = el.value.replace(/[^0-9]/g, '');
+  if (el.value.length === 1 && idx < 3) {
+    var next = document.getElementById('sw-pin-c-' + (idx + 1));
+    if (next) next.focus();
+  }
+  // Recomposer le code et valider automatiquement dès les 4 cases pleines
+  var code = '';
+  for (var i = 0; i < 4; i++) {
+    var v = document.getElementById('sw-pin-c-' + i);
+    code += v ? v.value : '';
+  }
+  if (code.length === 4) {
+    swAccVerifyPinConnect(code);
+  }
+}
+
+function swAccVerifyPinConnect(pin) {
+  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=checkPin&name=' + encodeURIComponent(_swAccName) + '&pin=' + encodeURIComponent(pin))
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (data.ok && data.fbId) {
+        // PIN correct + validé : basculer sur les vidéos
+        localStorage.setItem('sw_token', _swAccToken || ('sw' + Date.now()));
+        localStorage.setItem('sw_name', _swAccName);
+        window._swLoaded = true;
+        swAccCleanupAndClose();
+        nav('p-prestas');
+        var fakeMe = { id: data.fbId, name: _swAccName, first_name: _swAccName.split(' ')[0] };
+        loadPrestas(fakeMe);
+      } else {
+        // Mauvais PIN : afficher CODE ERRONÉ 2s puis reset (comme dans m-pin)
+        var t = document.getElementById('sw-pin-c-title');
+        if (t) { t.textContent = 'CODE ERRONÉ'; t.style.color = '#e84057'; }
+        setTimeout(function(){
+          for (var i = 0; i < 4; i++) {
+            var el = document.getElementById('sw-pin-c-' + i);
+            if (el) { el.value = ''; el.style.borderColor = 'var(--border2)'; }
+          }
+          var t2 = document.getElementById('sw-pin-c-title');
+          if (t2) { t2.textContent = 'Connexion'; t2.style.color = 'var(--white)'; }
+          var f = document.getElementById('sw-pin-c-0');
+          if (f) f.focus();
+        }, 2000);
+      }
+    })
+    .catch(function(){
+      var t = document.getElementById('sw-pin-c-title');
+      if (t) { t.textContent = 'ERREUR RÉSEAU'; t.style.color = '#e84057'; }
+    });
 }
 
 function swAccCopy() {
@@ -4109,32 +4265,44 @@ function swAccSend(channel) {
   var url = _swAccLinks[channel] || '';
   if (url) window.open(url, '_blank');
   document.getElementById('sw-acc-sent').style.display = 'block';
-  // Sheets et localStorage en arrière-plan
+  // Sheets et localStorage en arrière-plan (IMPORTANT : transmettre le PIN pour écriture colonne F)
   localStorage.setItem('sw_token', _swAccToken);
   localStorage.setItem('sw_name', _swAccName);
-  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken));
-}
-
-function swAccBack() {
-  document.getElementById('sw-acc-step2').style.display = 'none';
-  document.getElementById('sw-acc-step1').style.display = 'block';
-  document.getElementById('sw-acc-back-btn').style.display = 'none';
+  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken) + '&pin=' + encodeURIComponent(_swPinDemande || ''));
 }
 
 function swAccReset() {
+  // Afficher step1, cacher tous les autres
   document.getElementById('sw-acc-step1').style.display = 'block';
   document.getElementById('sw-acc-step2').style.display = 'none';
-  document.getElementById('sw-acc-back-btn').style.display = 'none';
+  var sd = document.getElementById('sw-acc-step-pin-demande');
+  if (sd) sd.style.display = 'none';
+  var sc = document.getElementById('sw-acc-step-pin-connect');
+  if (sc) sc.style.display = 'none';
+  var vbtn = document.getElementById('sw-acc-pin-validate-btn');
+  if (vbtn) { vbtn.style.display = 'none'; vbtn.style.opacity = '0.35'; vbtn.disabled = true; }
+  // Reset input nom
   var inp = document.getElementById('sw-acc-input');
-  if (inp) inp.value = '';
+  if (inp) { inp.value = ''; inp.removeAttribute('readonly'); inp.style.caretColor = ''; inp.style.borderColor = ''; }
   var dd = document.getElementById('sw-acc-dropdown');
   if (dd) { dd.style.display = 'none'; if (dd._outsideTapHandler) { document.removeEventListener('touchstart', dd._outsideTapHandler); dd._outsideTapHandler = null; } }
-  var okbtn = document.getElementById('sw-acc-ok-btn');
-  if (okbtn) okbtn.style.opacity = '0.35';
+  // Reset boutons Demande/Connexion à grisé
+  var db = document.getElementById('sw-acc-demande-btn');
+  if (db) db.style.opacity = '0.35';
+  var cb = document.getElementById('sw-acc-connect-btn');
+  if (cb) cb.style.opacity = '0.35';
+  // Reset cases PIN demande + connect
+  for (var i = 0; i < 4; i++) {
+    var d = document.getElementById('sw-pin-d-' + i);
+    if (d) { d.value = ''; d.style.borderColor = 'var(--border2)'; }
+    var c = document.getElementById('sw-pin-c-' + i);
+    if (c) { c.value = ''; c.style.borderColor = 'var(--border2)'; }
+  }
+  var tc = document.getElementById('sw-pin-c-title');
+  if (tc) { tc.textContent = 'Connexion'; tc.style.color = 'var(--white)'; }
   _swAccName = '';
   _swAccSelectedFromList = false;
-  var inp2 = document.getElementById('sw-acc-input');
-  if (inp2) { inp2.removeAttribute('readonly'); inp2.style.caretColor = ''; }
+  _swPinDemande = '';
 }
 
 // Nettoie le listener touchstart global AVANT de fermer la modale (sinon il reste actif et ralentit toute l'appli)
@@ -4204,10 +4372,37 @@ function checkFbSession() {
               oninput="swAccFilter(this.value)" onfocus="swAccFilterFocus(this.value)"
               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
               style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#fff;color:#000;font-size:15px;font-family:'DM Sans',sans-serif;outline:none">
-            <button id="sw-acc-ok-btn" onclick="swAccStep1()"
-              style="padding:10px 14px;border-radius:8px;border:none;background:var(--gold);color:#000;font-size:20px;cursor:pointer;opacity:0.35">✓</button>
           </div>
           <div id="sw-acc-dropdown" style="display:none;position:fixed;background:#fff;border-radius:8px;max-height:200px;overflow-y:auto;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.5);text-align:left;left:16px;right:16px"></div>
+          <!-- Deux boutons : Demande d'accès (bleu) + Connexion (rouge) -->
+          <div style="display:flex;gap:10px;margin-top:12px">
+            <button id="sw-acc-demande-btn" onclick="swAccGoDemande()"
+              style="flex:1;padding:12px 10px;border-radius:8px;border:none;background:#1877f2;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer;opacity:0.35">Demande d'accès</button>
+            <button id="sw-acc-connect-btn" onclick="swAccGoConnect()"
+              style="flex:1;padding:12px 10px;border-radius:8px;border:none;background:#e53935;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer;opacity:0.35">Connexion</button>
+          </div>
+        </div>
+      </div>
+      <!-- STEP PIN DEMANDE : saisie d'un nouveau PIN pour demande d'accès -->
+      <div id="sw-acc-step-pin-demande" style="display:none;padding:0">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);text-align:center;letter-spacing:1px;margin-bottom:12px">Demande d'accès</div>
+        <p style="font-size:13px;color:var(--white);margin-bottom:10px;line-height:1.5;text-align:center">Choisis un code PIN en cas de déconnexion</p>
+        <div style="display:flex;gap:12px;justify-content:center;margin-bottom:8px">
+          <input id="sw-pin-d-0" type="tel" maxlength="1" style="width:56px;height:64px;font-size:32px;font-weight:700;text-align:center;border-radius:10px;border:2px solid var(--border2);background:var(--card);color:var(--white);outline:none" onfocus="this.value=''" oninput="swPinDemandeInput(0,this)">
+          <input id="sw-pin-d-1" type="tel" maxlength="1" style="width:56px;height:64px;font-size:32px;font-weight:700;text-align:center;border-radius:10px;border:2px solid var(--border2);background:var(--card);color:var(--white);outline:none" onfocus="this.value=''" oninput="swPinDemandeInput(1,this)">
+          <input id="sw-pin-d-2" type="tel" maxlength="1" style="width:56px;height:64px;font-size:32px;font-weight:700;text-align:center;border-radius:10px;border:2px solid var(--border2);background:var(--card);color:var(--white);outline:none" onfocus="this.value=''" oninput="swPinDemandeInput(2,this)">
+          <input id="sw-pin-d-3" type="tel" maxlength="1" style="width:56px;height:64px;font-size:32px;font-weight:700;text-align:center;border-radius:10px;border:2px solid var(--border2);background:var(--card);color:var(--white);outline:none" onfocus="this.value=''" oninput="swPinDemandeInput(3,this)">
+        </div>
+      </div>
+      <!-- STEP PIN CONNEXION : saisie du PIN existant pour connexion -->
+      <div id="sw-acc-step-pin-connect" style="display:none;padding:0">
+        <div id="sw-pin-c-title" style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);text-align:center;letter-spacing:1px;margin-bottom:12px">Connexion</div>
+        <p style="font-size:13px;color:var(--white);margin-bottom:10px;line-height:1.5;text-align:center">Entre ton code PIN</p>
+        <div style="display:flex;gap:12px;justify-content:center;margin-bottom:8px">
+          <input id="sw-pin-c-0" type="tel" maxlength="1" style="width:56px;height:64px;font-size:32px;font-weight:700;text-align:center;border-radius:10px;border:2px solid var(--border2);background:var(--card);color:var(--white);outline:none" onfocus="this.value=''" oninput="swPinConnectInput(0,this)">
+          <input id="sw-pin-c-1" type="tel" maxlength="1" style="width:56px;height:64px;font-size:32px;font-weight:700;text-align:center;border-radius:10px;border:2px solid var(--border2);background:var(--card);color:var(--white);outline:none" onfocus="this.value=''" oninput="swPinConnectInput(1,this)">
+          <input id="sw-pin-c-2" type="tel" maxlength="1" style="width:56px;height:64px;font-size:32px;font-weight:700;text-align:center;border-radius:10px;border:2px solid var(--border2);background:var(--card);color:var(--white);outline:none" onfocus="this.value=''" oninput="swPinConnectInput(2,this)">
+          <input id="sw-pin-c-3" type="tel" maxlength="1" style="width:56px;height:64px;font-size:32px;font-weight:700;text-align:center;border-radius:10px;border:2px solid var(--border2);background:var(--card);color:var(--white);outline:none" onfocus="this.value=''" oninput="swPinConnectInput(3,this)">
         </div>
       </div>
       <div id="sw-acc-step2" style="display:none;padding:0 4px">
@@ -4237,7 +4432,7 @@ function checkFbSession() {
       </div>
     </div>
     <div class="mfoot" style="flex-direction:column;gap:8px;flex-shrink:0">
-      <button id="sw-acc-back-btn" onclick="swAccBack()" style="display:none;width:100%;background:none;border:1px solid var(--border2);border-radius:8px;padding:8px;color:var(--muted2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer">Retour</button>
+      <button id="sw-acc-pin-validate-btn" onclick="swAccValidatePinDemande()" style="display:none;width:100%;background:var(--gold);color:#000;border:none;border-radius:8px;padding:12px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer;opacity:0.35">Valider le code PIN</button>
       <button class="mbtn sec" onclick="swAccCleanupAndClose()">Fermer</button>
     </div>
   </div>
