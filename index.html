@@ -4123,6 +4123,16 @@ function swAccReset() {
   if (inp2) { inp2.removeAttribute('readonly'); inp2.style.caretColor = ''; }
 }
 
+// Nettoie le listener touchstart global AVANT de fermer la modale (sinon il reste actif et ralentit toute l'appli)
+function swAccCleanupAndClose() {
+  var dd = document.getElementById('sw-acc-dropdown');
+  if (dd && dd._outsideTapHandler) {
+    document.removeEventListener('touchstart', dd._outsideTapHandler);
+    dd._outsideTapHandler = null;
+  }
+  closeM('m-sw-access');
+}
+
 function checkFbSession() {
   if (_adminMode) return;
   if (window._swLoaded) return;
@@ -4209,7 +4219,7 @@ function checkFbSession() {
     </div>
     <div class="mfoot" style="flex-direction:column;gap:8px;flex-shrink:0">
       <button id="sw-acc-back-btn" onclick="swAccBack()" style="display:none;width:100%;background:none;border:1px solid var(--border2);border-radius:8px;padding:8px;color:var(--muted2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer">Retour</button>
-      <button class="mbtn sec" onclick="closeM('m-sw-access')">Fermer</button>
+      <button class="mbtn sec" onclick="swAccCleanupAndClose()">Fermer</button>
     </div>
   </div>
 </div>
