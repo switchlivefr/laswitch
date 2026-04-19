@@ -453,20 +453,6 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
     <div class="sht" style="color:#1877f2;text-shadow:0 0 40px rgba(24,119,242,.35)">MES PRESTAS</div>
     <div class="shsub" id="prestas-sub" style="color:var(--white)">Tes prestations SWiTCH</div>
   </div>
-  <!-- État : non connecté -->
-  <div id="prestas-nologin" style="padding:32px 20px;text-align:center">
-    <div style="font-size:52px;margin-bottom:16px">🎬</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:8px">Tes vidéos SWiTCH</div>
-    <div style="font-size:14px;color:var(--muted2);line-height:1.7;margin-bottom:28px">Connecte-toi avec Facebook pour accéder<br>à tes prestations SWiTCH en un clin d'œil</div>
-    <button onclick="fbLogin()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#1877f2;border:none;border-radius:12px;padding:16px;cursor:pointer">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-      <span style="color:#fff;font-size:16px;font-weight:700;font-family:'DM Sans',sans-serif">Continuer avec Facebook</span>
-    </button>
-    <button onclick="swOpenAccess()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:none;border:1px solid var(--border2);border-radius:12px;padding:14px;cursor:pointer;margin-top:12px">
-      <span style="font-size:20px">🎬</span>
-      <span style="color:var(--white);font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif">Accès SWiTCH</span>
-    </button>
-  </div>
   <!-- État : chargement -->
   <div id="prestas-loading" style="display:none;padding:48px 20px;text-align:center">
     <div style="width:36px;height:36px;border:3px solid rgba(52,209,192,.2);border-top:3px solid var(--cyan);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px"></div>
@@ -3294,7 +3280,6 @@ function fbLogout() {
 }
 
 function showNoFriend(me) {
-  document.getElementById('prestas-nologin').style.display = 'none';
   document.getElementById('prestas-loading').style.display = 'none';
   document.getElementById('prestas-loggedin').style.display = 'none';
   document.getElementById('prestas-empty').style.display = 'none';
@@ -3332,7 +3317,6 @@ function sendFriendRequest() {
 }
 
 function checkFriendshipAndLoad(me) {
-  document.getElementById('prestas-nologin').style.display = 'none';
   document.getElementById('prestas-loggedin').style.display = 'none';
   document.getElementById('prestas-empty').style.display = 'none';
   document.getElementById('prestas-nofriend').style.display = 'none';
@@ -3370,7 +3354,6 @@ function checkFriendshipAndLoad(me) {
 }
 
 function loadPrestas(me) {
-  document.getElementById('prestas-nologin').style.display = 'none';
   document.getElementById('prestas-loggedin').style.display = 'none';
   document.getElementById('prestas-empty').style.display = 'none';
   document.getElementById('prestas-nofriend').style.display = 'none';
@@ -3782,7 +3765,6 @@ var _swAccLinks = {};
 function swAdminVoirVideos() {
   closeM('m-sw-admin');
   nav('p-prestas');
-  document.getElementById('prestas-nologin').style.display  = 'none';
   document.getElementById('prestas-loggedin').style.display = 'none';
   document.getElementById('prestas-empty').style.display    = 'none';
   document.getElementById('prestas-nofriend').style.display = 'none';
@@ -3911,7 +3893,6 @@ function swShowPending(token, name) {
 }
 
 function swVerifyToken(token, name) {
-  document.getElementById('prestas-nologin').style.display  = 'none';
   document.getElementById('prestas-loggedin').style.display = 'none';
   document.getElementById('prestas-empty').style.display    = 'none';
   document.getElementById('prestas-nofriend').style.display = 'none';
@@ -3928,15 +3909,17 @@ function swVerifyToken(token, name) {
       } else if (data.pending) {
         openM('m-sw-pending');
       } else {
+        // Token invalide : nettoyer la mémoire et rouvrir la modale d'accès
         localStorage.removeItem('sw_token');
         localStorage.removeItem('sw_name');
         window._swLoaded = false;
-        document.getElementById('prestas-nologin').style.display = 'block';
+        swOpenAccess();
       }
     })
     .catch(function(){
       document.getElementById('prestas-loading').style.display = 'none';
-      document.getElementById('prestas-nologin').style.display = 'block';
+      // En cas d'erreur réseau, rouvrir la modale d'accès pour que l'utilisateur retente
+      swOpenAccess();
     });
 }
 
@@ -4432,17 +4415,26 @@ function checkFbSession() {
   // Fallback ancien flux (token en attente de validation par Marco — AVANT que le PIN ne soit inventé)
   var swToken = localStorage.getItem('sw_token');
   if (swToken && swName && !_fbUser) { swVerifyToken(swToken, swName); return; }
-  if (typeof FB === 'undefined') return;
-  FB.getLoginStatus(function(response) {
-    if (response.status === 'connected' && !_fbUser) {
-      FB.api('/me', { fields: 'id,name,first_name' }, function(me) {
-        _fbUser = me;
-        checkFriendshipAndLoad(me);
-      });
-    } else if (response.status === 'connected' && _fbUser) {
-      checkFriendshipAndLoad(_fbUser);
-    }
-  });
+  // Session Facebook déjà ouverte ?
+  if (typeof FB !== 'undefined') {
+    FB.getLoginStatus(function(response) {
+      if (response.status === 'connected' && !_fbUser) {
+        FB.api('/me', { fields: 'id,name,first_name' }, function(me) {
+          _fbUser = me;
+          checkFriendshipAndLoad(me);
+        });
+        return;
+      } else if (response.status === 'connected' && _fbUser) {
+        checkFriendshipAndLoad(_fbUser);
+        return;
+      }
+      // Pas connecté : ouvrir la modale d'accès (remplace l'ancienne page prestas-nologin)
+      swOpenAccess();
+    });
+    return;
+  }
+  // Pas de SDK FB : ouvrir direct la modale d'accès
+  swOpenAccess();
 }
 
 </script>
