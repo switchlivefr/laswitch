@@ -3870,6 +3870,7 @@ function swVerifyToken(token, name) {
     .then(function(data) {
       document.getElementById('prestas-loading').style.display = 'none';
       if (data.ok && data.fbId) {
+        window._swLoaded = true;
         nav('p-prestas');
         var fakeMe = { id: data.fbId, name: name, first_name: name.split(' ')[0] };
         loadPrestas(fakeMe);
@@ -3878,6 +3879,7 @@ function swVerifyToken(token, name) {
       } else {
         localStorage.removeItem('sw_token');
         localStorage.removeItem('sw_name');
+        window._swLoaded = false;
         document.getElementById('prestas-nologin').style.display = 'block';
       }
     })
@@ -4039,6 +4041,7 @@ function swAccReset() {
 
 function checkFbSession() {
   if (_adminMode) return;
+  if (window._swLoaded) return;
   var swToken = localStorage.getItem('sw_token');
   var swName  = localStorage.getItem('sw_name');
   if (swToken && swName && !_fbUser) { swVerifyToken(swToken, swName); return; }
