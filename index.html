@@ -1666,6 +1666,8 @@ function openM(id){
   }
   var el=document.getElementById(id);el.classList.add('open');
   document.body.style.overflow='hidden';document.body.classList.add('modal-open');
+  // Lancer les vidéos contenues dans la modale (elles ne sont plus en autoplay)
+  try { el.querySelectorAll('video').forEach(function(v){ try { v.play(); } catch(e) {} }); } catch(e) {}
   // Pour m-marco : réserver l'espace du bouton Plus de détails en bas
   if(id==='m-marco'){
     var rmb=document.getElementById('rules-more-btn');
@@ -1698,6 +1700,8 @@ function closeM(id){
   hideScrollHints();
   document.body.classList.remove('coverlay-open');
   var closedEl=document.getElementById(id);closedEl.classList.remove('open');closedEl.style.bottom='';
+  // Pauser les vidéos de la modale pour libérer CPU/réseau
+  try { closedEl.querySelectorAll('video').forEach(function(v){ try { v.pause(); } catch(e) {} }); } catch(e) {}
   if(!document.querySelector('.moverlay.open')&&!document.querySelector('.coverlay.open')){
     document.body.style.overflow='';document.body.classList.remove('modal-open');
     // Relancer les scroll hints si on est sur p-rules
@@ -1780,10 +1784,13 @@ function _renderPrcRows(el, rows, cs, ce, ci){
       if(isVideo){
         var vid=document.createElement('video');
         vid.src=url;
-        vid.autoplay=true;
+        // Autoplay uniquement hors modale (panneau desktop). Dans une modale, c'est openM/closeM qui gère play/pause.
+        var inModal = !!el.closest('.moverlay');
+        if(!inModal) vid.autoplay=true;
         vid.muted=true;
         vid.loop=true;
         vid.playsInline=true;
+        vid.preload='metadata';
         vid.style.cssText=cssBase+';height:auto';
         el.appendChild(vid);
       } else {
@@ -3938,6 +3945,12 @@ function swOpenAccess() {
   swAccReset();
   swLoadNames();
   openM('m-sw-access');
+  // Anti-scroll : le clavier virtuel iOS/Android fait remonter la page derrière la modale.
+  // Tant que m-sw-access est ouvert, on force window à rester en haut.
+  if (!window._swAccScrollLock) {
+    window._swAccScrollLock = function() { if (window.scrollY !== 0) window.scrollTo(0, 0); };
+    window.addEventListener('scroll', window._swAccScrollLock, { passive: true });
+  }
 }
 
 function swLoadNames() {
@@ -4137,6 +4150,11 @@ function swAccCleanupAndClose() {
   if (dd && dd._outsideTapHandler) {
     document.removeEventListener('touchstart', dd._outsideTapHandler);
     dd._outsideTapHandler = null;
+  }
+  // Retirer le listener anti-scroll
+  if (window._swAccScrollLock) {
+    window.removeEventListener('scroll', window._swAccScrollLock);
+    window._swAccScrollLock = null;
   }
   closeM('m-sw-access');
   if (_swAccReturnPage && _swAccReturnPage !== currentPage) {
