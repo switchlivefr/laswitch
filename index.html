@@ -3943,6 +3943,8 @@ function swVerifyToken(token, name) {
     });
 }
 
+var _swAccReturnPage = null;
+
 function swOpenAccess() {
   var swToken = localStorage.getItem('sw_token');
   var swName  = localStorage.getItem('sw_name');
@@ -3951,6 +3953,10 @@ function swOpenAccess() {
     swShowPending(swToken, swName);
     return;
   }
+  // Mémoriser la page actuelle, puis basculer sur Répertoire (page légère)
+  // pour libérer les ressources de l'accueil (vidéo, gif, diaporama, animations)
+  _swAccReturnPage = currentPage;
+  if (currentPage !== 'p-switch') nav('p-switch');
   swAccReset();
   swLoadNames();
   openM('m-sw-access');
@@ -4147,6 +4153,7 @@ function swAccReset() {
 }
 
 // Nettoie le listener touchstart global AVANT de fermer la modale (sinon il reste actif et ralentit toute l'appli)
+// Et restaure la page d'origine (on avait basculé sur p-switch pour libérer les ressources de l'accueil)
 function swAccCleanupAndClose() {
   var dd = document.getElementById('sw-acc-dropdown');
   if (dd && dd._outsideTapHandler) {
@@ -4154,6 +4161,10 @@ function swAccCleanupAndClose() {
     dd._outsideTapHandler = null;
   }
   closeM('m-sw-access');
+  if (_swAccReturnPage && _swAccReturnPage !== currentPage) {
+    nav(_swAccReturnPage);
+  }
+  _swAccReturnPage = null;
 }
 
 function checkFbSession() {
