@@ -548,7 +548,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 </div>
 <nav class="bnav">
   <button class="bn active" id="bn-home" onclick="nav('p-home')"><span class="ico">🏠</span><span>Accueil</span></button>
-  <button class="bn" id="bn-prestas" onclick="unlockPrestas()" style="opacity:0.35;pointer-events:auto"><span class="ico">🎬</span><span>Mes Prestas</span></button>
+  <button class="bn" id="bn-prestas" onclick="unlockPrestas()"><span class="ico">🎬</span><span>Mes Prestas</span></button>
   <button class="bn" id="bn-switch" onclick="nav('p-switch')"><span class="ico" style="filter:hue-rotate(140deg) saturate(3) brightness(1.2)">🎵</span><span>Répertoire</span></button>
   <button class="bn" id="bn-osl" onclick="nav('p-osl')"><span class="ico">✨</span><span id="osl-bn-label">One Shot Live</span></button>
   <button class="bn" id="bn-rules" onclick="nav('p-rules')"><span class="ico">📋</span><span>Inscription</span></button>
@@ -3296,10 +3296,8 @@ function fbLogout() {
   localStorage.removeItem('sw_loggedIn');
   _swAccHasPinCache = {}; // invalider le cache pour forcer une revérif à la prochaine saisie
   _prestasUnlocked = false;
-  var btn = document.getElementById('bn-prestas');
-  if (btn) btn.style.opacity = '0.35';
+  window._swLoaded = false;
   if (typeof FB !== 'undefined') FB.logout(function(){});
-  nav('p-home');
 }
 
 function showNoFriend(me) {
@@ -3667,8 +3665,6 @@ function adminTap() {
     _adminMode = !_adminMode;
     _prestasUnlocked = false;
     _prestasClicks = 0;
-    var btn2 = document.getElementById('bn-prestas');
-    if (btn2) { btn2.style.opacity = '0.35'; btn2.onclick = function(){ unlockPrestas(); }; }
     var t = document.createElement('div');
     t.textContent = _adminMode ? '🔧 MODE ADMIN ACTIF' : '👤 MODE UTILISATEUR';
     t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:' + (_adminMode ? '#e53935' : '#1877f2') + ';color:#fff;padding:10px 24px;border-radius:20px;font-size:15px;font-weight:700;z-index:9999;font-family:DM Sans,sans-serif';
@@ -3681,32 +3677,16 @@ var _prestasClicks = 0;
 var _prestasUnlocked = false;
 function unlockPrestas() {
   if (_adminMode) {
-    _prestasClicks++;
-    clearTimeout(_prestasTimer);
-    _prestasTimer = setTimeout(function(){ _prestasClicks = 0; }, 1500);
-    if (_prestasClicks >= 10) {
-      _prestasClicks = 0;
-      swLoadAdminRequests();
-      openM('m-sw-admin');
-    }
+    swLoadAdminRequests();
+    openM('m-sw-admin');
     return;
   }
-  // Utilisateur déjà connecté : ne pas relancer de recherche ni ouvrir la modale d'accès
-  // On se contente de basculer sur p-prestas si on n'y est pas déjà
+  // Utilisateur déjà connecté : basculer sur p-prestas
   if (window._swLoaded) {
     if (currentPage !== 'p-prestas') nav('p-prestas');
     return;
   }
-  if (_prestasUnlocked) { swOpenAccess(); return; }
-  _prestasClicks++;
-  clearTimeout(_prestasTimer);
-  _prestasTimer = setTimeout(function(){ _prestasClicks = 0; }, 1500);
-  if (_prestasClicks >= 10) {
-    _prestasUnlocked = true;
-    var btn = document.getElementById('bn-prestas');
-    btn.style.opacity = '1';
-    swOpenAccess();
-  }
+  swOpenAccess();
 }
 
 
