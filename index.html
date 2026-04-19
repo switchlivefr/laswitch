@@ -167,7 +167,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .moverlay.open{display:flex}
 .mbody a,.mbody a *{-webkit-touch-callout:none !important;-webkit-user-select:none !important;user-select:none !important}
 .mbody a{display:block}
-.mbox{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);width:100%;max-width:460px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden}
+.mbox{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);width:100%;max-width:460px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden}#m-sw-access .mbox{max-height:none}#m-sw-access{overflow:hidden}#m-sw-access .mbody{overflow:hidden;flex:none}
 /* Modale pitch : layout avec colonne photos gauche */
 #m-home-pitch .mbox,#m-pitch-big .mbox{max-width:460px;flex-direction:column}
 #m-home-pitch .mbox-inner,#m-pitch-big .mbox-inner{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
@@ -1690,7 +1690,7 @@ function openM(id){
       }
     },300);
   }
-  if(id!=='m-marco'&&id!=='m-pin'&&id!=='m-prc'&&id!=='m-resa'&&id!=='m-renseignements'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
+  if(id!=='m-marco'&&id!=='m-pin'&&id!=='m-prc'&&id!=='m-resa'&&id!=='m-renseignements'&&id!=='m-sw-access'&&id!=='m-sw-admin'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
 }
 function closeM(id){
   if(id==='m-resa'){clearTimeout(_prcTimer);_prcTimer=null;}
@@ -3787,6 +3787,9 @@ function swAdminVoirVideos() {
       document.getElementById('prestas-username').textContent = 'Marco — toutes les videos';
       document.getElementById('prestas-count').textContent = videos.length + ' PRESTATIONS SWiTCH';
       document.getElementById('prestas-sub').textContent = videos.length + ' prestations';
+      // Afficher la barre de recherche admin
+      document.getElementById('prestas-search-bar').style.display = 'block';
+      loadIdsFbk();
       renderVideoList(videos);
       document.getElementById('prestas-loggedin').style.display = 'flex';
       document.getElementById('prestas-loggedin').style.flexDirection = 'column';
@@ -4079,6 +4082,7 @@ function checkFbSession() {
           <div style="display:flex;gap:8px;align-items:center">
             <input type="text" id="sw-acc-input" placeholder="Ton nom Facebook..."
               oninput="swAccFilter(this.value)" onfocus="swAccFilterFocus(this.value)"
+              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
               style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#fff;color:#000;font-size:15px;font-family:'DM Sans',sans-serif;outline:none">
             <button id="sw-acc-ok-btn" onclick="swAccStep1()"
               style="padding:10px 14px;border-radius:8px;border:none;background:var(--gold);color:#000;font-size:20px;cursor:pointer;opacity:0.35">✓</button>
