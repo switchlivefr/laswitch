@@ -1925,8 +1925,7 @@ function renderSwitch(){
   }
   var sw=document.getElementById('sw-count-sub');if(sw){var c1=g(RAW.switch.rows,0,2);sw.textContent=c1||(allSongs.length+' titres');}
   buildAlpha();
-  var q=searchQuery.toLowerCase();
-  if(q)paintSongs(allSongs.filter(function(s){return s.artist.toLowerCase().indexOf(q)>-1||s.title.toLowerCase().indexOf(q)>-1;}));
+  if(searchQuery)paintSongs(allSongs.filter(function(s){ return swMatchSong(s.artist, s.title, searchQuery); }));
   else paintSongs(allSongs);
 }
 
@@ -1975,9 +1974,9 @@ function paintSongs(list){
 }
 
 function filterSongs(q){
-  searchQuery=q.trim();var ql=searchQuery.toLowerCase();
-  if(!ql){paintSongs(allSongs);return;}
-  paintSongs(allSongs.filter(function(s){return s.artist.toLowerCase().indexOf(ql)>-1||s.title.toLowerCase().indexOf(ql)>-1;}));
+  searchQuery=q.trim();
+  if(!searchQuery){paintSongs(allSongs);return;}
+  paintSongs(allSongs.filter(function(s){ return swMatchSong(s.artist, s.title, searchQuery); }));
 }
 
 function jumpL(l){
@@ -3560,9 +3559,8 @@ function onSearchInput() {
 
 function showDropdown(q) {
   var dd = document.getElementById('prestas-search-dropdown');
-  var lower = q.toLowerCase();
   var matches = _idsFbk.filter(function(item) {
-    return item.name.toLowerCase().includes(lower);
+    return swMatchTokens(item.name, q);
   }).slice(0, 30);
 
   if (!matches.length) { closeDropdown(); return; }
@@ -3968,12 +3966,37 @@ function swNormalize(str) {
   return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-// Chaque token saisi doit commencer un mot du nom candidat (AND entre tokens, OR entre mots du nom)
+// Chaque token saisi doit commencer un MOT DISTINCT du nom candidat (AND entre tokens, chaque mot ne peut matcher qu'une fois)
 function swMatchTokens(candidate, input) {
   var inputTokens = swNormalize(input).trim().split(/\s+/).filter(function(t){ return t.length > 0; });
   var nameWords   = swNormalize(candidate).split(/\s+/).filter(function(w){ return w.length > 0; });
+  var used = [];
   return inputTokens.every(function(token) {
-    return nameWords.some(function(word) { return word.indexOf(token) === 0; });
+    for (var i = 0; i < nameWords.length; i++) {
+      if (used.indexOf(i) === -1 && nameWords[i].indexOf(token) === 0) {
+        used.push(i);
+        return true;
+      }
+    }
+    return false;
+  });
+}
+
+// Même logique pour artiste+titre (Répertoire) : chaque token doit commencer un mot distinct dans l'un ou l'autre champ
+function swMatchSong(artist, title, input) {
+  var inputTokens = swNormalize(input).trim().split(/\s+/).filter(function(t){ return t.length > 0; });
+  var artistWords = swNormalize(artist).split(/\s+/).filter(function(w){ return w.length > 0; });
+  var titleWords  = swNormalize(title).split(/\s+/).filter(function(w){ return w.length > 0; });
+  var allWords    = artistWords.concat(titleWords);
+  var used = [];
+  return inputTokens.every(function(token) {
+    for (var i = 0; i < allWords.length; i++) {
+      if (used.indexOf(i) === -1 && allWords[i].indexOf(token) === 0) {
+        used.push(i);
+        return true;
+      }
+    }
+    return false;
   });
 }
 
