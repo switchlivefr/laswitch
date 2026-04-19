@@ -4172,15 +4172,25 @@ function checkFbSession() {
   </div>
 </div>
 
-<div class="moverlay" id="m-sw-pending">
-  <div style="display:flex;align-items:center;justify-content:center;width:80px;height:80px;border-radius:50%;background:var(--card)">
-    <div id="m-sw-pending-load" style="width:40px;height:40px;border:3px solid var(--border2);border-top-color:#1877f2;border-radius:50%;animation:spin 0.8s linear infinite"></div>
-  </div>
-  <div id="m-sw-pending-msg" style="display:none;background:var(--card);border:1px solid var(--border2);border-radius:var(--r);padding:24px 20px;text-align:center;max-width:300px;width:90%">
-    <div style="font-size:48px;margin-bottom:16px">⏳</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:10px">EN ATTENTE DE VALIDATION</div>
-    <div style="font-size:14px;color:var(--muted2);line-height:1.6;margin-bottom:16px">Ta demande a bien été envoyée à Marco.<br>Tu recevras l'accès dès qu'il l'aura validée.</div>
-    <button class="mbtn sec" onclick="closeM('m-sw-pending')" style="width:100%">Fermer</button>
+<div class="moverlay" id="m-sw-pending" onclick="if(event.target===this)closeM('m-sw-pending')">
+  <div class="mbox" style="display:flex;flex-direction:column;width:100%">
+    <div class="mhead" style="text-align:center;flex-shrink:0;padding:16px 18px 12px">
+      <h3 style="color:#1877f2;margin:0">DEMANDE D'ACCES</h3>
+    </div>
+    <div class="mbody" style="text-align:center;padding:20px 18px;overflow:hidden">
+      <div id="m-sw-pending-load" style="display:block">
+        <div style="width:40px;height:40px;border:3px solid var(--border2);border-top-color:#1877f2;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px"></div>
+        <div style="font-size:14px;color:var(--muted2)">Vérification en cours...</div>
+      </div>
+      <div id="m-sw-pending-msg" style="display:none">
+        <div style="font-size:48px;margin-bottom:16px">⏳</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:10px">EN ATTENTE DE VALIDATION</div>
+        <div style="font-size:14px;color:var(--muted2);line-height:1.6">Ta demande a bien été envoyée à Marco.<br>Tu recevras l'accès dès qu'il l'aura validée.</div>
+      </div>
+    </div>
+    <div class="mfoot" style="flex-shrink:0">
+      <button class="mbtn sec" onclick="closeM('m-sw-pending')">Fermer</button>
+    </div>
   </div>
 </div>
 </body>
