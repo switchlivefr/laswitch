@@ -3919,13 +3919,17 @@ function swAccFilterFocus(val) {
   swAccFilter(val);
 }
 
+function swNormalize(str) {
+  return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
 function swAccFilter(val) {
   var dd  = document.getElementById('sw-acc-dropdown');
   var btn = document.getElementById('sw-acc-ok-btn');
   _swAccName = val;
   btn.style.opacity = val.trim().length >= 1 ? '1' : '0.35';
   if (!val || val.length < 1) { dd.style.display = 'none'; return; }
-  var filtered = _swAccNames.filter(function(n){ return n.toLowerCase().includes(val.toLowerCase()); });
+  var filtered = _swAccNames.filter(function(n){ return swNormalize(n).includes(swNormalize(val)); });
   if (!filtered.length) { dd.style.display = 'none'; return; }
   dd.innerHTML = '';
   // Positionner en fixed sous l'input
