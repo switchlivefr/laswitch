@@ -3946,7 +3946,8 @@ function swOpenAccess() {
   // Priorité absolue : utilisateur déjà connecté par PIN → bascule directe sur p-prestas
   // (garde-fou en plus de celui de unlockPrestas, pour tous les chemins d'appel)
   if (localStorage.getItem('sw_loggedIn') === '1' && localStorage.getItem('sw_name')) {
-    window._swLoaded = true;
+    // Ne PAS mettre _swLoaded ici : c'est checkFbSession (appelée par nav) qui le fera
+    // après avoir effectivement lancé loadPrestas
     if (currentPage !== 'p-prestas') nav('p-prestas');
     return;
   }
