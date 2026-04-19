@@ -4417,19 +4417,17 @@ function swAccCleanupAndClose() {
 
 function checkFbSession() {
   if (_adminMode) return;
-  var dbg = document.getElementById('prestas-sub');
-  if (window._swLoaded) { if(dbg) dbg.textContent='[DBG] _swLoaded=true, skip'; return; }
+  if (window._swLoaded) return;
   var swLoggedIn = localStorage.getItem('sw_loggedIn');
   var swName = localStorage.getItem('sw_name');
-  var swToken = localStorage.getItem('sw_token');
-  var swFbId = localStorage.getItem('sw_fbId');
-  if(dbg) dbg.textContent='[DBG] loggedIn='+swLoggedIn+' name='+swName+' token='+(swToken?'oui':'non')+' fbId='+swFbId;
   if (swLoggedIn === '1' && swName) {
     window._swLoaded = true;
-    var fakeMe = { id: swFbId || '', name: swName, first_name: swName.split(' ')[0] };
+    var swFbId = localStorage.getItem('sw_fbId') || '';
+    var fakeMe = { id: swFbId, name: swName, first_name: swName.split(' ')[0] };
     loadPrestas(fakeMe);
     return;
   }
+  var swToken = localStorage.getItem('sw_token');
   if (swToken && swName && !_fbUser) { swVerifyToken(swToken, swName); return; }
   if (typeof FB === 'undefined') return;
   FB.getLoginStatus(function(response) {
