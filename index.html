@@ -3860,20 +3860,27 @@ function swAdminValidate(name, btn) {
 }
 
 function swVerifyToken(token, name) {
+  // Naviguer vers p-prestas et afficher le loading
+  nav('p-prestas');
   document.getElementById('prestas-nologin').style.display  = 'none';
   document.getElementById('prestas-loggedin').style.display = 'none';
   document.getElementById('prestas-empty').style.display    = 'none';
   document.getElementById('prestas-nofriend').style.display = 'none';
   document.getElementById('prestas-loading').style.display  = 'block';
+  var timeout = setTimeout(function(){
+    document.getElementById('prestas-loading').style.display = 'none';
+    document.getElementById('prestas-nologin').style.display = 'block';
+  }, 8000);
   fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=verifyToken&token=' + encodeURIComponent(token) + '&name=' + encodeURIComponent(name))
     .then(function(r){ return r.json(); })
     .then(function(data) {
+      clearTimeout(timeout);
       document.getElementById('prestas-loading').style.display = 'none';
       if (data.ok && data.fbId) {
-        nav('p-prestas');
         var fakeMe = { id: data.fbId, name: name, first_name: name.split(' ')[0] };
         loadPrestas(fakeMe);
       } else if (data.pending) {
+        document.getElementById('prestas-nologin').style.display = 'block';
         openM('m-sw-pending');
       } else {
         localStorage.removeItem('sw_token');
@@ -3882,6 +3889,7 @@ function swVerifyToken(token, name) {
       }
     })
     .catch(function(){
+      clearTimeout(timeout);
       document.getElementById('prestas-loading').style.display = 'none';
       document.getElementById('prestas-nologin').style.display = 'block';
     });
