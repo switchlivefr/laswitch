@@ -654,7 +654,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 </div>
 
 <!-- MODALE : Contacter Marco (appui long sur un titre) -->
-<div class="moverlay" id="m-marco" onclick="if(event.target===this)closeM('m-marco')">
+<div class="moverlay" id="m-marco">
   <div class="mbox" style="display:flex;flex-direction:column;max-height:calc(88vh - 64px)">
     <div class="mhead" style="text-align:center;flex-shrink:0">
       <h3 id="m-marco-head" style="color:var(--gold)">CONTACTE MARCO POUR T'INSCRIRE</h3>
@@ -750,7 +750,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 </div>
 
 <!-- MODALE INSCRIPTIONS CLOSES -->
-<div class="moverlay" id="m-closes" onclick="if(event.target===this)closeM('m-closes')">
+<div class="moverlay" id="m-closes">
   <div class="mbox">
     <div class="mhead" style="text-align:center"><h3 id="m-closes-head" style="color:var(--gold)">INSCRIPTIONS SUSPENDUES</h3></div>
     <div class="mfoot" style="flex-direction:column;gap:8px">
@@ -3278,7 +3278,7 @@ document.querySelector('.bnav').classList.add('nav-disabled');
   <div class="loader-title">SWiTCH 💫</div>
   <div class="loader-spin" id="loader-spin"></div>
   <div id="loader-weak" style="display:none;flex-direction:column;align-items:center;gap:10px;text-align:center">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);letter-spacing:2px">Connexion faible</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);letter-spacing:2px">Echec de connexion</div>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--muted2);letter-spacing:2px">Relance de l'appli</div>
     <div id="loader-countdown" style="font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--gold);letter-spacing:4px;margin-top:4px">3</div>
   </div>
@@ -4033,10 +4033,8 @@ function swAccFilterFocus(val) {
     inp.style.caretColor = '';
     _swAccSelectedFromList = false;
     _swAccName = '';
-    var db = document.getElementById('sw-acc-demande-btn');
-    if (db) { db.style.opacity = '0.35'; db.disabled = true; }
-    var cb = document.getElementById('sw-acc-connect-btn');
-    if (cb) { cb.style.opacity = '0.35'; cb.disabled = true; }
+    var ab = document.getElementById('sw-acc-action-btn');
+    if (ab) { ab.style.opacity = '0.35'; ab.disabled = true; ab.textContent = ''; ab.style.background = '#555'; }
     document.getElementById('sw-acc-dropdown').style.display = 'none';
     return;
   }
@@ -4152,12 +4150,10 @@ function swAccHideLoading() {
 var _swAccHasPinCache = {};
 var _swAccHasPinSeq = 0; // séquence pour ignorer les réponses obsolètes
 function swAccUpdateButtons(name) {
-  var demandeBtn = document.getElementById('sw-acc-demande-btn');
-  var connectBtn = document.getElementById('sw-acc-connect-btn');
+  var btn = document.getElementById('sw-acc-action-btn');
   var n = (name || '').trim();
   if (!n) {
-    if (demandeBtn) { demandeBtn.style.opacity = '0.35'; demandeBtn.disabled = true; }
-    if (connectBtn) { connectBtn.style.opacity = '0.35'; connectBtn.disabled = true; }
+    if (btn) { btn.style.opacity = '0.35'; btn.disabled = true; btn.textContent = ''; btn.style.background = '#555'; }
     return;
   }
   // Cache disponible : appliquer immédiatement sans sablier
@@ -4166,10 +4162,9 @@ function swAccUpdateButtons(name) {
     _applyBtnState(cached);
     return;
   }
-  // État transitoire : désactiver les 2 boutons pendant la vérif
-  if (demandeBtn) demandeBtn.disabled = true;
-  if (connectBtn) connectBtn.disabled = true;
-  // Sablier UNIQUEMENT si la sélection vient du dropdown (pas pendant la frappe)
+  // Désactiver pendant la vérif
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.35'; }
+  // Sablier UNIQUEMENT si la sélection vient du dropdown
   var seq = ++_swAccHasPinSeq;
   var loadingTimer = null;
   if (_swAccSelectedFromList) {
@@ -4181,9 +4176,8 @@ function swAccUpdateButtons(name) {
     .then(function(r){ return r.json(); })
     .then(function(data){
       if (loadingTimer) clearTimeout(loadingTimer);
-      if (seq !== _swAccHasPinSeq) return; // réponse obsolète
+      if (seq !== _swAccHasPinSeq) return;
       _swAccHasPinCache[n.toLowerCase()] = !!data.hasPin;
-      // Vérifier que le nom dans l'input n'a pas changé
       var currentName = (document.getElementById('sw-acc-input').value || '').trim();
       if (currentName.toLowerCase() !== n.toLowerCase()) { swAccHideLoading(); return; }
       _applyBtnState(!!data.hasPin);
@@ -4198,19 +4192,29 @@ function swAccUpdateButtons(name) {
     });
 }
 
-// Applique l'état final des 2 boutons selon le résultat hasPin
+// Applique l'état du bouton unique selon hasPin
 function _applyBtnState(hasPin) {
-  var demandeBtn = document.getElementById('sw-acc-demande-btn');
-  var connectBtn = document.getElementById('sw-acc-connect-btn');
+  var btn = document.getElementById('sw-acc-action-btn');
+  if (!btn) return;
+  btn.style.opacity = '1';
+  btn.disabled = false;
   if (hasPin) {
-    // PIN existe : Connexion active, Demande grisée ET désactivée
-    if (connectBtn) { connectBtn.style.opacity = '1'; connectBtn.disabled = false; }
-    if (demandeBtn) { demandeBtn.style.opacity = '0.35'; demandeBtn.disabled = true; }
+    btn.textContent = 'Connexion';
+    btn.style.background = '#e53935';
+    btn._mode = 'connect';
   } else {
-    // Pas de PIN : Demande active, Connexion grisée
-    if (demandeBtn) { demandeBtn.style.opacity = '1'; demandeBtn.disabled = false; }
-    if (connectBtn) { connectBtn.style.opacity = '0.35'; connectBtn.disabled = true; }
+    btn.textContent = "Demande d'accès";
+    btn.style.background = '#1877f2';
+    btn._mode = 'demande';
   }
+}
+
+// Clic sur le bouton unique : déléguer selon le mode
+function swAccActionClick() {
+  var btn = document.getElementById('sw-acc-action-btn');
+  if (!btn || btn.disabled) return;
+  if (btn._mode === 'connect') swAccGoConnect();
+  else swAccGoDemande();
 }
 
 // ============================================================
@@ -4219,8 +4223,8 @@ function _applyBtnState(hasPin) {
 var _swPinDemande = '';    // PIN saisi par l'utilisateur (mémorisé pour être envoyé lors du click réseau social)
 
 function swAccGoDemande() {
-  var btn = document.getElementById('sw-acc-demande-btn');
-  if (btn && btn.disabled) return; // Sécurité : refuse si un PIN existe déjà
+  var btn = document.getElementById('sw-acc-action-btn');
+  if (btn && btn.disabled) return;
   var name = (document.getElementById('sw-acc-input').value || '').trim();
   if (!name || name.length < 2) {
     document.getElementById('sw-acc-input').style.borderColor = '#e53935';
@@ -4289,8 +4293,7 @@ function swAccValidatePinDemande() {
 // FLUX CONNEXION (CAS 2)
 // ============================================================
 function swAccGoConnect() {
-  // Vérifier que le bouton est actif (PIN existe pour ce nom)
-  var btn = document.getElementById('sw-acc-connect-btn');
+  var btn = document.getElementById('sw-acc-action-btn');
   if (!btn || btn.disabled) return;
   var name = (document.getElementById('sw-acc-input').value || '').trim();
   if (!name || name.length < 2) return;
@@ -4427,11 +4430,9 @@ function swAccReset() {
   if (inp) { inp.value = ''; inp.removeAttribute('readonly'); inp.style.caretColor = ''; inp.style.borderColor = ''; }
   var dd = document.getElementById('sw-acc-dropdown');
   if (dd) { dd.style.display = 'none'; if (dd._outsideTapHandler) { document.removeEventListener('touchstart', dd._outsideTapHandler); dd._outsideTapHandler = null; } }
-  // Reset boutons Demande/Connexion à grisé ET disabled
-  var db = document.getElementById('sw-acc-demande-btn');
-  if (db) { db.style.opacity = '0.35'; db.disabled = true; }
-  var cb = document.getElementById('sw-acc-connect-btn');
-  if (cb) { cb.style.opacity = '0.35'; cb.disabled = true; }
+  // Reset bouton unique
+  var ab = document.getElementById('sw-acc-action-btn');
+  if (ab) { ab.style.opacity = '0.35'; ab.disabled = true; ab.textContent = ''; ab.style.background = '#555'; ab._mode = ''; }
   // Reset cases PIN demande + connect
   for (var i = 0; i < 4; i++) {
     var d = document.getElementById('sw-pin-d-' + i);
@@ -4531,12 +4532,9 @@ function checkFbSession() {
               style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#fff;color:#000;font-size:15px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
           <div id="sw-acc-dropdown" style="display:none;position:fixed;background:#fff;border-radius:8px;max-height:200px;overflow-y:auto;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.5);text-align:left"></div>
-          <!-- Deux boutons : Demande d'accès (bleu) + Connexion (rouge) -->
-          <div style="display:flex;gap:10px;margin-top:12px">
-            <button id="sw-acc-demande-btn" onclick="swAccGoDemande()"
-              style="flex:1;padding:12px 10px;border-radius:8px;border:none;background:#1877f2;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer;opacity:0.35">Demande d'accès</button>
-            <button id="sw-acc-connect-btn" onclick="swAccGoConnect()"
-              style="flex:1;padding:12px 10px;border-radius:8px;border:none;background:#e53935;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer;opacity:0.35">Connexion</button>
+          <div style="margin-top:12px">
+            <button id="sw-acc-action-btn" onclick="swAccActionClick()"
+              style="width:100%;padding:12px 10px;border-radius:8px;border:none;background:#555;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer;opacity:0.35" disabled></button>
           </div>
         </div>
       </div>
