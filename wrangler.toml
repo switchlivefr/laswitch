@@ -6,7 +6,6 @@ compatibility_flags = ["nodejs_compat"]
 [assets]
 directory = "."
 binding = "ASSETS"
-serve_directly = true
 
 [[kv_namespaces]]
 binding = "LASWITCH_KV"
