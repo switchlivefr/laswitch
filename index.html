@@ -3193,63 +3193,95 @@ function openResa(){window.open('https://www.proracecafe.com/reservation-pro-rac
 
 document.querySelector('.bnav').classList.add('nav-disabled');
 
-fetch('/api')
-  .then(function(r){return r.json();})
-  .then(function(nd){
-    RAW=nd;renderHome();renderContactSw();renderPromoSw();applyOslLabel();setTimeout(alignDesktopNav,100);
-    if(nd.pitchMode){_pitchMode=nd.pitchMode;}
-    if(nd.gifIndex!==undefined){window._serverGifIndex=nd.gifIndex;} // sera appliqué dans loadVideoList après chargement des gifs
-    if(nd.homeMode){
-      _lastKnownServerMode=nd.homeMode;
-      if(nd.homeMode==='alternance'){_inVideoMode=false;applySubMode('alternance',false);}
-      else if(nd.homeMode==='gif'||nd.homeMode==='photos'){_inVideoMode=false;applySubMode(nd.homeMode,false);}
-      else{_inVideoMode=true;applyHomeMode(nd.homeMode);}
-    }
-    if(nd.resaMode)applyResaMode(nd.resaMode);
-    if(nd.videoUrl)applyVideoUrl(nd.videoUrl);
-    loadVideoList();
-    setInterval(silentRefresh,30000);
-    // Animation d'entrée des boutons home-hero (une seule fois au lancement)
-    // Déclenché ici pour garantir qu'applyResaMode a déjà montré le bon bouton
-    setTimeout(function(){
-      var ed=document.getElementById('home-edition');
-      if(ed)ed.classList.add('anim-in');
-    },1000);
-    setTimeout(function(){
-      var prc=document.getElementById('home-prc-link');
-      var lieu=document.getElementById('home-lieu-link');
-      if(prc&&prc.style.display!=='none')prc.classList.add('anim-in');
-      if(lieu&&lieu.style.display!=='none')lieu.classList.add('anim-in');
-      // Flèches apparaissent une fois l'animation de glissement terminée (500ms)
-      // On synchronise haloArrow avec halo en lisant le temps écoulé de halo sur .prc-label
-      setTimeout(function(){
-        // Démarrer halo et haloArrow en même temps, glissement terminé
-        document.querySelectorAll('.prc-label').forEach(function(l){
-          l.style.animation='halo 6s ease-in-out infinite';
-        });
-        document.querySelectorAll('.prc-arrow-l,.prc-arrow-r').forEach(function(a){
-          a.style.animationDelay='0s';
-        });
-        if(prc)prc.classList.add('arrows-visible');
-        if(lieu)lieu.classList.add('arrows-visible');
-      },500);
-    },1500);
-  })
-  .catch(function(){renderHome();setInterval(silentRefresh,30000);})
-  .finally(function(){
-    var loader=document.getElementById('app-loader');
-    if(loader){loader.style.transition='opacity .4s';loader.style.opacity='0';setTimeout(function(){loader.style.display='none';},400);}
+// ── Chargement initial avec détection données incomplètes ──────────────────
+(function(){
+  var _countdownTimer = null;
+
+  function startWeakConnectionUI() {
+    var spin = document.getElementById('loader-spin');
+    if (spin) spin.style.display = 'none';
+    var weak = document.getElementById('loader-weak');
+    if (weak) weak.style.display = 'flex';
+    var loader = document.getElementById('app-loader');
+    if (loader) { loader.style.opacity = '1'; loader.style.display = 'flex'; }
+    var count = 3;
+    var cd = document.getElementById('loader-countdown');
+    if (cd) cd.textContent = count;
+    _countdownTimer = setInterval(function() {
+      count--;
+      if (cd) cd.textContent = count > 0 ? count : '↺';
+      if (count <= 0) {
+        clearInterval(_countdownTimer);
+        location.reload();
+      }
+    }, 1000);
+  }
+
+  function isDataValid(nd) {
+    if (!nd) return false;
+    if (!nd.switch || nd.switch.error) return false;
+    if (!nd.switch.rows || nd.switch.rows.length < 3) return false;
+    if (!nd.osl || nd.osl.error) return false;
+    if (!nd.osl.rows || nd.osl.rows.length < 2) return false;
+    if (!nd.regles || nd.regles.error) return false;
+    return true;
+  }
+
+  function hideLoader() {
+    var loader = document.getElementById('app-loader');
+    if (loader) { loader.style.transition = 'opacity .4s'; loader.style.opacity = '0'; setTimeout(function(){ loader.style.display = 'none'; }, 400); }
     document.querySelector('.bnav').classList.remove('nav-disabled');
-    // Apparition progressive de la colonne texte desktop
-    setTimeout(function(){
-      var c=document.getElementById('home-prc-col');
-      if(c)c.style.opacity='1';
-    },2000);
-  });
+    setTimeout(function(){ var c = document.getElementById('home-prc-col'); if (c) c.style.opacity = '1'; }, 2000);
+  }
+
+  // Pas de timeout : on attend la réponse aussi longtemps que nécessaire
+  // On vérifie uniquement que les données sont complètes à l'arrivée
+  fetch('/api')
+    .then(function(r){ return r.json(); })
+    .then(function(nd){
+      if (!isDataValid(nd)) { startWeakConnectionUI(); return; }
+      RAW=nd;renderHome();renderContactSw();renderPromoSw();applyOslLabel();setTimeout(alignDesktopNav,100);
+      if(nd.pitchMode){_pitchMode=nd.pitchMode;}
+      if(nd.gifIndex!==undefined){window._serverGifIndex=nd.gifIndex;}
+      if(nd.homeMode){
+        _lastKnownServerMode=nd.homeMode;
+        if(nd.homeMode==='alternance'){_inVideoMode=false;applySubMode('alternance',false);}
+        else if(nd.homeMode==='gif'||nd.homeMode==='photos'){_inVideoMode=false;applySubMode(nd.homeMode,false);}
+        else{_inVideoMode=true;applyHomeMode(nd.homeMode);}
+      }
+      if(nd.resaMode)applyResaMode(nd.resaMode);
+      if(nd.videoUrl)applyVideoUrl(nd.videoUrl);
+      loadVideoList();
+      setInterval(silentRefresh,30000);
+      setTimeout(function(){ var ed=document.getElementById('home-edition'); if(ed)ed.classList.add('anim-in'); },1000);
+      setTimeout(function(){
+        var prc=document.getElementById('home-prc-link');
+        var lieu=document.getElementById('home-lieu-link');
+        if(prc&&prc.style.display!=='none')prc.classList.add('anim-in');
+        if(lieu&&lieu.style.display!=='none')lieu.classList.add('anim-in');
+        setTimeout(function(){
+          document.querySelectorAll('.prc-label').forEach(function(l){ l.style.animation='halo 6s ease-in-out infinite'; });
+          document.querySelectorAll('.prc-arrow-l,.prc-arrow-r').forEach(function(a){ a.style.animationDelay='0s'; });
+          if(prc)prc.classList.add('arrows-visible');
+          if(lieu)lieu.classList.add('arrows-visible');
+        },500);
+      },1500);
+      hideLoader();
+    })
+    .catch(function(){
+      startWeakConnectionUI();
+    });
+})();
+// ────────────────────────────────────────────────────────────────────────────
 </script>
 <div id="app-loader">
   <div class="loader-title">SWiTCH 💫</div>
-  <div class="loader-spin"></div>
+  <div class="loader-spin" id="loader-spin"></div>
+  <div id="loader-weak" style="display:none;flex-direction:column;align-items:center;gap:10px;text-align:center">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);letter-spacing:2px">Connexion faible</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--muted2);letter-spacing:2px">Relance de l'appli</div>
+    <div id="loader-countdown" style="font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--gold);letter-spacing:4px;margin-top:4px">3</div>
+  </div>
 </div>
 <script>
 if('serviceWorker' in navigator){
