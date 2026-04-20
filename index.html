@@ -4464,10 +4464,9 @@ function checkFbSession() {
     <div class="mbody" style="text-align:left;overflow-y:auto;flex:1;min-height:0">
       <div id="sw-admin-list" style="padding:0 4px"></div>
     </div>
-    <div class="mfoot" style="flex-direction:column;gap:8px">
-      <button onclick="swLoadAdminRequests()" style="width:100%;background:var(--border2);border:none;border-radius:8px;padding:10px;color:var(--white);font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">ACTUALISER</button>
-      <button onclick="swAdminVoirVideos()" style="width:100%;background:#1877f2;border:none;border-radius:8px;padding:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">VOIR MES VIDEOS</button>
-      <button class="mbtn sec" onclick="closeM('m-sw-admin')">Fermer</button>
+    <div class="mfoot" style="flex-direction:row;gap:8px">
+      <button onclick="swLoadAdminRequests()" style="flex:1;background:var(--border2);border:none;border-radius:8px;padding:10px;color:var(--white);font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">ACTUALISER</button>
+      <button onclick="swAdminVoirVideos()" style="flex:1;background:#1877f2;border:none;border-radius:8px;padding:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">VOIR MES VIDEOS</button>
     </div>
   </div>
 </div>
@@ -4545,8 +4544,7 @@ function checkFbSession() {
           </button>
         </div>
         <div id="sw-acc-sent" style="display:none;padding:10px 0">
-          <div style="font-size:14px;font-weight:700;color:var(--cyan)">Message envoye !</div>
-          <div style="font-size:13px;color:var(--muted2);margin-top:4px">En attente de validation par Marco</div>
+          <div style="font-size:14px;font-weight:700;color:var(--cyan)">En attente de validation</div>
         </div>
       </div>
     </div>
