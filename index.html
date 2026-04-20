@@ -3893,11 +3893,14 @@ function swShowPending(token, name) {
   fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=verifyToken&token=' + encodeURIComponent(token) + '&name=' + encodeURIComponent(name))
     .then(function(r){ return r.json(); })
     .then(function(data) {
-      if (data.ok && data.fbId) {
-        // Validé : charger les vidéos sous la modale puis fermer
+      if (data.ok && data.fbId !== undefined) {
+        // Validé : mémoriser de façon permanente puis charger les vidéos
+        localStorage.setItem('sw_loggedIn', '1');
+        localStorage.setItem('sw_fbId', data.fbId || '');
+        localStorage.setItem('sw_name', name);
         window._swLoaded = true;
         nav('p-prestas');
-        var fakeMe = { id: data.fbId, name: name, first_name: name.split(' ')[0] };
+        var fakeMe = { id: data.fbId || '', name: name, first_name: name.split(' ')[0] };
         loadPrestas(fakeMe);
         setTimeout(function(){ closeM('m-sw-pending'); }, 800);
       } else {
@@ -3929,10 +3932,14 @@ function swVerifyToken(token, name) {
     .then(function(r){ return r.json(); })
     .then(function(data) {
       document.getElementById('prestas-loading').style.display = 'none';
-      if (data.ok && data.fbId) {
+      if (data.ok && data.fbId !== undefined) {
+        // Validation confirmée : mémoriser de façon permanente pour connexion auto
+        localStorage.setItem('sw_loggedIn', '1');
+        localStorage.setItem('sw_fbId', data.fbId || '');
+        localStorage.setItem('sw_name', name);
         window._swLoaded = true;
         nav('p-prestas');
-        var fakeMe = { id: data.fbId, name: name, first_name: name.split(' ')[0] };
+        var fakeMe = { id: data.fbId || '', name: name, first_name: name.split(' ')[0] };
         loadPrestas(fakeMe);
       } else if (data.pending) {
         openM('m-sw-pending');
