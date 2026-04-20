@@ -4460,13 +4460,10 @@ function swAccCleanupAndClose() {
     dd._outsideTapHandler = null;
   }
   closeM('m-sw-access');
+  if (_swAccReturnPage && _swAccReturnPage !== currentPage) {
+    nav(_swAccReturnPage);
+  }
   _swAccReturnPage = null;
-  // Rester sur p-prestas et afficher l'écran de login (comme le Fermer de m-pin)
-  if (currentPage !== 'p-prestas') nav('p-prestas');
-  ['prestas-loading','prestas-loggedin','prestas-empty','prestas-nofriend'].forEach(function(id){
-    var el = document.getElementById(id); if (el) el.style.display = 'none';
-  });
-  document.getElementById('prestas-nologin').style.display = 'block';
 }
 
 function checkFbSession() {
