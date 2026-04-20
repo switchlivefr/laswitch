@@ -45,7 +45,7 @@ async function readSheet(name) {
 async function handleRequest(request, env) {
   const url = new URL(request.url);
 
-  if (url.pathname === '/admin') {
+  if (url.pathname === '/marco-switch-ajoutnomfb') {
     return new Response(`<!DOCTYPE html>
 <html lang="fr">
 <head>
