@@ -46,7 +46,7 @@ async function handleRequest(request, env) {
   const url = new URL(request.url);
 
   if (url.pathname !== '/api') {
-    return env.ASSETS.fetch(request);
+    return env.ASSETS.fetch(new Request(request.url, request));
   }
 
   const action = url.searchParams.get('action');
