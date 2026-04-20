@@ -43,6 +43,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 @keyframes titlepulse{0%,100%{opacity:.1}50%{opacity:1}}
 @keyframes hintpulse{0%,100%{color:var(--gold);opacity:.1}50%{color:var(--gold);opacity:1}}
+@keyframes copyMsgPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.copy-msg-pulsing{animation:copyMsgPulse 1s ease-in-out infinite;display:inline-block;transform-origin:center}
 @keyframes rainbow{0%{color:#f2c94c}14%{color:#e8943a}28%{color:#e8407a}42%{color:#c471ed}57%{color:#5b9cf6}71%{color:#34d1c0}85%{color:#a8e063}100%{color:#f2c94c}}
 @keyframes spin{to{transform:rotate(360deg)}}
 #prc-slideshow{width:70%;aspect-ratio:1/1;overflow:hidden;border-radius:12px;background:var(--card);margin:0 auto 14px;position:relative}
@@ -2736,13 +2738,14 @@ function activateAfterCopy(){
 
 function copyMarcoMsg(){
   if(!window._marcoMsg)return;
-  navigator.clipboard.writeText(window._marcoMsg).then(function(){
-    var b=document.getElementById('m-marco-copy');if(b)b.textContent='\u2705 MESSAGE COPIÉ : CONTACTE MARCO !';
+  var applyDone = function(){
+    var b=document.getElementById('m-marco-copy');
+    if(b)b.innerHTML='<span class="copy-msg-pulsing">\u2705 MESSAGE COPI\u00c9 : CONTACTE MARCO !</span>';
     activateAfterCopy();
-  }).catch(function(){
+  };
+  navigator.clipboard.writeText(window._marcoMsg).then(applyDone).catch(function(){
     var ta=document.createElement('textarea');ta.value=window._marcoMsg;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();
-    var b=document.getElementById('m-marco-copy');if(b)b.textContent='\u2705 MESSAGE COPIÉ : CONTACTE MARCO !';
-    activateAfterCopy();
+    applyDone();
   });
 }
 
@@ -4240,7 +4243,7 @@ function swAccValidatePinDemande() {
   document.getElementById('sw-acc-social-btns').style.opacity = '0.3';
   document.getElementById('sw-acc-social-btns').style.pointerEvents = 'none';
   document.getElementById('sw-acc-sent').style.display = 'none';
-  document.getElementById('sw-acc-copy-btn').textContent = 'COPIE LE MESSAGE';
+  document.getElementById('sw-acc-copy-btn').innerHTML = '📋 COPIE LE MESSAGE';
 }
 
 // ============================================================
@@ -4342,11 +4345,11 @@ function swAccCopy() {
   var msg = document.getElementById('sw-acc-msg').textContent;
   var btn = document.getElementById('sw-acc-copy-btn');
   var done = function(){
-    btn.textContent = 'MESSAGE COPIÉ : CONTACTE MARCO !';
+    btn.innerHTML = '<span class="copy-msg-pulsing">\u2705 MESSAGE COPI\u00c9 : CONTACTE MARCO !</span>';
     document.getElementById('sw-acc-social-btns').style.opacity = '1';
     document.getElementById('sw-acc-social-btns').style.pointerEvents = 'auto';
-    localStorage.setItem('sw_token', _swAccToken);
-    localStorage.setItem('sw_name',  _swAccName);
+    // NE PAS écrire le localStorage ici : seulement dans swAccSend() après clic réseau social
+    // Sinon checkFbSession() trouve sw_token et affiche "EN ATTENTE" si on ferme sans envoyer
   };
   if (navigator.clipboard) {
     navigator.clipboard.writeText(msg).then(done).catch(function(){
@@ -4525,7 +4528,7 @@ function checkFbSession() {
         <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;margin-bottom:12px;text-align:left">
           <div id="sw-acc-msg" style="font-size:13px;color:var(--white);line-height:1.5;font-style:italic;margin-bottom:8px"></div>
           <button id="sw-acc-copy-btn" onclick="swAccCopy()"
-            style="width:100%;background:var(--gold);color:#000;border:none;border-radius:8px;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">COPIE LE MESSAGE</button>
+            style="width:100%;background:var(--gold);color:#000;border:none;border-radius:8px;padding:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">📋 COPIE LE MESSAGE</button>
         </div>
         <div id="sw-acc-social-btns" style="display:flex;gap:12px;justify-content:center;margin-bottom:4px;opacity:0.3;pointer-events:none">
           <button onclick="swAccSend('messenger')" style="display:flex;flex-direction:column;align-items:center;gap:6px;border:none;cursor:pointer;border-radius:12px;padding:14px 18px;flex:1;background:#1877f2">
