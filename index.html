@@ -4034,7 +4034,7 @@ function swAccFilterFocus(val) {
     _swAccSelectedFromList = false;
     _swAccName = '';
     var ab = document.getElementById('sw-acc-action-btn');
-    if (ab) { ab.style.opacity = '0.35'; ab.disabled = true; ab.textContent = ''; ab.style.background = '#555'; }
+    if (ab) { ab.style.opacity = '1'; ab.disabled = true; ab.textContent = 'EN ATTENTE DE...'; ab.style.background = '#555'; ab.style.color = '#333'; }
     document.getElementById('sw-acc-dropdown').style.display = 'none';
     return;
   }
@@ -4153,7 +4153,7 @@ function swAccUpdateButtons(name) {
   var btn = document.getElementById('sw-acc-action-btn');
   var n = (name || '').trim();
   if (!n) {
-    if (btn) { btn.style.opacity = '0.35'; btn.disabled = true; btn.textContent = ''; btn.style.background = '#555'; }
+    if (btn) { btn.style.opacity = '1'; btn.disabled = true; btn.textContent = 'EN ATTENTE DE...'; btn.style.background = '#555'; btn.style.color = '#333'; }
     return;
   }
   // Cache disponible : appliquer immédiatement sans sablier
@@ -4432,7 +4432,7 @@ function swAccReset() {
   if (dd) { dd.style.display = 'none'; if (dd._outsideTapHandler) { document.removeEventListener('touchstart', dd._outsideTapHandler); dd._outsideTapHandler = null; } }
   // Reset bouton unique
   var ab = document.getElementById('sw-acc-action-btn');
-  if (ab) { ab.style.opacity = '0.35'; ab.disabled = true; ab.textContent = ''; ab.style.background = '#555'; ab._mode = ''; }
+  if (ab) { ab.style.opacity = '1'; ab.disabled = true; ab.textContent = 'EN ATTENTE DE...'; ab.style.background = '#555'; ab.style.color = '#333'; ab._mode = ''; }
   // Reset cases PIN demande + connect
   for (var i = 0; i < 4; i++) {
     var d = document.getElementById('sw-pin-d-' + i);
@@ -4460,10 +4460,13 @@ function swAccCleanupAndClose() {
     dd._outsideTapHandler = null;
   }
   closeM('m-sw-access');
-  if (_swAccReturnPage && _swAccReturnPage !== currentPage) {
-    nav(_swAccReturnPage);
-  }
   _swAccReturnPage = null;
+  // Rester sur p-prestas et afficher l'écran de login (comme le Fermer de m-pin)
+  if (currentPage !== 'p-prestas') nav('p-prestas');
+  ['prestas-loading','prestas-loggedin','prestas-empty','prestas-nofriend'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.style.display = 'none';
+  });
+  document.getElementById('prestas-nologin').style.display = 'block';
 }
 
 function checkFbSession() {
@@ -4534,7 +4537,7 @@ function checkFbSession() {
           <div id="sw-acc-dropdown" style="display:none;position:fixed;background:#fff;border-radius:8px;max-height:200px;overflow-y:auto;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.5);text-align:left"></div>
           <div style="margin-top:12px">
             <button id="sw-acc-action-btn" onclick="swAccActionClick()"
-              style="width:100%;padding:12px 10px;border-radius:8px;border:none;background:#555;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer;opacity:0.35" disabled></button>
+              style="width:100%;padding:12px 10px;border-radius:8px;border:none;background:#555;color:#333;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer;opacity:1" disabled>EN ATTENTE DE...</button>
           </div>
         </div>
       </div>
