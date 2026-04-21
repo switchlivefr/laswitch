@@ -68,6 +68,7 @@ async function handleRequest(request, env) {
   --cyan:#34d1c0;
   --white:#ece9e0;
   --muted:#5a5a78;
+  --green:#4caf7d;
   --r:14px;
 }
 html,body{height:100%;overscroll-behavior:none}
@@ -89,9 +90,7 @@ body::before{
   background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(242,201,76,.08) 0%,transparent 70%);
   pointer-events:none;
 }
-.wrap{position:relative;z-index:1;width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:0}
-
-/* Titre */
+.wrap{position:relative;z-index:1;width:100%;max-width:460px;display:flex;flex-direction:column;align-items:center;gap:0}
 .title{
   font-family:'Bebas Neue',sans-serif;
   font-size:clamp(42px,12vw,64px);
@@ -104,14 +103,12 @@ body::before{
 .subtitle{
   font-family:'DM Sans',sans-serif;
   font-size:13px;
-  color:var(--muted);
+  color:var(--white);
   letter-spacing:2px;
   text-transform:uppercase;
   text-align:center;
   margin-bottom:36px;
 }
-
-/* Champ */
 .field{
   width:100%;
   background:var(--card);
@@ -128,13 +125,42 @@ body::before{
   caret-color:var(--gold);
   margin-bottom:14px;
 }
-.field:focus{
-  border-color:var(--gold);
-  box-shadow:0 0 0 3px rgba(242,201,76,.12);
-}
+.field:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(242,201,76,.12)}
 .field::placeholder{color:var(--muted);font-weight:400}
-
-/* Aperçu du nom saisi */
+.field-prenom{
+  width:100%;
+  max-width:380px;
+  display:block;
+  margin-left:auto;
+  margin-right:auto;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:16px 20px;
+  font-family:'DM Sans',sans-serif;
+  font-size:18px;
+  font-weight:600;
+  color:var(--white);
+  outline:none;
+  -webkit-appearance:none;
+  transition:border-color .2s, box-shadow .2s;
+  caret-color:var(--gold);
+  margin-bottom:14px;
+}
+.field-prenom:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(242,201,76,.12)}
+.field-prenom::placeholder{color:var(--muted);font-weight:400}
+.doublon-prenom-info{
+  display:none;
+  width:100%;
+  max-width:380px;
+  margin-left:auto;
+  margin-right:auto;
+  margin-bottom:14px;
+  text-align:left;
+}
+.doublon-prenom-info.visible{display:block}
+.doublon-prenom-label{font-size:14px;font-weight:600;color:var(--white);margin-bottom:4px}
+.doublon-prenom-valeur{font-size:15px;font-weight:700;color:var(--green)}
 .preview{
   width:100%;
   min-height:28px;
@@ -148,8 +174,6 @@ body::before{
   transition:opacity .2s;
 }
 .preview.visible{opacity:1}
-
-/* Bouton */
 .btn{
   width:100%;
   background:var(--gold);
@@ -166,29 +190,14 @@ body::before{
 }
 .btn:disabled{opacity:.35;cursor:default}
 .btn:not(:disabled):active{transform:scale(0.98);opacity:.9}
-
-/* État résultat */
-.result{
-  display:none;
-  flex-direction:column;
-  align-items:center;
-  gap:14px;
-  text-align:center;
-  padding:10px 0;
-}
+.result{display:none;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:10px 0}
 .result.visible{display:flex}
 .result-icon{font-size:52px;line-height:1}
-.result-title{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:28px;
-  letter-spacing:2px;
-}
-.result-name{
-  font-size:17px;
-  font-weight:700;
-  color:var(--cyan);
-}
-.result-msg{font-size:14px;color:var(--muted);line-height:1.5}
+.result-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px}
+.result-name{font-size:17px;font-weight:700}
+.result-name.gold{color:var(--gold)}
+.result-name.green{color:var(--green)}
+.result-msg{font-size:14px;color:var(--white);line-height:1.5}
 .btn-again{
   margin-top:8px;
   background:none;
@@ -202,8 +211,6 @@ body::before{
   cursor:pointer;
   -webkit-appearance:none;
 }
-
-/* Spinner */
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinner{
   display:none;
@@ -221,7 +228,6 @@ body::before{
 <body>
 <div class="wrap">
 
-  <!-- FORMULAIRE -->
   <div id="form-view">
     <div class="title">SWiTCH</div>
     <div class="subtitle">Ajouter un nom Facebook</div>
@@ -230,22 +236,38 @@ body::before{
       class="field"
       id="nom-input"
       type="text"
-      placeholder="Prénom Nom exact Facebook…"
+      placeholder="Nom exact Facebook…"
       autocomplete="off"
       autocorrect="off"
       spellcheck="false"
-      oninput="onInput(this.value)"
+      oninput="onNomInput(this.value)"
+      onfocus="onNomFocus()"
     >
+
+    <input
+      class="field-prenom"
+      id="prenom-input"
+      type="text"
+      placeholder="Prénom"
+      autocomplete="off"
+      autocorrect="off"
+      spellcheck="false"
+      oninput="onPrenomInput(this.value)"
+    >
+
+    <div class="doublon-prenom-info" id="doublon-prenom-info">
+      <div class="doublon-prenom-label">Prénom actuel</div>
+      <div class="doublon-prenom-valeur" id="doublon-prenom-valeur"></div>
+    </div>
 
     <div class="preview" id="preview"></div>
 
     <button class="btn" id="submit-btn" disabled onclick="submit()">
-      <span class="btn-label">AJOUTER</span>
+      <span class="btn-label" id="btn-label">AJOUTER</span>
       <div class="spinner"></div>
     </button>
   </div>
 
-  <!-- RÉSULTAT -->
   <div class="result" id="result-view">
     <div class="result-icon" id="result-icon">✅</div>
     <div class="result-title" id="result-title">AJOUTÉ !</div>
@@ -259,7 +281,18 @@ body::before{
 <script>
 var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec';
 
-function onInput(val) {
+var state = { nomDoublon: false, prenomExistant: null, modeRemplacement: false };
+
+function onNomFocus() {
+  if (state.nomDoublon) resetFields();
+}
+
+function onNomInput(val) {
+  state.nomDoublon = false;
+  state.prenomExistant = null;
+  state.modeRemplacement = false;
+  hidePrenomDoublon();
+  document.getElementById('btn-label').textContent = 'AJOUTER';
   var preview = document.getElementById('preview');
   var btn = document.getElementById('submit-btn');
   var trimmed = val.trim();
@@ -274,66 +307,134 @@ function onInput(val) {
   }
 }
 
-function submit() {
-  var input = document.getElementById('nom-input');
-  var nom = input.value.trim();
-  if (!nom) return;
+function onPrenomInput(val) {
+  if (state.prenomExistant !== null) {
+    var trimmed = val.trim();
+    if (trimmed && trimmed.toLowerCase() !== state.prenomExistant.toLowerCase()) {
+      state.modeRemplacement = true;
+      document.getElementById('btn-label').textContent = 'REMPLACER';
+      document.getElementById('submit-btn').disabled = false;
+    } else {
+      state.modeRemplacement = false;
+      document.getElementById('btn-label').textContent = 'AJOUTER';
+    }
+  }
+}
 
+function hidePrenomDoublon() {
+  document.getElementById('doublon-prenom-info').classList.remove('visible');
+  document.getElementById('doublon-prenom-valeur').textContent = '';
+}
+
+function showPrenomDoublon(prenomExistant) {
+  document.getElementById('doublon-prenom-valeur').textContent = prenomExistant;
+  document.getElementById('doublon-prenom-info').classList.add('visible');
+}
+
+function submit() {
+  var nom = document.getElementById('nom-input').value.trim();
+  var prenom = document.getElementById('prenom-input').value.trim();
+  if (!nom) return;
   var btn = document.getElementById('submit-btn');
   btn.classList.add('loading');
   btn.disabled = true;
-
-  var url = APPS_SCRIPT_URL + '?action=addAppliName&name=' + encodeURIComponent(nom);
-
+  var action = state.modeRemplacement ? 'replacePrenom' : 'addAppliName';
+  var url = APPS_SCRIPT_URL + '?action=' + action + '&name=' + encodeURIComponent(nom) + '&prenom=' + encodeURIComponent(prenom);
   fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(data) {
       btn.classList.remove('loading');
+      if (action === 'replacePrenom') {
+        if (data.ok) showResult('prenom', prenom, '');
+        else showResult('erreur', nom, data.error || 'Erreur inconnue.');
+        return;
+      }
       if (data.ok) {
-        showResult(true, nom, data.ligne ? 'Ligne ' + data.ligne + ' de IDS_APPLI' : '');
+        showResult('ajoute', nom, data.ligne ? 'Ligne ' + data.ligne + ' de IDS_APPLI' : '');
       } else if (data.duplicate) {
-        showResult(false, nom, 'Ce nom existe déjà dans la liste.');
+        var prenomExistant = data.prenomExistant || '';
+        var prenomSaisi = prenom;
+        if (prenomExistant && prenomSaisi && prenomSaisi.toLowerCase() !== prenomExistant.toLowerCase()) {
+          state.nomDoublon = true;
+          state.prenomExistant = prenomExistant;
+          state.modeRemplacement = true;
+          showPrenomDoublon(prenomExistant);
+          document.getElementById('btn-label').textContent = 'REMPLACER';
+          btn.disabled = false;
+        } else {
+          showResult('abandon', nom, 'Ce nom existe déjà dans la liste.');
+        }
       } else {
-        showResult(false, nom, data.error || 'Erreur inconnue.');
+        showResult('erreur', nom, data.error || 'Erreur inconnue.');
       }
     })
     .catch(function(e) {
       btn.classList.remove('loading');
-      showResult(false, nom, 'Erreur réseau. Vérifie ta connexion.');
+      showResult('erreur', nom, 'Erreur réseau. Vérifie ta connexion.');
     });
 }
 
-function showResult(ok, nom, msg) {
+function showResult(type, valeur, msg) {
   document.getElementById('form-view').style.display = 'none';
   var rv = document.getElementById('result-view');
   rv.classList.add('visible');
-  document.getElementById('result-icon').textContent = ok ? '✅' : '⚠️';
-  document.getElementById('result-title').textContent = ok ? 'AJOUTÉ !' : 'PROBLÈME';
-  document.getElementById('result-title').style.color = ok ? 'var(--gold)' : '#e8407a';
-  document.getElementById('result-name').textContent = '"' + nom + '"';
+  var icon = document.getElementById('result-icon');
+  var title = document.getElementById('result-title');
+  var name = document.getElementById('result-name');
   document.getElementById('result-msg').textContent = msg || '';
+  if (type === 'ajoute') {
+    icon.textContent = '✅';
+    title.textContent = 'AJOUTÉ !';
+    title.style.color = 'var(--gold)';
+    name.textContent = '"' + valeur + '"';
+    name.className = 'result-name gold';
+  } else if (type === 'prenom') {
+    icon.textContent = '✅';
+    title.textContent = 'REMPLACÉ !';
+    title.style.color = 'var(--gold)';
+    name.textContent = valeur;
+    name.className = 'result-name green';
+  } else if (type === 'abandon') {
+    icon.textContent = '';
+    title.textContent = 'ABANDON';
+    title.style.color = '#e8407a';
+    name.textContent = '"' + valeur + '"';
+    name.className = 'result-name gold';
+  } else {
+    icon.textContent = '';
+    title.textContent = 'ERREUR';
+    title.style.color = '#e8407a';
+    name.textContent = '"' + valeur + '"';
+    name.className = 'result-name gold';
+  }
+}
+
+function resetFields() {
+  state.nomDoublon = false;
+  state.prenomExistant = null;
+  state.modeRemplacement = false;
+  hidePrenomDoublon();
+  document.getElementById('nom-input').value = '';
+  document.getElementById('prenom-input').value = '';
+  document.getElementById('preview').classList.remove('visible');
+  document.getElementById('preview').textContent = '';
+  document.getElementById('btn-label').textContent = 'AJOUTER';
+  var btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.classList.remove('loading');
 }
 
 function reset() {
   document.getElementById('form-view').style.display = '';
-  var rv = document.getElementById('result-view');
-  rv.classList.remove('visible');
-  var input = document.getElementById('nom-input');
-  input.value = '';
-  document.getElementById('preview').classList.remove('visible');
-  document.getElementById('preview').textContent = '';
-  var btn = document.getElementById('submit-btn');
-  btn.disabled = true;
-  btn.classList.remove('loading');
-  setTimeout(function(){ input.focus(); }, 100);
+  document.getElementById('result-view').classList.remove('visible');
+  resetFields();
+  setTimeout(function(){ document.getElementById('nom-input').focus(); }, 100);
 }
 
-// Focus auto au chargement
 window.addEventListener('load', function() {
   setTimeout(function(){ document.getElementById('nom-input').focus(); }, 300);
 });
 
-// Entrée clavier = soumettre
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Enter') {
     var btn = document.getElementById('submit-btn');
