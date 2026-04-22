@@ -60,25 +60,14 @@ async function handleRequest(request, env) {
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#0a0a0f;
-  --card:#13131f;
-  --border:#1e1e30;
-  --gold:#f2c94c;
-  --gglo:rgba(242,201,76,.25);
-  --white:#ece9e0;
-  --muted:#5a5a78;
-  --green:#4caf7d;
-  --r:14px;
+  --bg:#0a0a0f;--card:#13131f;--border:#1e1e30;
+  --gold:#f2c94c;--gglo:rgba(242,201,76,.25);
+  --white:#ece9e0;--muted:#5a5a78;--green:#4caf7d;--r:14px;
 }
 html{height:100%;overscroll-behavior:none}
 body{
-  background:var(--bg);
-  color:var(--white);
-  font-family:'DM Sans',sans-serif;
-  min-height:100dvh;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
+  background:var(--bg);color:var(--white);font-family:'DM Sans',sans-serif;
+  min-height:100dvh;display:flex;flex-direction:column;align-items:center;
   justify-content:flex-start;
   padding:0 20px 8px;
   padding-top:max(32px,env(safe-area-inset-top));
@@ -91,16 +80,13 @@ body::before{
 }
 .wrap{position:relative;z-index:1;width:100%;max-width:460px;display:flex;flex-direction:column;align-items:center}
 .title{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(38px,10vw,56px);
-  letter-spacing:4px;color:var(--gold);
-  text-shadow:0 0 40px var(--gglo);
+  font-family:'Bebas Neue',sans-serif;font-size:clamp(38px,10vw,56px);
+  letter-spacing:4px;color:var(--gold);text-shadow:0 0 40px var(--gglo);
   text-align:center;margin-bottom:2px;
 }
 .subtitle{
-  font-family:'DM Sans',sans-serif;font-size:12px;
-  color:var(--white);letter-spacing:2px;text-transform:uppercase;
-  text-align:center;margin-bottom:22px;
+  font-size:12px;color:var(--white);letter-spacing:2px;
+  text-transform:uppercase;text-align:center;margin-bottom:22px;
 }
 .field{
   width:100%;background:var(--card);border:1px solid var(--border);
@@ -114,8 +100,8 @@ body::before{
 .ac-wrap{position:relative;width:100%;margin-bottom:12px}
 .ac-wrap.narrow{max-width:380px;margin-left:auto;margin-right:auto}
 .dropdown{
-  display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:100;
-  background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  display:none;position:absolute;top:calc(100% + 2px);left:0;right:0;z-index:200;
+  background:var(--card);border:1px solid var(--gold);border-radius:var(--r);
   overflow:hidden;max-height:190px;overflow-y:auto;
 }
 .dropdown.open{display:block}
@@ -124,18 +110,19 @@ body::before{
   cursor:pointer;border-bottom:1px solid var(--border);
 }
 .dd-item:last-child{border-bottom:none}
-.dd-item:active,.dd-item.hover{background:rgba(242,201,76,.1);color:var(--gold)}
+.dd-item:active{background:rgba(242,201,76,.1);color:var(--gold)}
 .dd-item em{font-style:normal;color:var(--gold)}
 .feedback{
-  width:100%;min-height:30px;text-align:center;
+  width:100%;min-height:28px;text-align:center;
   font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;
   color:var(--green);margin-bottom:8px;opacity:0;transition:opacity .2s;
 }
 .feedback.visible{opacity:1}
 .feedback.abandon{color:#e8407a}
 .btn{
-  width:100%;background:var(--gold);color:#000;border:none;border-radius:var(--r);
-  padding:15px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;
+  width:100%;background:var(--gold);color:#000;border:none;
+  border-radius:var(--r);padding:15px;
+  font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;
   cursor:pointer;transition:opacity .15s,transform .1s;-webkit-appearance:none;
 }
 .btn:disabled{opacity:.35;cursor:default}
@@ -171,7 +158,7 @@ body::before{
 
   <div class="feedback" id="feedback"></div>
 
-  <button class="btn" id="submit-btn" disabled onclick="submit()">
+  <button class="btn" id="submit-btn" disabled>
     <span class="btn-label" id="btn-label">AJOUTER</span>
     <div class="spinner"></div>
   </button>
@@ -187,60 +174,59 @@ var prenoms_col_g = [];
 var state = { nomSelectionne: false, prenomExistant: '', resultShown: false };
 
 function norm(s) {
-  return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  return (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 }
 function matches(input, candidate) {
   var tokens = norm(input).split(/\s+/).filter(Boolean);
   var words  = norm(candidate).split(/\s+/).filter(Boolean);
   return tokens.every(function(tok){
-    return words.some(function(w){ return w.indexOf(tok) === 0; });
+    return words.some(function(w){ return w.indexOf(tok)===0; });
   });
 }
 function highlight(text, input) {
   var tokens = norm(input).split(/\s+/).filter(Boolean);
   var result = text;
   tokens.forEach(function(tok){
-    var safe = tok.replace(new RegExp('[.*+?^$' + '{}()|[\\]\\\\]','g'),'\\$&');
-    var re = new RegExp('(' + safe + ')', 'gi');
+    var safe = tok.replace(new RegExp('[-\\/\\\\^$*+?.()|[\\]{}]','g'),'\\$&');
+    var re = new RegExp('('+safe+')','gi');
     result = result.replace(re,'<em>$1</em>');
   });
   return result;
 }
 
 function loadData() {
-  var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + SHEET_ID +
-            '/values/IDS_APPLI?key=' + API_KEY;
-  fetch(url).then(function(r){ return r.json(); }).then(function(d){
-    var rows = d.values || [];
+  var url = 'https://sheets.googleapis.com/v4/spreadsheets/'+SHEET_ID+'/values/IDS_APPLI?key='+API_KEY;
+  fetch(url).then(function(r){return r.json();}).then(function(d){
+    var rows = d.values||[];
     var pset = {};
     rows.forEach(function(row){
-      var nom    = (row[0] || '').trim();
-      var prenom = (row[6] || '').trim();
-      if (nom) DATA.push({ nom: nom, prenom: prenom });
-      if (prenom) pset[norm(prenom)] = prenom;
+      var nom    = (row[0]||'').trim();
+      var prenom = (row[6]||'').trim();
+      if(nom) DATA.push({nom:nom,prenom:prenom});
+      if(prenom) pset[norm(prenom)]=prenom;
     });
     prenoms_col_g = Object.values(pset);
   }).catch(function(){});
 }
 
 function showDropdown(ddEl, items, inputVal, onSelect) {
-  if (!items.length) { ddEl.classList.remove('open'); return; }
-  ddEl.innerHTML = '';
+  if(!items.length){ddEl.classList.remove('open');return;}
+  ddEl.innerHTML='';
   items.forEach(function(item){
-    var div = document.createElement('div');
-    div.className = 'dd-item';
-    div.innerHTML = highlight(item, inputVal);
-    div.addEventListener('mousedown', function(e){ e.preventDefault(); });
-    div.addEventListener('click', function(){ onSelect(item); });
+    var div=document.createElement('div');
+    div.className='dd-item';
+    div.innerHTML=highlight(item,inputVal);
+    div.addEventListener('mousedown',function(e){e.preventDefault();});
+    div.addEventListener('click',function(){onSelect(item);});
     ddEl.appendChild(div);
   });
   ddEl.classList.add('open');
 }
-function hideDropdown(ddEl){ ddEl.classList.remove('open'); }
+function hideDropdown(ddEl){ddEl.classList.remove('open');}
 
-var nomInput, prenomInput, ddNom, ddPrenom, feedbackEl, submitBtn, btnLabel;
+var nomInput,prenomInput,ddNom,ddPrenom,feedbackEl,submitBtn,btnLabel;
 
-window.addEventListener('load', function(){
+window.addEventListener('load',function(){
   nomInput    = document.getElementById('nom-input');
   prenomInput = document.getElementById('prenom-input');
   ddNom       = document.getElementById('dd-nom');
@@ -251,142 +237,144 @@ window.addEventListener('load', function(){
 
   loadData();
 
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', function(){
-      document.body.style.height = window.visualViewport.height + 'px';
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize',function(){
+      document.body.style.height = window.visualViewport.height+'px';
       window.scrollTo(0,0);
     });
   }
 
-  document.addEventListener('touchstart', function(e){
-    if (!state.resultShown) return;
-    if (!e.target.closest('#dd-nom') && !e.target.closest('#dd-prenom')) doFullReset();
-  });
+  document.addEventListener('touchstart',function(e){
+    if(!state.resultShown) return;
+    if(!e.target.closest('#dd-nom')&&!e.target.closest('#dd-prenom')) doFullReset();
+  },{passive:true});
 
-  nomInput.addEventListener('input', function(){
-    if (state.resultShown) return;
-    if (state.nomSelectionne) { doFullReset(); return; }
+  nomInput.addEventListener('input',function(){
+    if(state.resultShown) return;
+    if(state.nomSelectionne){doFullReset();return;}
     hideFeedback();
-    var val = nomInput.value;
-    if (norm(val).replace(/\s/g,'').length < 2) { hideDropdown(ddNom); return; }
-    var filtered = DATA.map(function(d){ return d.nom; })
-      .filter(function(n){ return matches(val, n); }).slice(0,8);
-    showDropdown(ddNom, filtered, val, function(selected){
-      nomInput.value = selected;
+    var val=nomInput.value;
+    if(norm(val).replace(/\s/g,'').length<2){hideDropdown(ddNom);return;}
+    var filtered=DATA.map(function(d){return d.nom;})
+      .filter(function(n){return matches(val,n);}).slice(0,8);
+    showDropdown(ddNom,filtered,val,function(selected){
+      nomInput.value=selected;
       hideDropdown(ddNom);
       selectNom(selected);
     });
   });
 
-  nomInput.addEventListener('focus', function(){
-    if (state.nomSelectionne) { doFullReset(); setTimeout(function(){ nomInput.focus(); },10); }
+  nomInput.addEventListener('focus',function(){
+    if(state.nomSelectionne){doFullReset();setTimeout(function(){nomInput.focus();},10);}
   });
-  nomInput.addEventListener('blur', function(){
-    setTimeout(function(){ hideDropdown(ddNom); }, 150);
+  nomInput.addEventListener('blur',function(){
+    setTimeout(function(){hideDropdown(ddNom);},150);
   });
 
-  prenomInput.addEventListener('input', function(){
-    if (state.resultShown) return;
+  prenomInput.addEventListener('input',function(){
+    if(state.resultShown) return;
     hideFeedback();
     updateBtn();
-    var val = prenomInput.value;
-    if (!val) { hideDropdown(ddPrenom); return; }
-    var filtered = prenoms_col_g.filter(function(p){ return matches(val,p); }).slice(0,8);
-    showDropdown(ddPrenom, filtered, val, function(selected){
-      prenomInput.value = selected;
+    var val=prenomInput.value;
+    if(!val){hideDropdown(ddPrenom);return;}
+    var filtered=prenoms_col_g.filter(function(p){return matches(val,p);}).slice(0,8);
+    showDropdown(ddPrenom,filtered,val,function(selected){
+      prenomInput.value=selected;
       hideDropdown(ddPrenom);
       updateBtn();
     });
   });
-  prenomInput.addEventListener('blur', function(){
-    setTimeout(function(){ hideDropdown(ddPrenom); }, 150);
+  prenomInput.addEventListener('blur',function(){
+    setTimeout(function(){hideDropdown(ddPrenom);},150);
   });
 
-  document.addEventListener('keydown', function(e){
-    if (e.key === 'Enter' && !submitBtn.disabled) submit();
+  submitBtn.addEventListener('click',function(){doSubmit();});
+
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&!submitBtn.disabled) doSubmit();
   });
 
-  setTimeout(function(){ nomInput.focus(); }, 300);
+  setTimeout(function(){nomInput.focus();},300);
 });
 
-function selectNom(nom) {
-  state.nomSelectionne = true;
-  var found = DATA.find(function(d){ return d.nom === nom; });
-  state.prenomExistant = found ? found.prenom : '';
-  prenomInput.value = '';
-  prenomInput.placeholder = state.prenomExistant || 'Pr\u00e9nom';
-  submitBtn.disabled = true;
-  btnLabel.textContent = 'AJOUTER';
+function selectNom(nom){
+  state.nomSelectionne=true;
+  var found=DATA.find(function(d){return d.nom===nom;});
+  state.prenomExistant=found?found.prenom:'';
+  prenomInput.value='';
+  prenomInput.placeholder=state.prenomExistant||'Pr\u00e9nom';
+  submitBtn.disabled=true;
+  btnLabel.textContent='AJOUTER';
 }
 
-function updateBtn() {
-  var prenomSaisi = prenomInput.value.trim();
-  if (!prenomSaisi) { submitBtn.disabled = true; btnLabel.textContent = 'AJOUTER'; return; }
-  if (state.nomSelectionne) {
-    submitBtn.disabled = false;
-    btnLabel.textContent = (state.prenomExistant && norm(prenomSaisi) !== norm(state.prenomExistant))
-      ? 'REMPLACER' : 'AJOUTER';
+function updateBtn(){
+  var prenomSaisi=prenomInput.value.trim();
+  if(!prenomSaisi){submitBtn.disabled=true;btnLabel.textContent='AJOUTER';return;}
+  if(state.nomSelectionne){
+    submitBtn.disabled=false;
+    btnLabel.textContent=(state.prenomExistant&&norm(prenomSaisi)!==norm(state.prenomExistant))
+      ?'REMPLACER':'AJOUTER';
   } else {
-    submitBtn.disabled = !nomInput.value.trim();
-    btnLabel.textContent = 'AJOUTER';
+    submitBtn.disabled=!nomInput.value.trim();
+    btnLabel.textContent='AJOUTER';
   }
 }
 
-function submit() {
-  var nom    = nomInput.value.trim();
-  var prenom = prenomInput.value.trim();
-  if (!nom) return;
+function doSubmit(){
+  var nom=nomInput.value.trim();
+  var prenom=prenomInput.value.trim();
+  if(!nom||submitBtn.disabled) return;
 
-  if (state.nomSelectionne && state.prenomExistant && norm(prenom) === norm(state.prenomExistant)) {
-    showFeedback('ABANDON', true);
+  if(state.nomSelectionne&&state.prenomExistant&&norm(prenom)===norm(state.prenomExistant)){
+    showFeedback('ABANDON',true);
     return;
   }
 
   submitBtn.classList.add('loading');
-  submitBtn.disabled = true;
+  submitBtn.disabled=true;
 
-  var action = (state.nomSelectionne && state.prenomExistant && norm(prenom) !== norm(state.prenomExistant))
-    ? 'replacePrenom' : 'addAppliName';
+  var action=(state.nomSelectionne&&state.prenomExistant&&norm(prenom)!==norm(state.prenomExistant))
+    ?'replacePrenom':'addAppliName';
 
-  var url = APPS_SCRIPT_URL + '?action=' + action
-    + '&name='   + encodeURIComponent(nom)
-    + '&prenom=' + encodeURIComponent(prenom);
+  var url=APPS_SCRIPT_URL+'?action='+action
+    +'&name='+encodeURIComponent(nom)
+    +'&prenom='+encodeURIComponent(prenom);
 
   fetch(url)
-    .then(function(r){ return r.json(); })
+    .then(function(r){return r.json();})
     .then(function(data){
       submitBtn.classList.remove('loading');
-      showFeedback(data.ok ? 'AJOUT\u00c9 !' : 'ERREUR', !data.ok);
+      showFeedback(data.ok?'AJOUT\u00c9 !':'ERREUR',!data.ok);
     })
     .catch(function(){
       submitBtn.classList.remove('loading');
-      showFeedback('ERREUR R\u00c9SEAU', true);
+      showFeedback('ERREUR R\u00c9SEAU',true);
     });
 }
 
-function showFeedback(msg, isAbandon) {
-  feedbackEl.textContent = msg;
-  feedbackEl.className = 'feedback visible' + (isAbandon ? ' abandon' : '');
-  state.resultShown = true;
-  submitBtn.disabled = true;
+function showFeedback(msg,isAbandon){
+  feedbackEl.textContent=msg;
+  feedbackEl.className='feedback visible'+(isAbandon?' abandon':'');
+  state.resultShown=true;
+  submitBtn.disabled=true;
 }
-function hideFeedback() {
-  feedbackEl.className = 'feedback';
-  feedbackEl.textContent = '';
-  state.resultShown = false;
+function hideFeedback(){
+  feedbackEl.className='feedback';
+  feedbackEl.textContent='';
+  state.resultShown=false;
 }
-function doFullReset() {
-  state.nomSelectionne = false;
-  state.prenomExistant = '';
-  state.resultShown    = false;
-  nomInput.value       = '';
-  prenomInput.value    = '';
-  prenomInput.placeholder = 'Pr\u00e9nom';
+function doFullReset(){
+  state.nomSelectionne=false;
+  state.prenomExistant='';
+  state.resultShown=false;
+  nomInput.value='';
+  prenomInput.value='';
+  prenomInput.placeholder='Pr\u00e9nom';
   hideDropdown(ddNom);
   hideDropdown(ddPrenom);
   hideFeedback();
-  btnLabel.textContent = 'AJOUTER';
-  submitBtn.disabled   = true;
+  btnLabel.textContent='AJOUTER';
+  submitBtn.disabled=true;
   submitBtn.classList.remove('loading');
 }
 </script>
