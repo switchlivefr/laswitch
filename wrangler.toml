@@ -7,6 +7,3 @@ compatibility_flags = ["nodejs_compat"]
 binding = "LASWITCH_KV"
 id = "65e46617f6d34131b6647315d9d00c7d"
 
-[[r2_buckets]]
-binding = "R2_BUCKET"
-bucket_name = "laswitch-assets"
