@@ -64,7 +64,7 @@ body::before{
 .field:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(242,201,76,.12)}
 .field::placeholder{color:var(--muted);font-weight:400}
 .ac-wrap{position:relative;width:100%;margin-bottom:12px}
-.ac-wrap.narrow{max-width:380px;margin-left:auto;margin-right:auto}
+.ac-wrap.narrow{max-width:380px;margin-left:auto;margin-right:auto;margin-top:16px}
 .dropdown{
   display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:100;
   background:var(--card);border:1px solid var(--border);border-radius:var(--r);
@@ -109,21 +109,21 @@ body::before{
 
   <div class="ac-wrap" id="ac-nom">
     <input class="field" id="nom-input" type="text"
-      placeholder="Nom exact Facebook\u2026"
+      placeholder="Nom exact Facebook…"
       autocomplete="off" autocorrect="off" spellcheck="false">
     <div class="dropdown" id="dd-nom"></div>
   </div>
 
   <div class="ac-wrap narrow" id="ac-prenom">
     <input class="field" id="prenom-input" type="text"
-      placeholder="Pr\u00e9nom"
+      placeholder="Prénom"
       autocomplete="off" autocorrect="off" spellcheck="false">
     <div class="dropdown" id="dd-prenom"></div>
   </div>
 
   <div class="feedback" id="feedback"></div>
 
-  <button class="btn" id="submit-btn" disabled onclick="submit()">
+  <button class="btn" id="submit-btn" disabled>
     <span class="btn-label" id="btn-label">AJOUTER</span>
     <div class="spinner"></div>
   </button>
@@ -167,7 +167,7 @@ function loadData() {
     var pset = {};
     rows.forEach(function(row){
       var nom    = (row[0] || '').trim();
-      var prenom = (row[6] || '').trim();
+      var prenom = (row[6] || '').trim(); // colonne G = index 6
       if (nom) DATA.push({ nom: nom, prenom: prenom });
       if (prenom) pset[norm(prenom)] = prenom;
     });
@@ -213,7 +213,7 @@ window.addEventListener('load', function(){
   document.addEventListener('touchstart', function(e){
     if (!state.resultShown) return;
     if (!e.target.closest('#dd-nom') && !e.target.closest('#dd-prenom')) doFullReset();
-  });
+  }, { passive: true });
 
   nomInput.addEventListener('input', function(){
     if (state.resultShown) return;
@@ -254,8 +254,10 @@ window.addEventListener('load', function(){
     setTimeout(function(){ hideDropdown(ddPrenom); }, 150);
   });
 
+  submitBtn.addEventListener('click', function(){ doSubmit(); });
+
   document.addEventListener('keydown', function(e){
-    if (e.key === 'Enter' && !submitBtn.disabled) submit();
+    if (e.key === 'Enter' && !submitBtn.disabled) doSubmit();
   });
 
   setTimeout(function(){ nomInput.focus(); }, 300);
@@ -266,7 +268,7 @@ function selectNom(nom) {
   var found = DATA.find(function(d){ return d.nom === nom; });
   state.prenomExistant = found ? found.prenom : '';
   prenomInput.value = '';
-  prenomInput.placeholder = state.prenomExistant || 'Pr\u00e9nom';
+  prenomInput.placeholder = state.prenomExistant || 'Prénom';
   submitBtn.disabled = true;
   btnLabel.textContent = 'AJOUTER';
 }
@@ -284,11 +286,12 @@ function updateBtn() {
   }
 }
 
-function submit() {
+function doSubmit() {
   var nom    = nomInput.value.trim();
   var prenom = prenomInput.value.trim();
-  if (!nom) return;
+  if (!nom || !prenom || submitBtn.disabled) return;
 
+  // Si prénom saisi identique au prénom existant → abandon silencieux
   if (state.nomSelectionne && state.prenomExistant && norm(prenom) === norm(state.prenomExistant)) {
     showFeedback('ABANDON', true);
     return;
@@ -297,10 +300,11 @@ function submit() {
   submitBtn.classList.add('loading');
   submitBtn.disabled = true;
 
-  var action = (state.nomSelectionne && state.prenomExistant && norm(prenom) !== norm(state.prenomExistant))
-    ? 'replacePrenom' : 'addAppliName';
+  var isReplace = (state.nomSelectionne && state.prenomExistant && norm(prenom) !== norm(state.prenomExistant));
+  var action = isReplace ? 'replacePrenom' : 'addAppliName';
 
-  var url = APPS_SCRIPT_URL + '?action=' + action
+  var url = APPS_SCRIPT_URL
+    + '?action=' + action
     + '&name='   + encodeURIComponent(nom)
     + '&prenom=' + encodeURIComponent(prenom);
 
@@ -308,11 +312,16 @@ function submit() {
     .then(function(r){ return r.json(); })
     .then(function(data){
       submitBtn.classList.remove('loading');
-      showFeedback(data.ok ? 'AJOUT\u00c9 !' : 'ERREUR', !data.ok);
+      if (data.ok) {
+        // Affiche REMPLACÉ ! si c'était un remplacement, sinon AJOUTÉ !
+        showFeedback(isReplace ? 'REMPLACÉ !' : 'AJOUTÉ !', false);
+      } else {
+        showFeedback('ERREUR', true);
+      }
     })
     .catch(function(){
       submitBtn.classList.remove('loading');
-      showFeedback('ERREUR R\u00c9SEAU', true);
+      showFeedback('ERREUR RÉSEAU', true);
     });
 }
 
@@ -333,7 +342,7 @@ function doFullReset() {
   state.resultShown    = false;
   nomInput.value       = '';
   prenomInput.value    = '';
-  prenomInput.placeholder = 'Pr\u00e9nom';
+  prenomInput.placeholder = 'Prénom';
   hideDropdown(ddNom);
   hideDropdown(ddPrenom);
   hideFeedback();
