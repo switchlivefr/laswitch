@@ -45,9 +45,6 @@ async function readSheet(name) {
 async function handleRequest(request, env) {
   const url = new URL(request.url);
 
-async function handleRequest(request, env) {
-  const url = new URL(request.url);
-
   // Sous-domaine dédié marco.laswitch.net → sert toujours ajoutnomfb
   if (url.hostname === 'marco.laswitch.net') {
     if (url.pathname === '/manifest-ajoutnomfb.json') {
@@ -933,6 +930,6 @@ function doFullReset() {
   }
 }
 
-export default {
-  fetch: handleRequest
-};
+export async function onRequest(context) {
+  return handleRequest(context.request, context.env);
+}
