@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-title" content="Ajouter Nom FB">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0a0a0f">
-<link rel="manifest" href="/manifest-ajoutnomfb.json">
+
 <link rel="apple-touch-icon" href="/icon-192-ajoutnomfb.png">
 <title>Ajouter un nom</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
@@ -111,6 +111,28 @@ body::before{
 .btn.loading .btn-label{display:none}
 .btn.loading .spinner{display:block}
 </style>
+<script>
+const __manifest = {
+  name: "Ajouter Nom FB",
+  short_name: "Nom FB",
+  start_url: "/marco_switch_ajoutnomfb.html",
+  scope: "/marco_switch_ajoutnomfb.html",
+  display: "standalone",
+  background_color: "#0a0a0f",
+  theme_color: "#0a0a0f",
+  icons: [
+    { src: "/icon-192-ajoutnomfb.png", sizes: "192x192", type: "image/png" },
+    { src: "/icon-512-ajoutnomfb.png", sizes: "512x512", type: "image/png" }
+  ]
+};
+const __blob = new Blob([JSON.stringify(__manifest)], {type: 'application/manifest+json'});
+const __url = URL.createObjectURL(__blob);
+document.querySelector('link[rel="manifest"]') && document.querySelector('link[rel="manifest"]').remove();
+const __link = document.createElement('link');
+__link.rel = 'manifest';
+__link.href = __url;
+document.head.appendChild(__link);
+</script>
 </head>
 <body>
 <div class="wrap">
