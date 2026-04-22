@@ -65,161 +65,86 @@ async function handleRequest(request, env) {
   --border:#1e1e30;
   --gold:#f2c94c;
   --gglo:rgba(242,201,76,.25);
-  --cyan:#34d1c0;
   --white:#ece9e0;
   --muted:#5a5a78;
   --green:#4caf7d;
   --r:14px;
 }
-html,body{height:100%;overscroll-behavior:none}
+html{height:100%;overscroll-behavior:none}
 body{
   background:var(--bg);
   color:var(--white);
   font-family:'DM Sans',sans-serif;
+  min-height:100dvh;
   display:flex;
   flex-direction:column;
   align-items:center;
-  justify-content:center;
-  min-height:100vh;
-  padding:24px 20px;
-  padding-top:max(24px,env(safe-area-inset-top));
-  padding-bottom:max(24px,env(safe-area-inset-bottom));
+  justify-content:flex-start;
+  padding:0 20px 8px;
+  padding-top:max(32px,env(safe-area-inset-top));
+  overscroll-behavior:none;
 }
 body::before{
   content:'';position:fixed;inset:0;z-index:0;
   background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(242,201,76,.08) 0%,transparent 70%);
   pointer-events:none;
 }
-.wrap{position:relative;z-index:1;width:100%;max-width:460px;display:flex;flex-direction:column;align-items:center;gap:0}
+.wrap{position:relative;z-index:1;width:100%;max-width:460px;display:flex;flex-direction:column;align-items:center}
 .title{
   font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(42px,12vw,64px);
-  letter-spacing:4px;
-  color:var(--gold);
+  font-size:clamp(38px,10vw,56px);
+  letter-spacing:4px;color:var(--gold);
   text-shadow:0 0 40px var(--gglo);
-  text-align:center;
-  margin-bottom:6px;
+  text-align:center;margin-bottom:2px;
 }
 .subtitle{
-  font-family:'DM Sans',sans-serif;
-  font-size:13px;
-  color:var(--white);
-  letter-spacing:2px;
-  text-transform:uppercase;
-  text-align:center;
-  margin-bottom:36px;
+  font-family:'DM Sans',sans-serif;font-size:12px;
+  color:var(--white);letter-spacing:2px;text-transform:uppercase;
+  text-align:center;margin-bottom:22px;
 }
 .field{
-  width:100%;
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:var(--r);
-  padding:16px 20px;
-  font-family:'DM Sans',sans-serif;
-  font-size:18px;
-  font-weight:600;
-  color:var(--white);
-  outline:none;
-  -webkit-appearance:none;
-  transition:border-color .2s, box-shadow .2s;
-  caret-color:var(--gold);
-  margin-bottom:14px;
+  width:100%;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:14px 18px;
+  font-family:'DM Sans',sans-serif;font-size:17px;font-weight:600;
+  color:var(--white);outline:none;-webkit-appearance:none;
+  transition:border-color .2s,box-shadow .2s;caret-color:var(--gold);
 }
 .field:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(242,201,76,.12)}
 .field::placeholder{color:var(--muted);font-weight:400}
-.field-prenom{
-  width:100%;
-  max-width:380px;
-  display:block;
-  margin-left:auto;
-  margin-right:auto;
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:var(--r);
-  padding:16px 20px;
-  font-family:'DM Sans',sans-serif;
-  font-size:18px;
-  font-weight:600;
-  color:var(--white);
-  outline:none;
-  -webkit-appearance:none;
-  transition:border-color .2s, box-shadow .2s;
-  caret-color:var(--gold);
-  margin-bottom:14px;
+.ac-wrap{position:relative;width:100%;margin-bottom:12px}
+.ac-wrap.narrow{max-width:380px;margin-left:auto;margin-right:auto}
+.dropdown{
+  display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:100;
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  overflow:hidden;max-height:190px;overflow-y:auto;
 }
-.field-prenom:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(242,201,76,.12)}
-.field-prenom::placeholder{color:var(--muted);font-weight:400}
-.doublon-prenom-info{
-  display:none;
-  width:100%;
-  max-width:380px;
-  margin-left:auto;
-  margin-right:auto;
-  margin-bottom:14px;
-  text-align:left;
+.dropdown.open{display:block}
+.dd-item{
+  padding:11px 18px;font-size:15px;font-weight:600;color:var(--white);
+  cursor:pointer;border-bottom:1px solid var(--border);
 }
-.doublon-prenom-info.visible{display:block}
-.doublon-prenom-label{font-size:14px;font-weight:600;color:var(--white);margin-bottom:4px}
-.doublon-prenom-valeur{font-size:15px;font-weight:700;color:var(--green)}
-.preview{
-  width:100%;
-  min-height:28px;
-  text-align:center;
-  font-size:15px;
-  font-weight:600;
-  color:var(--cyan);
-  letter-spacing:.5px;
-  margin-bottom:20px;
-  opacity:0;
-  transition:opacity .2s;
+.dd-item:last-child{border-bottom:none}
+.dd-item:active,.dd-item.hover{background:rgba(242,201,76,.1);color:var(--gold)}
+.dd-item em{font-style:normal;color:var(--gold)}
+.feedback{
+  width:100%;min-height:30px;text-align:center;
+  font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;
+  color:var(--green);margin-bottom:8px;opacity:0;transition:opacity .2s;
 }
-.preview.visible{opacity:1}
+.feedback.visible{opacity:1}
+.feedback.abandon{color:#e8407a}
 .btn{
-  width:100%;
-  background:var(--gold);
-  color:#000;
-  border:none;
-  border-radius:var(--r);
-  padding:18px;
-  font-family:'Bebas Neue',sans-serif;
-  font-size:22px;
-  letter-spacing:3px;
-  cursor:pointer;
-  transition:opacity .15s, transform .1s;
-  -webkit-appearance:none;
+  width:100%;background:var(--gold);color:#000;border:none;border-radius:var(--r);
+  padding:15px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;
+  cursor:pointer;transition:opacity .15s,transform .1s;-webkit-appearance:none;
 }
 .btn:disabled{opacity:.35;cursor:default}
 .btn:not(:disabled):active{transform:scale(0.98);opacity:.9}
-.result{display:none;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:10px 0}
-.result.visible{display:flex}
-.result-icon{font-size:52px;line-height:1}
-.result-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px}
-.result-name{font-size:17px;font-weight:700}
-.result-name.gold{color:var(--gold)}
-.result-name.green{color:var(--green)}
-.result-msg{font-size:14px;color:var(--white);line-height:1.5}
-.btn-again{
-  margin-top:8px;
-  background:none;
-  border:1px solid var(--border);
-  border-radius:var(--r);
-  padding:14px 28px;
-  font-family:'DM Sans',sans-serif;
-  font-size:15px;
-  font-weight:700;
-  color:var(--white);
-  cursor:pointer;
-  -webkit-appearance:none;
-}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinner{
-  display:none;
-  width:24px;height:24px;
-  border:3px solid rgba(0,0,0,.2);
-  border-top-color:#000;
-  border-radius:50%;
-  animation:spin .7s linear infinite;
-  margin:0 auto;
+  display:none;width:22px;height:22px;
+  border:3px solid rgba(0,0,0,.2);border-top-color:#000;
+  border-radius:50%;animation:spin .7s linear infinite;margin:0 auto;
 }
 .btn.loading .btn-label{display:none}
 .btn.loading .spinner{display:block}
@@ -227,220 +152,243 @@ body::before{
 </head>
 <body>
 <div class="wrap">
+  <div class="title">SWiTCH</div>
+  <div class="subtitle">Ajouter un nom Facebook</div>
 
-  <div id="form-view">
-    <div class="title">SWiTCH</div>
-    <div class="subtitle">Ajouter un nom Facebook</div>
-
-    <input
-      class="field"
-      id="nom-input"
-      type="text"
-      placeholder="Nom exact Facebook…"
-      autocomplete="off"
-      autocorrect="off"
-      spellcheck="false"
-      oninput="onNomInput(this.value)"
-      onfocus="onNomFocus()"
-    >
-
-    <input
-      class="field-prenom"
-      id="prenom-input"
-      type="text"
-      placeholder="Prénom"
-      autocomplete="off"
-      autocorrect="off"
-      spellcheck="false"
-      oninput="onPrenomInput(this.value)"
-    >
-
-    <div class="doublon-prenom-info" id="doublon-prenom-info">
-      <div class="doublon-prenom-label">Prénom actuel</div>
-      <div class="doublon-prenom-valeur" id="doublon-prenom-valeur"></div>
-    </div>
-
-    <div class="preview" id="preview"></div>
-
-    <button class="btn" id="submit-btn" disabled onclick="submit()">
-      <span class="btn-label" id="btn-label">AJOUTER</span>
-      <div class="spinner"></div>
-    </button>
+  <div class="ac-wrap" id="ac-nom">
+    <input class="field" id="nom-input" type="text"
+      placeholder="Nom exact Facebook\u2026"
+      autocomplete="off" autocorrect="off" spellcheck="false">
+    <div class="dropdown" id="dd-nom"></div>
   </div>
 
-  <div class="result" id="result-view">
-    <div class="result-icon" id="result-icon">✅</div>
-    <div class="result-title" id="result-title">AJOUTÉ !</div>
-    <div class="result-name" id="result-name"></div>
-    <div class="result-msg" id="result-msg"></div>
-    <button class="btn-again" onclick="reset()">Ajouter un autre nom</button>
+  <div class="ac-wrap narrow" id="ac-prenom">
+    <input class="field" id="prenom-input" type="text"
+      placeholder="Pr\u00e9nom"
+      autocomplete="off" autocorrect="off" spellcheck="false">
+    <div class="dropdown" id="dd-prenom"></div>
   </div>
 
+  <div class="feedback" id="feedback"></div>
+
+  <button class="btn" id="submit-btn" disabled onclick="submit()">
+    <span class="btn-label" id="btn-label">AJOUTER</span>
+    <div class="spinner"></div>
+  </button>
 </div>
 
 <script>
 var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec';
+var SHEET_ID = '1Z8GftsfaAgwDNuXLMTNrQwCV6V5W-hpHlI893INosSw';
+var API_KEY  = 'AIzaSyCTADjNIhq3jXSJiI_WO_jPsp63pTklT_A';
 
-var state = { nomDoublon: false, prenomExistant: null, modeRemplacement: false };
+var DATA = [];
+var prenoms_col_g = [];
+var state = { nomSelectionne: false, prenomExistant: '', resultShown: false };
 
-function onNomFocus() {
-  if (state.nomDoublon) resetFields();
+function norm(s) {
+  return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
+function matches(input, candidate) {
+  var tokens = norm(input).split(/\s+/).filter(Boolean);
+  var words  = norm(candidate).split(/\s+/).filter(Boolean);
+  return tokens.every(function(tok){
+    return words.some(function(w){ return w.indexOf(tok) === 0; });
+  });
+}
+function highlight(text, input) {
+  var tokens = norm(input).split(/\s+/).filter(Boolean);
+  var result = text;
+  tokens.forEach(function(tok){
+    var safe = tok.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    var re = new RegExp('(' + safe + ')', 'gi');
+    result = result.replace(re,'<em>$1</em>');
+  });
+  return result;
 }
 
-function onNomInput(val) {
-  state.nomDoublon = false;
-  state.prenomExistant = null;
-  state.modeRemplacement = false;
-  hidePrenomDoublon();
-  document.getElementById('btn-label').textContent = 'AJOUTER';
-  var preview = document.getElementById('preview');
-  var btn = document.getElementById('submit-btn');
-  var trimmed = val.trim();
-  if (trimmed) {
-    preview.textContent = '→ "' + trimmed + '"';
-    preview.classList.add('visible');
-    btn.disabled = false;
+function loadData() {
+  var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + SHEET_ID +
+            '/values/IDS_APPLI?key=' + API_KEY;
+  fetch(url).then(function(r){ return r.json(); }).then(function(d){
+    var rows = d.values || [];
+    var pset = {};
+    rows.forEach(function(row){
+      var nom    = (row[0] || '').trim();
+      var prenom = (row[6] || '').trim();
+      if (nom) DATA.push({ nom: nom, prenom: prenom });
+      if (prenom) pset[norm(prenom)] = prenom;
+    });
+    prenoms_col_g = Object.values(pset);
+  }).catch(function(){});
+}
+
+function showDropdown(ddEl, items, inputVal, onSelect) {
+  if (!items.length) { ddEl.classList.remove('open'); return; }
+  ddEl.innerHTML = '';
+  items.forEach(function(item){
+    var div = document.createElement('div');
+    div.className = 'dd-item';
+    div.innerHTML = highlight(item, inputVal);
+    div.addEventListener('mousedown', function(e){ e.preventDefault(); });
+    div.addEventListener('click', function(){ onSelect(item); });
+    ddEl.appendChild(div);
+  });
+  ddEl.classList.add('open');
+}
+function hideDropdown(ddEl){ ddEl.classList.remove('open'); }
+
+var nomInput, prenomInput, ddNom, ddPrenom, feedbackEl, submitBtn, btnLabel;
+
+window.addEventListener('load', function(){
+  nomInput    = document.getElementById('nom-input');
+  prenomInput = document.getElementById('prenom-input');
+  ddNom       = document.getElementById('dd-nom');
+  ddPrenom    = document.getElementById('dd-prenom');
+  feedbackEl  = document.getElementById('feedback');
+  submitBtn   = document.getElementById('submit-btn');
+  btnLabel    = document.getElementById('btn-label');
+
+  loadData();
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', function(){
+      document.body.style.height = window.visualViewport.height + 'px';
+      window.scrollTo(0,0);
+    });
+  }
+
+  document.addEventListener('touchstart', function(e){
+    if (!state.resultShown) return;
+    if (!e.target.closest('#dd-nom') && !e.target.closest('#dd-prenom')) doFullReset();
+  });
+
+  nomInput.addEventListener('input', function(){
+    if (state.resultShown) return;
+    if (state.nomSelectionne) { doFullReset(); return; }
+    hideFeedback();
+    var val = nomInput.value;
+    if (norm(val).replace(/\s/g,'').length < 2) { hideDropdown(ddNom); return; }
+    var filtered = DATA.map(function(d){ return d.nom; })
+      .filter(function(n){ return matches(val, n); }).slice(0,8);
+    showDropdown(ddNom, filtered, val, function(selected){
+      nomInput.value = selected;
+      hideDropdown(ddNom);
+      selectNom(selected);
+    });
+  });
+
+  nomInput.addEventListener('focus', function(){
+    if (state.nomSelectionne) { doFullReset(); setTimeout(function(){ nomInput.focus(); },10); }
+  });
+  nomInput.addEventListener('blur', function(){
+    setTimeout(function(){ hideDropdown(ddNom); }, 150);
+  });
+
+  prenomInput.addEventListener('input', function(){
+    if (state.resultShown) return;
+    hideFeedback();
+    updateBtn();
+    var val = prenomInput.value;
+    if (!val) { hideDropdown(ddPrenom); return; }
+    var filtered = prenoms_col_g.filter(function(p){ return matches(val,p); }).slice(0,8);
+    showDropdown(ddPrenom, filtered, val, function(selected){
+      prenomInput.value = selected;
+      hideDropdown(ddPrenom);
+      updateBtn();
+    });
+  });
+  prenomInput.addEventListener('blur', function(){
+    setTimeout(function(){ hideDropdown(ddPrenom); }, 150);
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' && !submitBtn.disabled) submit();
+  });
+
+  setTimeout(function(){ nomInput.focus(); }, 300);
+});
+
+function selectNom(nom) {
+  state.nomSelectionne = true;
+  var found = DATA.find(function(d){ return d.nom === nom; });
+  state.prenomExistant = found ? found.prenom : '';
+  prenomInput.value = '';
+  prenomInput.placeholder = state.prenomExistant || 'Pr\u00e9nom';
+  submitBtn.disabled = true;
+  btnLabel.textContent = 'AJOUTER';
+}
+
+function updateBtn() {
+  var prenomSaisi = prenomInput.value.trim();
+  if (!prenomSaisi) { submitBtn.disabled = true; btnLabel.textContent = 'AJOUTER'; return; }
+  if (state.nomSelectionne) {
+    submitBtn.disabled = false;
+    btnLabel.textContent = (state.prenomExistant && norm(prenomSaisi) !== norm(state.prenomExistant))
+      ? 'REMPLACER' : 'AJOUTER';
   } else {
-    preview.textContent = '';
-    preview.classList.remove('visible');
-    btn.disabled = true;
+    submitBtn.disabled = !nomInput.value.trim();
+    btnLabel.textContent = 'AJOUTER';
   }
-}
-
-function onPrenomInput(val) {
-  if (state.prenomExistant !== null) {
-    var trimmed = val.trim();
-    if (trimmed && trimmed.toLowerCase() !== state.prenomExistant.toLowerCase()) {
-      state.modeRemplacement = true;
-      document.getElementById('btn-label').textContent = 'REMPLACER';
-      document.getElementById('submit-btn').disabled = false;
-    } else {
-      state.modeRemplacement = false;
-      document.getElementById('btn-label').textContent = 'AJOUTER';
-    }
-  }
-}
-
-function hidePrenomDoublon() {
-  document.getElementById('doublon-prenom-info').classList.remove('visible');
-  document.getElementById('doublon-prenom-valeur').textContent = '';
-}
-
-function showPrenomDoublon(prenomExistant) {
-  document.getElementById('doublon-prenom-valeur').textContent = prenomExistant;
-  document.getElementById('doublon-prenom-info').classList.add('visible');
 }
 
 function submit() {
-  var nom = document.getElementById('nom-input').value.trim();
-  var prenom = document.getElementById('prenom-input').value.trim();
+  var nom    = nomInput.value.trim();
+  var prenom = prenomInput.value.trim();
   if (!nom) return;
-  var btn = document.getElementById('submit-btn');
-  btn.classList.add('loading');
-  btn.disabled = true;
-  var action = state.modeRemplacement ? 'replacePrenom' : 'addAppliName';
-  var url = APPS_SCRIPT_URL + '?action=' + action + '&name=' + encodeURIComponent(nom) + '&prenom=' + encodeURIComponent(prenom);
+
+  if (state.nomSelectionne && state.prenomExistant && norm(prenom) === norm(state.prenomExistant)) {
+    showFeedback('ABANDON', true);
+    return;
+  }
+
+  submitBtn.classList.add('loading');
+  submitBtn.disabled = true;
+
+  var action = (state.nomSelectionne && state.prenomExistant && norm(prenom) !== norm(state.prenomExistant))
+    ? 'replacePrenom' : 'addAppliName';
+
+  var url = APPS_SCRIPT_URL + '?action=' + action
+    + '&name='   + encodeURIComponent(nom)
+    + '&prenom=' + encodeURIComponent(prenom);
+
   fetch(url)
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      btn.classList.remove('loading');
-      if (action === 'replacePrenom') {
-        if (data.ok) showResult('prenom', prenom, '');
-        else showResult('erreur', nom, data.error || 'Erreur inconnue.');
-        return;
-      }
-      if (data.ok) {
-        showResult('ajoute', nom, data.ligne ? 'Ligne ' + data.ligne + ' de IDS_APPLI' : '');
-      } else if (data.duplicate) {
-        var prenomExistant = data.prenomExistant || '';
-        var prenomSaisi = prenom;
-        if (prenomExistant && prenomSaisi && prenomSaisi.toLowerCase() !== prenomExistant.toLowerCase()) {
-          state.nomDoublon = true;
-          state.prenomExistant = prenomExistant;
-          state.modeRemplacement = true;
-          showPrenomDoublon(prenomExistant);
-          document.getElementById('btn-label').textContent = 'REMPLACER';
-          btn.disabled = false;
-        } else {
-          showResult('abandon', nom, 'Ce nom existe déjà dans la liste.');
-        }
-      } else {
-        showResult('erreur', nom, data.error || 'Erreur inconnue.');
-      }
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      submitBtn.classList.remove('loading');
+      showFeedback(data.ok ? 'AJOUT\u00c9 !' : 'ERREUR', !data.ok);
     })
-    .catch(function(e) {
-      btn.classList.remove('loading');
-      showResult('erreur', nom, 'Erreur réseau. Vérifie ta connexion.');
+    .catch(function(){
+      submitBtn.classList.remove('loading');
+      showFeedback('ERREUR R\u00c9SEAU', true);
     });
 }
 
-function showResult(type, valeur, msg) {
-  document.getElementById('form-view').style.display = 'none';
-  var rv = document.getElementById('result-view');
-  rv.classList.add('visible');
-  var icon = document.getElementById('result-icon');
-  var title = document.getElementById('result-title');
-  var name = document.getElementById('result-name');
-  document.getElementById('result-msg').textContent = msg || '';
-  if (type === 'ajoute') {
-    icon.textContent = '✅';
-    title.textContent = 'AJOUTÉ !';
-    title.style.color = 'var(--gold)';
-    name.textContent = '"' + valeur + '"';
-    name.className = 'result-name gold';
-  } else if (type === 'prenom') {
-    icon.textContent = '✅';
-    title.textContent = 'REMPLACÉ !';
-    title.style.color = 'var(--gold)';
-    name.textContent = valeur;
-    name.className = 'result-name green';
-  } else if (type === 'abandon') {
-    icon.textContent = '';
-    title.textContent = 'ABANDON';
-    title.style.color = '#e8407a';
-    name.textContent = '"' + valeur + '"';
-    name.className = 'result-name gold';
-  } else {
-    icon.textContent = '';
-    title.textContent = 'ERREUR';
-    title.style.color = '#e8407a';
-    name.textContent = '"' + valeur + '"';
-    name.className = 'result-name gold';
-  }
+function showFeedback(msg, isAbandon) {
+  feedbackEl.textContent = msg;
+  feedbackEl.className = 'feedback visible' + (isAbandon ? ' abandon' : '');
+  state.resultShown = true;
+  submitBtn.disabled = true;
 }
-
-function resetFields() {
-  state.nomDoublon = false;
-  state.prenomExistant = null;
-  state.modeRemplacement = false;
-  hidePrenomDoublon();
-  document.getElementById('nom-input').value = '';
-  document.getElementById('prenom-input').value = '';
-  document.getElementById('preview').classList.remove('visible');
-  document.getElementById('preview').textContent = '';
-  document.getElementById('btn-label').textContent = 'AJOUTER';
-  var btn = document.getElementById('submit-btn');
-  btn.disabled = true;
-  btn.classList.remove('loading');
+function hideFeedback() {
+  feedbackEl.className = 'feedback';
+  feedbackEl.textContent = '';
+  state.resultShown = false;
 }
-
-function reset() {
-  document.getElementById('form-view').style.display = '';
-  document.getElementById('result-view').classList.remove('visible');
-  resetFields();
-  setTimeout(function(){ document.getElementById('nom-input').focus(); }, 100);
+function doFullReset() {
+  state.nomSelectionne = false;
+  state.prenomExistant = '';
+  state.resultShown    = false;
+  nomInput.value       = '';
+  prenomInput.value    = '';
+  prenomInput.placeholder = 'Pr\u00e9nom';
+  hideDropdown(ddNom);
+  hideDropdown(ddPrenom);
+  hideFeedback();
+  btnLabel.textContent = 'AJOUTER';
+  submitBtn.disabled   = true;
+  submitBtn.classList.remove('loading');
 }
-
-window.addEventListener('load', function() {
-  setTimeout(function(){ document.getElementById('nom-input').focus(); }, 300);
-});
-
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    var btn = document.getElementById('submit-btn');
-    if (!btn.disabled) submit();
-  }
-});
 </script>
 </body>
 </html>
