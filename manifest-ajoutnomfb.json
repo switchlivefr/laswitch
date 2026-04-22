@@ -1,0 +1,22 @@
+{
+  "name": "Ajouter Nom FB",
+  "short_name": "Nom FB",
+  "description": "Ajouter un prénom à un nom Facebook dans SWiTCH",
+  "start_url": "/marco_switch_ajoutnomfb",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#0a0a0f",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192-ajoutnomfb.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512-ajoutnomfb.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
