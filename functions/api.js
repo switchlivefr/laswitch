@@ -45,9 +45,416 @@ async function readSheet(name) {
 async function handleRequest(request, env) {
   const url = new URL(request.url);
 
-  if (url.pathname === '/marco_switch_ajoutnomfb') {
-    const html = await env.ASSETS.fetch(new Request('https://dummy/marco_switch_ajoutnomfb.html'));
-    return new Response(html.body, {
+async function handleRequest(request, env) {
+  const url = new URL(request.url);
+
+  // Sous-domaine dédié marco.laswitch.net → sert toujours ajoutnomfb
+  if (url.hostname === 'marco.laswitch.net') {
+    if (url.pathname === '/manifest-ajoutnomfb.json') {
+      const manifest = JSON.stringify({
+        name: "Ajouter Nom FB",
+        short_name: "Nom FB",
+        description: "Ajouter un prénom à un nom Facebook dans SWiTCH",
+        start_url: "/",
+        scope: "/",
+        display: "standalone",
+        background_color: "#0a0a0f",
+        theme_color: "#0a0a0f",
+        orientation: "portrait",
+        icons: [
+          { src: "/icon-192-ajoutnomfb.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
+          { src: "/icon-512-ajoutnomfb.png", sizes: "512x512", type: "image/png", purpose: "any maskable" }
+        ]
+      });
+      return new Response(manifest, {
+        headers: { 'Content-Type': 'application/manifest+json; charset=utf-8', 'Cache-Control': 'no-cache' }
+      });
+    }
+    if (url.pathname === '/icon-192-ajoutnomfb.png' || url.pathname === '/icon-512-ajoutnomfb.png') {
+      return env.ASSETS.fetch(request);
+    }
+    // Sert le HTML directement en string (pas de env.ASSETS)
+    const MARCO_HTML = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ajouter Nom FB">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0f">
+<link rel="manifest" href="/manifest-ajoutnomfb.json">
+<link rel="apple-touch-icon" href="/icon-192-ajoutnomfb.png">
+<title>Ajouter un nom</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a0a0f;
+  --card:#13131f;
+  --border:#1e1e30;
+  --gold:#f2c94c;
+  --gglo:rgba(242,201,76,.25);
+  --white:#ece9e0;
+  --muted:#5a5a78;
+  --green:#4caf7d;
+  --r:14px;
+}
+html{height:100%;overscroll-behavior:none}
+body{
+  background:var(--bg);
+  color:var(--white);
+  font-family:'DM Sans',sans-serif;
+  min-height:100dvh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  padding:0 20px 8px;
+  padding-top:max(32px,env(safe-area-inset-top));
+  overscroll-behavior:none;
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(242,201,76,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.wrap{position:relative;z-index:1;width:100%;max-width:460px;display:flex;flex-direction:column;align-items:center}
+.title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(38px,10vw,56px);
+  letter-spacing:4px;color:var(--gold);
+  text-shadow:0 0 40px var(--gglo);
+  text-align:center;margin-bottom:2px;
+}
+.subtitle{
+  font-family:'DM Sans',sans-serif;font-size:12px;
+  color:var(--white);letter-spacing:2px;text-transform:uppercase;
+  text-align:center;margin-bottom:22px;
+}
+.field{
+  width:100%;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:14px 18px;
+  font-family:'DM Sans',sans-serif;font-size:17px;font-weight:600;
+  color:var(--white);outline:none;-webkit-appearance:none;
+  transition:border-color .2s,box-shadow .2s;caret-color:var(--gold);
+}
+.field:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(242,201,76,.12)}
+.field::placeholder{color:var(--muted);font-weight:400}
+.ac-wrap{position:relative;width:100%;margin-bottom:12px}
+.ac-wrap.narrow{max-width:380px;margin-left:auto;margin-right:auto;margin-top:16px}
+.dropdown{
+  display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:100;
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  overflow:hidden;max-height:190px;overflow-y:auto;
+}
+.dropdown.open{display:block}
+.dd-item{
+  padding:11px 18px;font-size:15px;font-weight:600;color:var(--white);
+  cursor:pointer;border-bottom:1px solid var(--border);
+}
+.dd-item:last-child{border-bottom:none}
+.dd-item:active,.dd-item.hover{background:rgba(242,201,76,.1);color:var(--gold)}
+.dd-item em{font-style:normal;color:var(--gold)}
+.feedback{
+  width:100%;min-height:30px;text-align:center;
+  font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;
+  color:var(--green);margin-bottom:8px;opacity:0;transition:opacity .2s;
+}
+.feedback.visible{opacity:1}
+.feedback.abandon{color:#e8407a}
+.btn{
+  width:100%;background:var(--gold);color:#000;border:none;border-radius:var(--r);
+  padding:15px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;
+  cursor:pointer;transition:opacity .15s,transform .1s,background .2s,color .2s;-webkit-appearance:none;
+}
+.btn:disabled{opacity:.35;cursor:default}
+.btn:not(:disabled):active{transform:scale(0.98);opacity:.9}
+.btn.reset-mode{
+  background:transparent;
+  color:var(--gold);
+  border:2px solid var(--gold);
+  font-size:17px;
+  letter-spacing:2px;
+}
+.btn.reset-mode:not(:disabled):active{transform:scale(0.98);opacity:.8}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{
+  display:none;width:22px;height:22px;
+  border:3px solid rgba(0,0,0,.2);border-top-color:#000;
+  border-radius:50%;animation:spin .7s linear infinite;margin:0 auto;
+}
+.btn.loading .btn-label{display:none}
+.btn.loading .spinner{display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="title">SWiTCH</div>
+  <div class="subtitle">Ajouter un nom Facebook</div>
+
+  <div class="ac-wrap" id="ac-nom">
+    <input class="field" id="nom-input" type="text"
+      placeholder="Nom exact Facebook…"
+      autocomplete="off" autocorrect="off" spellcheck="false">
+    <div class="dropdown" id="dd-nom"></div>
+  </div>
+
+  <div class="ac-wrap narrow" id="ac-prenom">
+    <input class="field" id="prenom-input" type="text"
+      placeholder="Prénom"
+      autocomplete="off" autocorrect="off" spellcheck="false">
+    <div class="dropdown" id="dd-prenom"></div>
+  </div>
+
+  <div class="feedback" id="feedback"></div>
+
+  <button class="btn" id="submit-btn" disabled>
+    <span class="btn-label" id="btn-label">AJOUTER</span>
+    <div class="spinner"></div>
+  </button>
+</div>
+
+<script>
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec';
+var SHEET_ID = '1Z8GftsfaAgwDNuXLMTNrQwCV6V5W-hpHlI893INosSw';
+var API_KEY  = 'AIzaSyCTADjNIhq3jXSJiI_WO_jPsp63pTklT_A';
+
+var DATA = [];
+var prenoms_col_g = [];
+var state = { nomSelectionne: false, prenomExistant: '', resultShown: false };
+
+function norm(s) {
+  return (s || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();
+}
+function matches(input, candidate) {
+  var tokens = norm(input).split(/\\s+/).filter(Boolean);
+  var words  = norm(candidate).split(/\\s+/).filter(Boolean);
+  return tokens.every(function(tok){
+    return words.some(function(w){ return w.indexOf(tok) === 0; });
+  });
+}
+function highlight(text, input) {
+  var tokens = norm(input).split(/\\s+/).filter(Boolean);
+  var result = text;
+  tokens.forEach(function(tok){
+    var safe = tok.replace(/[.*+?^\${}()|[\\]\\\\]/g,'\\\\$&');
+    var re = new RegExp('(' + safe + ')', 'gi');
+    result = result.replace(re,'<em>$1</em>');
+  });
+  return result;
+}
+
+function loadData() {
+  var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + SHEET_ID +
+            '/values/IDS_APPLI?key=' + API_KEY;
+  fetch(url).then(function(r){ return r.json(); }).then(function(d){
+    var rows = d.values || [];
+    var pset = {};
+    rows.forEach(function(row){
+      var nom    = (row[0] || '').trim();
+      var prenom = (row[6] || '').trim(); // colonne G = index 6
+      if (nom) DATA.push({ nom: nom, prenom: prenom });
+      if (prenom) pset[norm(prenom)] = prenom;
+    });
+    prenoms_col_g = Object.values(pset);
+  }).catch(function(){});
+}
+
+function showDropdown(ddEl, items, inputVal, onSelect) {
+  if (!items.length) { ddEl.classList.remove('open'); return; }
+  ddEl.innerHTML = '';
+  items.forEach(function(item){
+    var div = document.createElement('div');
+    div.className = 'dd-item';
+    div.innerHTML = highlight(item, inputVal);
+    div.addEventListener('mousedown', function(e){ e.preventDefault(); });
+    div.addEventListener('click', function(){ onSelect(item); });
+    ddEl.appendChild(div);
+  });
+  ddEl.classList.add('open');
+}
+function hideDropdown(ddEl){ ddEl.classList.remove('open'); }
+
+var nomInput, prenomInput, ddNom, ddPrenom, feedbackEl, submitBtn, btnLabel;
+
+window.addEventListener('load', function(){
+  nomInput    = document.getElementById('nom-input');
+  prenomInput = document.getElementById('prenom-input');
+  ddNom       = document.getElementById('dd-nom');
+  ddPrenom    = document.getElementById('dd-prenom');
+  feedbackEl  = document.getElementById('feedback');
+  submitBtn   = document.getElementById('submit-btn');
+  btnLabel    = document.getElementById('btn-label');
+
+  loadData();
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', function(){
+      document.body.style.height = window.visualViewport.height + 'px';
+      window.scrollTo(0,0);
+    });
+  }
+
+  nomInput.addEventListener('input', function(){
+    if (state.resultShown) return;
+    if (state.nomSelectionne) { doFullReset(); return; }
+    hideFeedback();
+    var val = nomInput.value;
+    if (norm(val).replace(/\\s/g,'').length < 2) { hideDropdown(ddNom); return; }
+    var filtered = DATA.map(function(d){ return d.nom; })
+      .filter(function(n){ return matches(val, n); }).slice(0,8);
+    showDropdown(ddNom, filtered, val, function(selected){
+      nomInput.value = selected;
+      hideDropdown(ddNom);
+      selectNom(selected);
+    });
+  });
+
+  nomInput.addEventListener('focus', function(){
+    if (state.nomSelectionne) { doFullReset(); setTimeout(function(){ nomInput.focus(); },10); }
+  });
+  nomInput.addEventListener('blur', function(){
+    setTimeout(function(){ hideDropdown(ddNom); }, 150);
+  });
+
+  prenomInput.addEventListener('input', function(){
+    if (state.resultShown) return;
+    hideFeedback();
+    updateBtn();
+    var val = prenomInput.value;
+    if (!val) { hideDropdown(ddPrenom); return; }
+    var filtered = prenoms_col_g.filter(function(p){ return matches(val,p); }).slice(0,8);
+    showDropdown(ddPrenom, filtered, val, function(selected){
+      prenomInput.value = selected;
+      hideDropdown(ddPrenom);
+      updateBtn();
+    });
+  });
+  prenomInput.addEventListener('blur', function(){
+    setTimeout(function(){ hideDropdown(ddPrenom); }, 150);
+  });
+
+  submitBtn.addEventListener('click', function(){
+    // Si en mode reset → recharger la page
+    if (state.resultShown) {
+      window.location.reload();
+      return;
+    }
+    doSubmit();
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Enter') {
+      if (state.resultShown) { window.location.reload(); return; }
+      if (!submitBtn.disabled) doSubmit();
+    }
+  });
+
+  setTimeout(function(){ nomInput.focus(); }, 300);
+});
+
+function selectNom(nom) {
+  state.nomSelectionne = true;
+  var found = DATA.find(function(d){ return d.nom === nom; });
+  state.prenomExistant = found ? found.prenom : '';
+  prenomInput.value = '';
+  prenomInput.placeholder = state.prenomExistant || 'Prénom';
+  submitBtn.disabled = true;
+  btnLabel.textContent = 'AJOUTER';
+}
+
+function updateBtn() {
+  var prenomSaisi = prenomInput.value.trim();
+  if (!prenomSaisi) { submitBtn.disabled = true; btnLabel.textContent = 'AJOUTER'; return; }
+  if (state.nomSelectionne) {
+    submitBtn.disabled = false;
+    btnLabel.textContent = (state.prenomExistant && norm(prenomSaisi) !== norm(state.prenomExistant))
+      ? 'REMPLACER' : 'AJOUTER';
+  } else {
+    submitBtn.disabled = !nomInput.value.trim();
+    btnLabel.textContent = 'AJOUTER';
+  }
+}
+
+function doSubmit() {
+  var nom    = nomInput.value.trim();
+  var prenom = prenomInput.value.trim();
+  if (!nom || !prenom || submitBtn.disabled) return;
+
+  // Prénom identique → abandon
+  if (state.nomSelectionne && state.prenomExistant && norm(prenom) === norm(state.prenomExistant)) {
+    showFeedback('ABANDON', true);
+    return;
+  }
+
+  submitBtn.classList.add('loading');
+  submitBtn.disabled = true;
+
+  var isReplace = (state.nomSelectionne && state.prenomExistant && norm(prenom) !== norm(state.prenomExistant));
+  var action = isReplace ? 'replacePrenom' : 'addAppliName';
+
+  var url = APPS_SCRIPT_URL
+    + '?action=' + action
+    + '&name='   + encodeURIComponent(nom)
+    + '&prenom=' + encodeURIComponent(prenom);
+
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      submitBtn.classList.remove('loading');
+      if (data.ok) {
+        showFeedback(isReplace ? 'REMPLACÉ !' : 'AJOUTÉ !', false);
+        showResetBtn();
+      } else {
+        showFeedback('ERREUR', true);
+      }
+    })
+    .catch(function(){
+      submitBtn.classList.remove('loading');
+      showFeedback('ERREUR RÉSEAU', true);
+    });
+}
+
+function showResetBtn() {
+  // Passe le bouton en mode "ENTRER UN AUTRE NOM"
+  submitBtn.disabled = false;
+  submitBtn.classList.remove('loading');
+  submitBtn.classList.add('reset-mode');
+  btnLabel.textContent = 'ENTRER UN AUTRE NOM';
+}
+
+function showFeedback(msg, isAbandon) {
+  feedbackEl.textContent = msg;
+  feedbackEl.className = 'feedback visible' + (isAbandon ? ' abandon' : '');
+  state.resultShown = true;
+  submitBtn.disabled = true;
+}
+function hideFeedback() {
+  feedbackEl.className = 'feedback';
+  feedbackEl.textContent = '';
+  state.resultShown = false;
+}
+function doFullReset() {
+  state.nomSelectionne = false;
+  state.prenomExistant = '';
+  state.resultShown    = false;
+  nomInput.value       = '';
+  prenomInput.value    = '';
+  prenomInput.placeholder = 'Prénom';
+  hideDropdown(ddNom);
+  hideDropdown(ddPrenom);
+  hideFeedback();
+  btnLabel.textContent = 'AJOUTER';
+  submitBtn.disabled   = true;
+  submitBtn.classList.remove('loading');
+  submitBtn.classList.remove('reset-mode');
+}
+</script>
+</body>
+</html>
+`;
+    return new Response(MARCO_HTML, {
       headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' }
     });
   }
