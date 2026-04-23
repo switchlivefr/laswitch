@@ -2098,8 +2098,8 @@ function makeMarcoLink() {
     document.getElementById('c-marco-fb').classList.add('open');
     document.body.classList.add('coverlay-open');
   };
-  wrap.appendChild(finger);
   wrap.appendChild(a);
+  wrap.appendChild(finger);
   return wrap;
 }
 
@@ -2120,11 +2120,12 @@ function renderRules(){
   var cs=_resaOff?4:1,ce2=_resaOff?6:3,ca=_resaOff?3:0;
   for(var i=0;i<rows.length;i++){
     var codeA=(rows[i][ca]||'').trim().toUpperCase();
+    var codeA0=(rows[i][0]||'').trim().toUpperCase();
     if(codeA==='X')continue;
     var txt='';
     for(var col=cs;col<ce2;col++){var v=g(rows,i,col);if(v&&v.length>3&&v.charCodeAt(0)!==9658){txt=v;break;}}
     if(codeA==='L'){var lspR=document.createElement('div');lspR.style.height='10px';card.appendChild(lspR);continue;}
-    if(codeA==='LIEN'){var lienWrap=makeMarcoLink();card.appendChild(lienWrap);continue;}
+    if(codeA==='LIEN'||codeA0==='LIEN'){var lienWrap=makeMarcoLink();card.appendChild(lienWrap);continue;}
     if(!txt||isRK(txt))continue;
     if(codeA==='T'){var ti=document.createElement('div');ti.className='sec';ti.textContent=txt;card.appendChild(ti);}
     else if(codeA==='H'){var secH=document.createElement('div');secH.className='sec';secH.textContent=txt;card.appendChild(secH);}
