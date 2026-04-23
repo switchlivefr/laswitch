@@ -656,24 +656,21 @@ document.addEventListener('keydown', function(e) {
         return parseDate(b.date) - parseDate(a.date);
       });
 
-      // Récupérer titres YouTube via oEmbed — lots de 50 en parallèle avec timeout
-      const fetchTitle = async (ytUrl) => {
-        try {
-          const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(ytUrl)}&format=json`;
-          const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000));
-          const res = await Promise.race([fetch(oembedUrl), timeout]);
-          if (!res.ok) return '';
-          const d = await res.json();
-          return d.title || '';
-        } catch(e) { return ''; }
-      };
-
-      for (let i = 0; i < videos.length; i += 50) {
-        const batch = videos.slice(i, i + 50);
-        const titles = await Promise.all(
-          batch.map(v => v.titre ? Promise.resolve(v.titre) : fetchTitle(v.youtube))
-        );
-        titles.forEach((t, j) => { if (t) videos[i + j].titre = t; });
+      // Titres YouTube : côté Worker uniquement pour les vidéos personnelles (< 40)
+      // En mode admin (nombreuses vidéos), le client charge les titres lui-même via oEmbed
+      if (!isAdmin && videos.length <= 40) {
+        const fetchTitle = async (ytUrl) => {
+          try {
+            const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(ytUrl)}&format=json`;
+            const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 5000));
+            const res = await Promise.race([fetch(oembedUrl), timeout]);
+            if (!res.ok) return '';
+            const d = await res.json();
+            return d.title || '';
+          } catch(e) { return ''; }
+        };
+        const titles = await Promise.all(videos.map(v => fetchTitle(v.youtube)));
+        titles.forEach((t, i) => { if (t) videos[i].titre = t; });
       }
 
       return new Response(JSON.stringify({ videos }), {
