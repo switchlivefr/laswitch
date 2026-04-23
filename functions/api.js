@@ -656,19 +656,20 @@ document.addEventListener('keydown', function(e) {
         return parseDate(b.date) - parseDate(a.date);
       });
 
-      // Récupérer titres YouTube via oEmbed par lots de 10
+      // Récupérer titres YouTube via oEmbed — lots de 50 en parallèle avec timeout
       const fetchTitle = async (ytUrl) => {
         try {
           const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(ytUrl)}&format=json`;
-          const res = await fetch(oembedUrl);
+          const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000));
+          const res = await Promise.race([fetch(oembedUrl), timeout]);
           if (!res.ok) return '';
           const d = await res.json();
           return d.title || '';
         } catch(e) { return ''; }
       };
 
-      for (let i = 0; i < videos.length; i += 10) {
-        const batch = videos.slice(i, i + 10);
+      for (let i = 0; i < videos.length; i += 50) {
+        const batch = videos.slice(i, i + 50);
         const titles = await Promise.all(
           batch.map(v => v.titre ? Promise.resolve(v.titre) : fetchTitle(v.youtube))
         );
@@ -769,17 +770,19 @@ document.addEventListener('keydown', function(e) {
         const parseDate = d => { if (!d) return 0; const p = d.split('/'); if (p.length === 3) return new Date(p[2], p[1]-1, p[0]).getTime(); return 0; };
         return parseDate(b.date) - parseDate(a.date);
       });
-      // Titres YouTube
+      // Titres YouTube — lots de 50 en parallèle avec timeout
       const fetchTitle = async (ytUrl) => {
         try {
-          const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(ytUrl)}&format=json`);
+          const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(ytUrl)}&format=json`;
+          const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000));
+          const res = await Promise.race([fetch(oembedUrl), timeout]);
           if (!res.ok) return '';
           const d = await res.json();
           return d.title || '';
         } catch(e) { return ''; }
       };
-      for (let i = 0; i < videos.length; i += 10) {
-        const batch = videos.slice(i, i + 10);
+      for (let i = 0; i < videos.length; i += 50) {
+        const batch = videos.slice(i, i + 50);
         const titles = await Promise.all(batch.map(v => fetchTitle(v.youtube)));
         titles.forEach((t, j) => { if (t) videos[i + j].titre = t; });
       }
