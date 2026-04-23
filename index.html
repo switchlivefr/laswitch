@@ -457,18 +457,20 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
     <div class="sht" style="color:#1877f2;text-shadow:0 0 40px rgba(24,119,242,.35)">MES PRESTAS</div>
     <div class="shsub" id="prestas-sub" style="color:var(--white)">Tes prestations SWiTCH</div>
   </div>
-  <!-- État : non connecté -->
+  <!-- État : non connecté — page splash -->
   <div id="prestas-nologin" style="padding:32px 20px;text-align:center">
-    <div style="font-size:52px;margin-bottom:16px">🎬</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:8px">Tes vidéos SWiTCH</div>
-    <div style="font-size:14px;color:var(--muted2);line-height:1.7;margin-bottom:28px">Connecte-toi avec Facebook pour accéder<br>à tes prestations SWiTCH en un clin d'œil</div>
-    <button onclick="fbLogin()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#1877f2;border:none;border-radius:12px;padding:16px;cursor:pointer">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-      <span style="color:#fff;font-size:16px;font-weight:700;font-family:'DM Sans',sans-serif">Continuer avec Facebook</span>
+    <div style="font-size:72px;margin-bottom:20px">🎬</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:16px">TES VIDÉOS SWiTCH</div>
+    <div style="font-size:15px;color:var(--white);line-height:1.7;margin-bottom:28px;font-weight:500">Connecte-toi avec ton nom Facebook exact<br>pour accéder à toutes tes prestations SWiTCH</div>
+    <button onclick="prestasConnectClick()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#1877f2;border:none;border-radius:12px;padding:16px;cursor:pointer;margin-bottom:14px">
+      <span style="color:#fff;font-size:16px;font-weight:700;font-family:'DM Sans',sans-serif">SE CONNECTER</span>
     </button>
-    <button onclick="swOpenAccess()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:none;border:1px solid var(--border2);border-radius:12px;padding:14px;cursor:pointer;margin-top:12px">
-      <span style="font-size:20px">🎬</span>
-      <span style="color:var(--white);font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif">Accès SWiTCH</span>
+    <button onclick="openM('m-prestas-info')" style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;background:rgba(24,119,242,.08);border:1px solid rgba(24,119,242,.35);border-radius:12px;padding:14px 12px;cursor:pointer;animation:btnpulse-blue 3s ease-in-out infinite;gap:4px">
+      <span style="color:#fff;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;text-align:center">À lire si tu n'es pas identifié sur le profil</span>
+      <span style="display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#1877f2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        <span style="color:#1877f2;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif">Marco Kiff Ton SWiTCH</span>
+      </span>
     </button>
   </div>
   <!-- État : chargement -->
@@ -3353,14 +3355,16 @@ function fbLogout() {
   _prestasUnlocked = false;
   window._swLoaded = false;
   if (typeof FB !== 'undefined') FB.logout(function(){});
-  // Rester sur p-prestas et rouvrir la saisie de nom
+  // Revenir sur p-prestas et afficher la splash page
   if (currentPage !== 'p-prestas') nav('p-prestas');
-  // Masquer tous les états pour que seule la modale de saisie soit visible
-  ['prestas-nologin','prestas-loggedin','prestas-loading','prestas-empty','prestas-nofriend'].forEach(function(id){
+  // Masquer tous les états connectés, afficher la splash
+  ['prestas-loggedin','prestas-loading','prestas-empty','prestas-nofriend'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.style.display = 'none';
   });
+  var nologin = document.getElementById('prestas-nologin');
+  if (nologin) nologin.style.display = '';
+  document.getElementById('prestas-sub').textContent = 'Tes prestations SWiTCH';
   swAccReset();
-  openM('m-sw-access');
 }
 
 function showNoFriend(me) {
@@ -3469,7 +3473,7 @@ function loadPrestas(me) {
       var countEl = document.getElementById('prestas-count');
       countEl.textContent = videos.length + ' PRESTATION' + (videos.length > 1 ? 'S' : '') + ' SWiTCH';
       countEl.style.display = '';
-      document.getElementById('prestas-sub').textContent = videos.length + ' prestation' + (videos.length > 1 ? 's' : '');
+      document.getElementById('prestas-sub').textContent = videos.length + ' PRESTATION' + (videos.length > 1 ? 'S' : '') + ' SWiTCH';
 
       // Mode admin : activer la barre de recherche et charger IDS_FBK
       if (me && me.name && me.name.toLowerCase().includes('marco') && me.name.toLowerCase().includes('switch')) {
@@ -3671,7 +3675,7 @@ function clearSearchAndReload() {
     .then(function(data) {
       var videos = data.videos || [];
       document.getElementById('prestas-count').textContent = videos.length + ' PRESTATION' + (videos.length > 1 ? 'S' : '') + ' SWiTCH';
-      document.getElementById('prestas-sub').textContent = videos.length + ' prestation' + (videos.length > 1 ? 's' : '');
+      document.getElementById('prestas-sub').textContent = videos.length + ' PRESTATION' + (videos.length > 1 ? 'S' : '') + ' SWiTCH';
       renderVideoList(videos);
     });
 }
@@ -3815,11 +3819,12 @@ function unlockPrestas() {
     openM('m-sw-admin');
     return;
   }
-  // Utilisateur déjà connecté : basculer sur p-prestas
-  if (window._swLoaded) {
-    if (currentPage !== 'p-prestas') nav('p-prestas');
-    return;
-  }
+  // Toujours aller sur p-prestas : la page gère elle-même l'état connecté/déconnecté
+  if (currentPage !== 'p-prestas') nav('p-prestas');
+}
+
+function prestasConnectClick() {
+  // Bouton SE CONNECTER sur la splash page → lance le flow de connexion
   swOpenAccess();
 }
 
@@ -3929,7 +3934,7 @@ function swAdminVoirVideos() {
       var countElA = document.getElementById('prestas-count');
       countElA.textContent = videos.length + ' PRESTATIONS SWiTCH';
       countElA.style.display = '';
-      document.getElementById('prestas-sub').textContent = videos.length + ' prestations';
+      document.getElementById('prestas-sub').textContent = videos.length + ' PRESTATIONS SWiTCH';
       // Afficher la barre de recherche admin
       document.getElementById('prestas-search-bar').style.display = 'block';
       loadIdsFbk();
@@ -4571,6 +4576,9 @@ function checkFbSession() {
   }
   var swToken = localStorage.getItem('sw_token');
   if (swToken && swName && !_fbUser) { swVerifyToken(swToken, swName); return; }
+  // Non connecté : s'assurer que la splash est visible, pas de modale automatique
+  var nologin = document.getElementById('prestas-nologin');
+  if (nologin) nologin.style.display = '';
   if (typeof FB === 'undefined') return;
   FB.getLoginStatus(function(response) {
     if (response.status === 'connected' && !_fbUser) {
