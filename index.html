@@ -59,11 +59,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 #rules-more-btn button{display:flex;align-items:center;justify-content:center;width:100%;background:rgba(232,148,58,.07);border:1px solid rgba(232,148,58,.22);border-radius:var(--r);padding:12px 16px;cursor:pointer;font-size:15px;font-weight:600;color:var(--amber);animation:btnpulse-amber 3s ease-in-out infinite}
 @media(min-width:600px){#rules-more-btn{max-width:480px;left:50%;transform:translateX(-50%);right:auto;width:480px}}
 @keyframes reperHintPulse{0%,100%{opacity:0}50%{opacity:1}}
+@keyframes rulesFingerMove{0%,100%{transform:translateX(0)}50%{transform:translateX(8px)}}
+.rules-finger{display:inline-block;animation:rulesFingerMove 1.4s ease-in-out infinite;color:var(--gold);margin-left:8px;font-size:1em;vertical-align:middle}
 #reper-side-hint-wrap{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:9999;display:flex;align-items:center;justify-content:flex-end;padding-right:8px}
 @media(min-width:600px){#reper-side-hint-wrap{max-width:480px;left:50%;right:auto;width:480px;transform:translateX(-50%)}}
 #reper-side-hint{pointer-events:none;opacity:0;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:0px;color:var(--gold);line-height:1.3;white-space:nowrap;transition:opacity .5s;background:rgba(8,8,16,.55);border:1px solid rgba(242,201,76,.2);border-radius:12px;padding:14px 12px}
 #reper-side-hint.visible{opacity:1;pointer-events:auto}
-#reper-side-hint-btn{display:block;margin-top:12px;width:100%;background:rgba(52,209,192,.07);border:1px solid rgba(52,209,192,.22);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;color:var(--cyan);cursor:pointer;padding:10px 16px;animation:btnpulse 3s ease-in-out infinite}
+#reper-side-hint-btn{display:block;margin-top:12px;width:100%;background:transparent;border:none;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:22px;font-weight:600;color:var(--cyan);cursor:pointer;padding:10px 16px;opacity:0}
 @keyframes starPulse{0%,100%{opacity:.08;filter:brightness(1.5)}50%{opacity:.35;filter:brightness(3)}}
 @keyframes sloganPulse{0%,100%{opacity:.2}50%{opacity:1}}
 
@@ -490,7 +492,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
             onfocus="stopPrestasVideo();onSearchFocus()"
             style="width:100%;box-sizing:border-box;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:9px 36px 9px 12px;font-size:14px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none">
           <!-- Croix effacer -->
-          <button onclick="clearSearch()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted2);font-size:18px;line-height:1;padding:0">✕</button>
+          <button onclick="clearSearchAndReload()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted2);font-size:18px;line-height:1;padding:0">✕</button>
         </div>
         <!-- Bouton ouvrir profil Facebook -->
         <button id="prestas-fb-open" onclick="openSelectedFbProfile()" title="Ouvrir le profil Facebook" disabled
@@ -561,7 +563,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
   <button class="bn" id="bn-rules" onclick="nav('p-rules')"><span class="ico">📋</span><span>Inscription</span></button>
   <button class="bn" id="bn-resa" onclick="bnResaClick()"><span class="ico" id="bn-resa-ico">🍽️</span><span id="bn-resa-lbl">Réservation</span></button>
 </nav>
-<div id="reper-side-hint-wrap"><div id="reper-side-hint"><div>Jette un oeil au</div><div id="reper-side-hint-label">One Shot LIVE</div><button id="reper-side-hint-btn" onclick="reperHintValidate()">Valider</button></div></div>
+<div id="reper-side-hint-wrap"><div id="reper-side-hint"><div>Jette un oeil au</div><div id="reper-side-hint-label-wrap" style="white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:6px"><span style="font-size:0.85em">✨</span><span id="reper-side-hint-label">One Shot LIVE</span><span style="font-size:0.85em">✨</span></div><button id="reper-side-hint-btn" onclick="reperHintValidate()" style="opacity:0;pointer-events:auto;cursor:pointer"><span id="reper-hint-swipe-ico" style="display:inline-block;animation:rulesFingerMove 1.4s ease-in-out infinite">👉</span></button></div></div>
 
 <!-- MODALE : Pro Race Cafe -->
 <div class="moverlay" id="m-prc" onclick="if(event.target===this)closeM('m-prc')">
@@ -2080,6 +2082,27 @@ function isRK(t){for(var i=0;i<RULE_SKIP.length;i++){if(t.indexOf(RULE_SKIP[i])>
 
 var _rulesBigMode = false;
 
+function makeMarcoLink() {
+  var wrap = document.createElement('div');
+  var a = document.createElement('a');
+  a.href = '#';
+  a.style.color = '#1877f2';
+  a.style.fontWeight = '700';
+  a.style.textDecoration = 'none';
+  a.textContent = 'Marco Kiff Ton SWiTCH';
+  a.onclick = function(e) {
+    e.preventDefault();
+    document.getElementById('c-marco-fb').classList.add('open');
+    document.body.classList.add('coverlay-open');
+  };
+  var finger = document.createElement('span');
+  finger.className = 'rules-finger';
+  finger.textContent = '👉';
+  wrap.appendChild(a);
+  wrap.appendChild(finger);
+  return wrap;
+}
+
 function toggleRulesBig(){
   _rulesBigMode = !_rulesBigMode;
   var btn = document.getElementById('rules-more-btn-inner');
@@ -2109,12 +2132,14 @@ function renderRules(){
     else if(codeA==='K'){var linesK=txt.split(/[\n\r]+/);for(var liK=0;liK<linesK.length;liK++){var lineK=linesK[liK].trim();if(!lineK)continue;var pK=document.createElement('p');pK.textContent=lineK;card.appendChild(pK);}}
     else if(isRH(txt)){var sec=document.createElement('div');sec.className='sec';sec.textContent=txt;card.appendChild(sec);}
     else if(isRS(txt)){var sub=document.createElement('div');sub.className='sec sub';sub.textContent=txt;card.appendChild(sub);}
-    else if(txt.indexOf('After du Spectacle')>-1){
+    else if(codeA==='LIEN'){
+      // Code LIEN dans col A de REGLES BIG : insérer le lien Marco à cet endroit précis, à la ligne
+      var lienWrap=makeMarcoLink();lienWrap.style.cssText='display:block;margin-top:10px;margin-bottom:6px';card.appendChild(lienWrap);
+    }else if(txt.indexOf('After du Spectacle')>-1){
       var p=document.createElement('p');var colon=txt.indexOf(':');
-      if(colon>-1)p.textContent=txt.slice(0,colon+1)+' ';else p.textContent=txt+' ';
-      var aM=document.createElement('a');aM.href='#';aM.style.color='#1877f2';aM.style.fontWeight='700';aM.style.textDecoration='none';aM.textContent='Marco Kiff Ton SWiTCH';
-      aM.onclick=function(e){e.preventDefault();document.getElementById('c-marco-fb').classList.add('open');document.body.classList.add('coverlay-open');};
-      p.appendChild(aM);card.appendChild(p);
+      if(colon>-1)p.textContent=txt.slice(0,colon+1);else p.textContent=txt;
+      card.appendChild(p);
+      var lienWrapA=makeMarcoLink();lienWrapA.style.cssText='display:block;margin-top:8px';card.appendChild(lienWrapA);
     }else{
       var lines=txt.split(/[\n\r]+/);
       for(var li=0;li<lines.length;li++){
@@ -2126,17 +2151,8 @@ function renderRules(){
   }
   // En mode resa_on et REGLES (pas REGLES BIG), ajouter le lien Marco en bas
   if(!_resaOff && !_rulesBigMode){
-    var marcoP=document.createElement('p');
-    marcoP.style.marginTop='16px';
-    var marcoA=document.createElement('a');
-    marcoA.href='#';
-    marcoA.style.color='#1877f2';
-    marcoA.style.fontWeight='700';
-    marcoA.style.textDecoration='none';
-    marcoA.textContent='Marco Kiff Ton SWiTCH';
-    marcoA.onclick=function(e){e.preventDefault();document.getElementById('c-marco-fb').classList.add('open');document.body.classList.add('coverlay-open');};
-    marcoP.appendChild(marcoA);
-    card.appendChild(marcoP);
+    var marcoWrap=makeMarcoLink();marcoWrap.style.marginTop='16px';
+    card.appendChild(marcoWrap);
   }
   wrap.appendChild(card);re.appendChild(wrap);
   // Ajuster spacer : en mode normal resa_on, juste le lien Marco suffit
@@ -3604,6 +3620,19 @@ function clearSearch() {
   var fbBtn = document.getElementById('prestas-fb-open');
   if (fbBtn) { fbBtn.disabled = true; fbBtn.style.opacity = '0.3'; }
   closeDropdown();
+}
+
+function clearSearchAndReload() {
+  // Appelé uniquement par la croix — efface ET recharge toutes les vidéos admin
+  clearSearch();
+  fetch('/api?action=getVideos&fbid=ALL&nom=&fullname=')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var videos = data.videos || [];
+      document.getElementById('prestas-count').textContent = videos.length + ' PRESTATION' + (videos.length > 1 ? 'S' : '') + ' SWiTCH';
+      document.getElementById('prestas-sub').textContent = videos.length + ' prestation' + (videos.length > 1 ? 's' : '');
+      renderVideoList(videos);
+    });
 }
 
 function onSearchFocus() {
