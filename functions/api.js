@@ -728,8 +728,8 @@ document.addEventListener('keydown', function(e) {
       if (data.error) throw new Error(data.error.message);
       const rows = (data.values || []).slice(1);
       const ids = rows
-        .filter(row => row[0])
-        .map(row => ({ fb_id: (row[7]||'').trim(), name: row[0].trim(), nb: parseInt(row[2]||0), prenom: (row[6]||'').trim() }))
+        .filter(row => row[0] && row[1])
+        .map(row => ({ fb_id: row[0].trim(), name: row[0].trim(), nb: parseInt(row[2]||0), prenom: (row[6]||'').trim() }))
         .sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }));
       return new Response(JSON.stringify({ ids }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'max-age=300' }
