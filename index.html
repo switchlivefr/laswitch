@@ -1962,6 +1962,12 @@ window.addEventListener('resize', function(){
 
 function renderHome(){
   if(!RAW.switch||RAW.switch.error)return;
+  // Sauvegarder le prénom (col G) si connecté et pas encore sauvegardé
+  if (!window._prenomSaved) {
+    window._prenomSaved = true;
+    var _snp = localStorage.getItem('sw_name');
+    if (_snp) _savePrenom(_snp);
+  }
   var rows=RAW.switch.rows;
   var ed=g(rows,0,0);if(ed)document.getElementById('home-edition').textContent=ed;
   var ct=g(rows,0,2);var sw=document.getElementById('sw-count-sub');if(sw&&ct)sw.textContent=ct;
@@ -3385,9 +3391,6 @@ document.querySelector('.bnav').classList.add('nav-disabled');
       if(nd.videoUrl)applyVideoUrl(nd.videoUrl);
       loadVideoList();
       setInterval(silentRefresh,30000);
-      // Sauvegarder le prénom (col G IDS_FBK) si connecté
-      var _snForPrenom = localStorage.getItem('sw_name');
-      if (_snForPrenom) _savePrenom(_snForPrenom);
       setTimeout(function(){ var ed=document.getElementById('home-edition'); if(ed)ed.classList.add('anim-in'); },1000);
       setTimeout(function(){
         var prc=document.getElementById('home-prc-link');
