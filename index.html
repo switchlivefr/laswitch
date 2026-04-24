@@ -558,6 +558,12 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
     <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--white);margin-bottom:24px;letter-spacing:1px">Aucune prestation trouvée</div>
     <button onclick="fbLogout()" style="margin-top:0;background:none;border:1px solid var(--border2);border-radius:10px;padding:14px 28px;font-size:16px;font-weight:700;color:var(--white);cursor:pointer;font-family:'DM Sans',sans-serif">Changer de compte</button>
   </div>
+  <!-- État : demande en attente de validation -->
+  <div id="prestas-pending" style="display:none;padding:48px 20px;text-align:center">
+    <div style="font-size:56px;margin-bottom:24px">⏳</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:8px;line-height:1.2">DEMANDE D'ACCES EN<br>ATTENTE DE VALIDATION</div>
+    <div style="font-size:13px;color:var(--muted2);margin-top:12px;line-height:1.6">Dès que Marco valide ta demande,<br>tes prestations s'affichent automatiquement.</div>
+  </div>
 </div>
 <nav class="bnav">
   <button class="bn active" id="bn-home" onclick="nav('p-home')"><span class="ico">🏠</span><span>Accueil</span></button>
@@ -938,7 +944,7 @@ function nav(id,direction){
     }else{ne.classList.add('active');}
   }
   if(id==='p-prestas'){checkFbSession();hideHint();}
-  if(oldId==='p-prestas'&&id!=='p-prestas'){stopPrestasVideo();}
+  if(oldId==='p-prestas'&&id!=='p-prestas'){stopPrestasVideo();if(typeof _swPendingPollTimer!=='undefined'&&_swPendingPollTimer){clearInterval(_swPendingPollTimer);_swPendingPollTimer=null;}}
   if(id==='p-switch'){renderSwitch();showHint();
     var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
     var isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -3443,6 +3449,8 @@ function fbLogout() {
   stopPrestasVideo();
   _fbUser = null;
   window._swLoaded = false;
+  // Arrêter tout polling en cours
+  if (typeof _swPendingPollTimer !== 'undefined' && _swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
   localStorage.removeItem('sw_token');
   localStorage.removeItem('sw_name');
   localStorage.removeItem('sw_fbId');
@@ -3458,11 +3466,7 @@ function fbLogout() {
   }
   // Mode utilisateur : revenir sur p-prestas et afficher la splash
   if (currentPage !== 'p-prestas') nav('p-prestas');
-  ['prestas-loggedin','prestas-loading','prestas-empty','prestas-nofriend'].forEach(function(id){
-    var el = document.getElementById(id); if (el) el.style.display = 'none';
-  });
-  var nologin = document.getElementById('prestas-nologin');
-  if (nologin) nologin.style.display = '';
+  _showAllPrestasStates('prestas-nologin');
   document.getElementById('prestas-sub').textContent = 'Tes prestations SWiTCH';
   swAccReset();
 }
@@ -4121,76 +4125,22 @@ function swAdminValidate(name, btn) {
     .catch(function(){ btn.textContent = 'ERREUR'; btn.disabled = false; });
 }
 
-var _swPendingPollTimer = null;
-
 function swShowPending(token, name) {
-  // Afficher la modale avec sablier immédiatement
-  var msgEl = document.getElementById('m-sw-pending-msg');
-  if (msgEl) msgEl.style.display = 'none';
-  var loadEl = document.getElementById('m-sw-pending-load');
-  if (loadEl) loadEl.style.display = 'block';
-  // Restaurer le titre par défaut (peut avoir été changé par swAccVerifyPinConnect)
-  var titleEl = document.getElementById('m-sw-pending-title');
-  if (titleEl) titleEl.textContent = "DEMANDE D'ACCES EN";
-  openM('m-sw-pending');
-
-  // Arrêter tout polling précédent
-  if (_swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
-
-  function checkValidation() {
-    fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=verifyToken&token=' + encodeURIComponent(token) + '&name=' + encodeURIComponent(name))
-      .then(function(r){ return r.json(); })
-      .then(function(data) {
-        if (data.ok && data.fbId !== undefined) {
-          // Validé : arrêter le polling, mémoriser de façon permanente puis charger les vidéos
-          if (_swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
-          localStorage.setItem('sw_loggedIn', '1');
-          localStorage.setItem('sw_fbId', data.fbId || '');
-          localStorage.setItem('sw_name', name);
-          window._swLoaded = true;
-          closeM('m-sw-pending');
-          nav('p-prestas');
-          var fakeMe = { id: data.fbId || '', name: name, first_name: name.split(' ')[0] };
-          loadPrestas(fakeMe);
-        } else {
-          // Encore en attente : afficher le message (seulement au 1er appel)
-          if (loadEl && loadEl.style.display !== 'none') { loadEl.style.display = 'none'; }
-          if (msgEl && msgEl.style.display === 'none') {
-            msgEl.style.display = 'block';
-            var footEl = document.getElementById('m-sw-pending-foot');
-            if (footEl) footEl.style.display = 'flex';
-          }
-          if (!data.pending) {
-            if (_swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
-            localStorage.removeItem('sw_token');
-            localStorage.removeItem('sw_name');
-            window._swLoaded = false;
-          }
-        }
-      })
-      .catch(function(){
-        if (loadEl) loadEl.style.display = 'none';
-        if (msgEl) msgEl.style.display = 'block';
-      });
-  }
-
-  // 1er appel immédiat, puis polling toutes les 15 secondes
-  checkValidation();
-  _swPendingPollTimer = setInterval(checkValidation, 15000);
+  // Fermer la modale d'accès si ouverte, naviguer sur p-prestas et afficher l'écran d'attente inline
+  swAccCleanupAndClose();
+  if (currentPage !== 'p-prestas') nav('p-prestas');
+  _showAllPrestasStates('prestas-pending');
+  _startPendingPoll(token, name);
 }
 
 function swVerifyToken(token, name) {
-  document.getElementById('prestas-nologin').style.display  = 'none';
-  document.getElementById('prestas-loggedin').style.display = 'none';
-  document.getElementById('prestas-empty').style.display    = 'none';
-  document.getElementById('prestas-nofriend').style.display = 'none';
-  document.getElementById('prestas-loading').style.display  = 'block';
+  // Vérifie le token une fois, puis délègue à _startPendingPoll si encore en attente
+  _showAllPrestasStates('prestas-loading');
   fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=verifyToken&token=' + encodeURIComponent(token) + '&name=' + encodeURIComponent(name))
     .then(function(r){ return r.json(); })
     .then(function(data) {
-      document.getElementById('prestas-loading').style.display = 'none';
       if (data.ok && data.fbId !== undefined) {
-        // Validation confirmée : mémoriser de façon permanente pour connexion auto
+        // Validation confirmée → mémoriser et charger
         localStorage.setItem('sw_loggedIn', '1');
         localStorage.setItem('sw_fbId', data.fbId || '');
         localStorage.setItem('sw_name', name);
@@ -4199,39 +4149,39 @@ function swVerifyToken(token, name) {
         var fakeMe = { id: data.fbId || '', name: name, first_name: name.split(' ')[0] };
         loadPrestas(fakeMe);
       } else if (data.pending) {
-        openM('m-sw-pending');
+        // Encore en attente → afficher écran inline et démarrer polling
+        _showAllPrestasStates('prestas-pending');
+        _startPendingPoll(token, name);
       } else {
+        // Rejeté ou expiré
         localStorage.removeItem('sw_token');
         localStorage.removeItem('sw_name');
         window._swLoaded = false;
-        document.getElementById('prestas-nologin').style.display = 'block';
+        _showAllPrestasStates('prestas-nologin');
       }
     })
     .catch(function(){
-      document.getElementById('prestas-loading').style.display = 'none';
-      document.getElementById('prestas-nologin').style.display = 'block';
+      _showAllPrestasStates('prestas-nologin');
     });
 }
 
 var _swAccReturnPage = null;
 
 function swOpenAccess() {
-  // Priorité absolue : utilisateur déjà connecté par PIN → bascule directe sur p-prestas
-  // (garde-fou en plus de celui de unlockPrestas, pour tous les chemins d'appel)
+  // CAS 1 : déjà authentifié (sw_loggedIn=1) → aller directement sur p-prestas
   if (localStorage.getItem('sw_loggedIn') === '1' && localStorage.getItem('sw_name')) {
-    // Ne PAS mettre _swLoaded ici : c'est checkFbSession (appelée par nav) qui le fera
-    // après avoir effectivement lancé loadPrestas
     if (currentPage !== 'p-prestas') nav('p-prestas');
     return;
   }
+  // CAS 2 : demande en attente (token présent) → aller sur p-prestas (checkFbSession affiche l'écran d'attente)
   var swToken = localStorage.getItem('sw_token');
   var swName  = localStorage.getItem('sw_name');
   if (swToken && swName) {
-    // Ouvrir la fenetre d'attente immédiatement avec sablier
-    swShowPending(swToken, swName);
+    if (currentPage !== 'p-prestas') nav('p-prestas');
+    // checkFbSession sera appelé par nav → affichera prestas-pending et lancera le polling
     return;
   }
-  // Rester sur p-prestas — c'est la page d'origine du bouton SE CONNECTER
+  // CAS 3 : pas de session → ouvrir la modale de connexion/demande
   _swAccReturnPage = 'p-prestas';
   if (currentPage !== 'p-prestas') nav('p-prestas');
   swAccReset();
@@ -4592,17 +4542,13 @@ function swAccVerifyPinConnect(pin) {
         var fakeMe = { id: data.fbId || '', name: _swAccName, first_name: _swAccName.split(' ')[0] };
         loadPrestas(fakeMe);
       } else if (data.reason === 'not_validated') {
-        // PIN correct MAIS Marco n'a pas encore validé : fermer m-sw-access puis afficher
-        // la modale m-sw-pending avec titre "DEMANDE D'ACCES DÉJÀ" (pas de CODE ERRONÉ)
+        // PIN correct MAIS Marco n'a pas encore validé → afficher écran inline + polling
         swAccHideLoading();
         swAccCleanupAndClose();
-        var loadEl2 = document.getElementById('m-sw-pending-load');
-        if (loadEl2) loadEl2.style.display = 'none';
-        var msgEl2 = document.getElementById('m-sw-pending-msg');
-        if (msgEl2) msgEl2.style.display = 'block';
-        var titleEl2 = document.getElementById('m-sw-pending-title');
-        if (titleEl2) titleEl2.textContent = "DEMANDE D'ACCES EN";
-        openM('m-sw-pending');
+        var tok = localStorage.getItem('sw_token') || _swAccToken;
+        var nm  = localStorage.getItem('sw_name')  || _swAccName;
+        _showAllPrestasStates('prestas-pending');
+        _startPendingPoll(tok, nm);
       } else {
         // Mauvais PIN : afficher CODE ERRONÉ 2s puis reset (comme dans m-pin)
         swAccHideLoading();
@@ -4711,11 +4657,60 @@ function swAccCleanupAndClose() {
   _swAccReturnPage = null;
 }
 
+function _showAllPrestasStates(show) {
+  // Utilitaire : cache tous les états sauf celui demandé
+  var states = ['prestas-nologin','prestas-loading','prestas-loggedin','prestas-empty','prestas-nofriend','prestas-pending'];
+  states.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = (id === show) ? (id === 'prestas-loggedin' ? 'flex' : 'block') : 'none';
+  });
+}
+
+var _swPendingPollTimer = null;
+
+function _startPendingPoll(token, name) {
+  // Arrêter tout polling précédent
+  if (_swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
+
+  function checkNow() {
+    fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=verifyToken&token=' + encodeURIComponent(token) + '&name=' + encodeURIComponent(name))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.ok && data.fbId !== undefined) {
+          // Validé → arrêter polling, mémoriser, charger vidéos
+          if (_swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
+          localStorage.setItem('sw_loggedIn', '1');
+          localStorage.setItem('sw_fbId', data.fbId || '');
+          localStorage.setItem('sw_name', name);
+          window._swLoaded = true;
+          _showAllPrestasStates('prestas-loading');
+          var fakeMe = { id: data.fbId || '', name: name, first_name: name.split(' ')[0] };
+          loadPrestas(fakeMe);
+        } else if (!data.pending) {
+          // Refusé ou token invalide → nettoyer et retour splash
+          if (_swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
+          localStorage.removeItem('sw_token');
+          localStorage.removeItem('sw_name');
+          window._swLoaded = false;
+          _showAllPrestasStates('prestas-nologin');
+        }
+        // si data.pending → on ne fait rien, le polling continue
+      })
+      .catch(function() { /* réseau indisponible : on réessaie au prochain tick */ });
+  }
+
+  // Vérification immédiate + polling toutes les 15 secondes
+  checkNow();
+  _swPendingPollTimer = setInterval(checkNow, 15000);
+}
+
 function checkFbSession() {
   if (_adminMode) return;
   if (window._swLoaded) return;
   var swLoggedIn = localStorage.getItem('sw_loggedIn');
   var swName = localStorage.getItem('sw_name');
+
+  // CAS 1 : déjà authentifié (validé par Marco dans une session précédente)
   if (swLoggedIn === '1' && swName) {
     window._swLoaded = true;
     var swFbId = localStorage.getItem('sw_fbId') || '';
@@ -4723,11 +4718,20 @@ function checkFbSession() {
     loadPrestas(fakeMe);
     return;
   }
+
   var swToken = localStorage.getItem('sw_token');
-  if (swToken && swName && !_fbUser) { swVerifyToken(swToken, swName); return; }
-  // Non connecté : s'assurer que la splash est visible, pas de modale automatique
-  var nologin = document.getElementById('prestas-nologin');
-  if (nologin) nologin.style.display = '';
+
+  // CAS 2 : demande en attente (token présent mais pas encore validé)
+  if (swToken && swName) {
+    // Afficher immédiatement l'écran d'attente dans la page (pas de modale)
+    _showAllPrestasStates('prestas-pending');
+    // Lancer le polling : dès validation par Marco, les vidéos s'affichent seules
+    _startPendingPoll(swToken, swName);
+    return;
+  }
+
+  // CAS 3 : non connecté — splash avec bouton SE CONNECTER
+  _showAllPrestasStates('prestas-nologin');
   if (typeof FB === 'undefined') return;
   FB.getLoginStatus(function(response) {
     if (response.status === 'connected' && !_fbUser) {
