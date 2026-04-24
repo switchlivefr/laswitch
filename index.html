@@ -3424,17 +3424,30 @@ document.querySelector('.bnav').classList.add('nav-disabled');
 if('serviceWorker' in navigator){
   window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js');});
 }
-// Greeting sablier : afficher le prénom si déjà connecté
+// Greeting sablier : afficher le prénom depuis IDS_FBK col G si connecté
 (function(){
   var swName = localStorage.getItem('sw_name');
-  if (swName && swName.trim()) {
-    var prenom = swName.trim().split(' ')[0].toUpperCase();
-    var greet = document.getElementById('loader-greeting');
-    var nameEl = document.getElementById('loader-greet-name');
-    if (greet && nameEl) {
-      nameEl.textContent = prenom;
-      greet.style.display = 'flex';
-    }
+  var swFbId = localStorage.getItem('sw_fbId');
+  if (!swName || !swName.trim()) return;
+  var greet = document.getElementById('loader-greeting');
+  var nameEl = document.getElementById('loader-greet-name');
+  if (!greet || !nameEl) return;
+  // Afficher d'abord le premier mot du sw_name en attendant l'API
+  var fallback = swName.trim().split(' ')[0].toUpperCase();
+  nameEl.textContent = fallback;
+  greet.style.display = 'flex';
+  // Chercher le vrai prénom (col G) dans IDS_FBK si on a un fbId
+  if (swFbId) {
+    fetch('/api?action=getIdsFbk')
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        var ids = data.ids || [];
+        var match = ids.find(function(item){ return item.fb_id === swFbId; });
+        if (match && match.prenom) {
+          nameEl.textContent = match.prenom.toUpperCase();
+        }
+      })
+      .catch(function(){});
   }
 })();
 </script>
