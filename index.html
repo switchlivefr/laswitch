@@ -4102,10 +4102,9 @@ function swOpenAccess() {
     swShowPending(swToken, swName);
     return;
   }
-  // Mémoriser la page actuelle, puis basculer sur Répertoire (page légère)
-  // pour libérer les ressources de l'accueil (vidéo, gif, diaporama, animations)
-  _swAccReturnPage = currentPage;
-  if (currentPage !== 'p-switch') nav('p-switch');
+  // Rester sur p-prestas — c'est la page d'origine du bouton SE CONNECTER
+  _swAccReturnPage = 'p-prestas';
+  if (currentPage !== 'p-prestas') nav('p-prestas');
   swAccReset();
   swLoadNames();
   openM('m-sw-access');
@@ -4129,8 +4128,7 @@ function swAccFilterFocus(val) {
     inp.style.caretColor = '';
     _swAccSelectedFromList = false;
     _swAccName = '';
-    var ab = document.getElementById('sw-acc-action-btn');
-    if (ab) { ab.style.opacity = '1'; ab.disabled = true; ab.textContent = 'EN ATTENTE DE...'; ab.style.background = '#555'; ab.style.color = '#333'; }
+
     document.getElementById('sw-acc-dropdown').style.display = 'none';
     return;
   }
@@ -4246,20 +4244,14 @@ function swAccHideLoading() {
 var _swAccHasPinCache = {};
 var _swAccHasPinSeq = 0; // séquence pour ignorer les réponses obsolètes
 function swAccUpdateButtons(name) {
-  var btn = document.getElementById('sw-acc-action-btn');
   var n = (name || '').trim();
-  if (!n) {
-    if (btn) { btn.style.opacity = '1'; btn.disabled = true; btn.textContent = 'EN ATTENTE DE...'; btn.style.background = '#555'; btn.style.color = '#333'; }
-    return;
-  }
+  if (!n) return;
   // Cache disponible : appliquer immédiatement sans sablier
   var cached = _swAccHasPinCache[n.toLowerCase()];
   if (cached !== undefined) {
     _applyBtnState(cached);
     return;
   }
-  // Désactiver pendant la vérif
-  if (btn) { btn.disabled = true; btn.style.opacity = '0.35'; }
   // Sablier UNIQUEMENT si la sélection vient du dropdown
   var seq = ++_swAccHasPinSeq;
   var loadingTimer = null;
@@ -4288,30 +4280,20 @@ function swAccUpdateButtons(name) {
     });
 }
 
-// Applique l'état du bouton unique selon hasPin
+// _applyBtnState : affiche directement le bon step sous le champ de saisie
 function _applyBtnState(hasPin) {
-  var btn = document.getElementById('sw-acc-action-btn');
-  if (!btn) return;
-  btn.style.opacity = '1';
-  btn.disabled = false;
+  var name = (document.getElementById('sw-acc-input').value || '').trim();
+  if (!name || name.length < 2) return;
+  _swAccName = name;
   if (hasPin) {
-    btn.textContent = 'Connexion';
-    btn.style.background = '#e53935';
-    btn._mode = 'connect';
+    swAccGoConnect();
   } else {
-    btn.textContent = "Demande d'accès";
-    btn.style.background = '#1877f2';
-    btn._mode = 'demande';
+    swAccGoDemande();
   }
 }
 
-// Clic sur le bouton unique : déléguer selon le mode
-function swAccActionClick() {
-  var btn = document.getElementById('sw-acc-action-btn');
-  if (!btn || btn.disabled) return;
-  if (btn._mode === 'connect') swAccGoConnect();
-  else swAccGoDemande();
-}
+// swAccActionClick conservé pour compatibilité (ne devrait plus être appelé)
+function swAccActionClick() {}
 
 // ============================================================
 // FLUX DEMANDE D'ACCÈS (CAS 1)
@@ -4319,8 +4301,6 @@ function swAccActionClick() {
 var _swPinDemande = '';    // PIN saisi par l'utilisateur (mémorisé pour être envoyé lors du click réseau social)
 
 function swAccGoDemande() {
-  var btn = document.getElementById('sw-acc-action-btn');
-  if (btn && btn.disabled) return;
   var name = (document.getElementById('sw-acc-input').value || '').trim();
   if (!name || name.length < 2) {
     document.getElementById('sw-acc-input').style.borderColor = '#e53935';
@@ -4389,8 +4369,6 @@ function swAccValidatePinDemande() {
 // FLUX CONNEXION (CAS 2)
 // ============================================================
 function swAccGoConnect() {
-  var btn = document.getElementById('sw-acc-action-btn');
-  if (!btn || btn.disabled) return;
   var name = (document.getElementById('sw-acc-input').value || '').trim();
   if (!name || name.length < 2) return;
   _swAccName = name;
@@ -4527,8 +4505,7 @@ function swAccReset() {
   var dd = document.getElementById('sw-acc-dropdown');
   if (dd) { dd.style.display = 'none'; if (dd._outsideTapHandler) { document.removeEventListener('touchstart', dd._outsideTapHandler); dd._outsideTapHandler = null; } }
   // Reset bouton unique
-  var ab = document.getElementById('sw-acc-action-btn');
-  if (ab) { ab.style.opacity = '1'; ab.disabled = true; ab.textContent = 'EN ATTENTE DE...'; ab.style.background = '#555'; ab.style.color = '#333'; ab._mode = ''; }
+
   // Reset cases PIN demande + connect
   for (var i = 0; i < 4; i++) {
     var d = document.getElementById('sw-pin-d-' + i);
@@ -4631,10 +4608,7 @@ function checkFbSession() {
               style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#fff;color:#000;font-size:15px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
           <div id="sw-acc-dropdown" style="display:none;position:fixed;background:#fff;border-radius:8px;max-height:200px;overflow-y:auto;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.5);text-align:left"></div>
-          <div style="margin-top:12px">
-            <button id="sw-acc-action-btn" onclick="swAccActionClick()"
-              style="width:100%;padding:12px 10px;border-radius:8px;border:none;background:#555;color:#333;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer;opacity:1" disabled>EN ATTENTE DE...</button>
-          </div>
+          <div id="sw-acc-action-area" style="margin-top:4px"></div>
         </div>
       </div>
       <!-- STEP PIN DEMANDE : saisie d'un nouveau PIN pour demande d'accès -->
