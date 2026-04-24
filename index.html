@@ -1599,30 +1599,24 @@ function renderPrestasInfo(){
     if(code==='I'){
       var url=txt;
       if(!url)continue;
-      // Chercher le prochain code LIEN dans les lignes suivantes pour le lien cliquable
-      var nextLienUrl = null;
-      for(var ni=i+1;ni<rows.length;ni++){
-        var nc=(rows[ni][0]||'').trim().toUpperCase();
-        if(nc==='LIEN'){ nextLienUrl='https://www.facebook.com/marco.onlyformusic'; break; }
-        if(nc==='I'||nc==='T'||nc==='H'||nc==='S') break;
-      }
       var pos=(rows[i][2]||'').trim().toUpperCase();
       var isVideo=/\.(mp4|webm|ogg)(\?.*)?$/i.test(url);
+      var openMarco=function(){document.getElementById('c-marco-fb').classList.add('open');document.body.classList.add('coverlay-open');};
       if(pos==='L'||pos==='R'){
         var side=(pos==='L')?'left':'right';
         var margin=(side==='right')?'0 0 10px 16px':'0 16px 10px 0';
-        var cssFloat='float:'+side+';max-width:45%;border-radius:8px;margin:'+margin+';display:block';
+        var cssFloat='float:'+side+';max-width:45%;border-radius:8px;margin:'+margin+';display:block;cursor:pointer';
         var mediaEl;
         if(isVideo){mediaEl=document.createElement('video');mediaEl.src=url;mediaEl.muted=true;mediaEl.loop=true;mediaEl.playsInline=true;mediaEl.preload='auto';mediaEl.style.cssText=cssFloat+';height:auto';}
         else{mediaEl=document.createElement('img');mediaEl.src=url;mediaEl.style.cssText=cssFloat;}
-        if(nextLienUrl){mediaEl.style.cursor='pointer';mediaEl.onclick=function(u){return function(){document.getElementById('c-marco-fb').classList.add('open');document.body.classList.add('coverlay-open');};}(nextLienUrl);}
+        mediaEl.onclick=openMarco;
         el.appendChild(mediaEl);
       } else {
-        var cssFullW='display:block;width:100%;border-radius:8px;margin:8px 0;clear:both';
+        var cssFullW='display:block;width:100%;border-radius:8px;margin:8px 0;clear:both;cursor:pointer';
         var mediaEl2;
         if(isVideo){mediaEl2=document.createElement('video');mediaEl2.src=url;mediaEl2.muted=true;mediaEl2.loop=true;mediaEl2.playsInline=true;mediaEl2.preload='auto';mediaEl2.style.cssText=cssFullW+';height:auto';}
         else{mediaEl2=document.createElement('img');mediaEl2.src=url;mediaEl2.style.cssText=cssFullW;}
-        if(nextLienUrl){mediaEl2.style.cursor='pointer';mediaEl2.onclick=function(u){return function(){document.getElementById('c-marco-fb').classList.add('open');document.body.classList.add('coverlay-open');};}(nextLienUrl);}
+        mediaEl2.onclick=openMarco;
         el.appendChild(mediaEl2);
       }
       continue;
@@ -4902,6 +4896,7 @@ function checkFbSession() {
         </div>
       </div>
       <div id="sw-acc-step2" style="display:none;padding:0 4px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:12px;color:var(--white);letter-spacing:1px;text-align:center;margin-bottom:6px">DERNIÈRE ÉTAPE !</div>
         <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;margin-bottom:12px;text-align:left">
           <div id="sw-acc-msg" style="font-size:13px;color:var(--white);line-height:1.5;font-style:italic;margin-bottom:8px"></div>
           <button id="sw-acc-copy-btn" onclick="swAccCopy()"
