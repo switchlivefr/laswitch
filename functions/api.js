@@ -719,6 +719,24 @@ document.addEventListener('keydown', function(e) {
     }
   }
 
+  // GET getPrenom : cherche le prénom (col G) depuis le nom Facebook (col A) dans IDS_FBK
+  if (request.method === 'GET' && action === 'getPrenom') {
+    try {
+      const name = (url.searchParams.get('name') || '').trim().toLowerCase();
+      if (!name) return new Response(JSON.stringify({ prenom: '' }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+      const sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent('IDS_FBK')}?key=${API_KEY}`;
+      const r = await fetch(sheetUrl);
+      const data = await r.json();
+      if (data.error) throw new Error(data.error.message);
+      const rows = (data.values || []).slice(1);
+      const match = rows.find(row => (row[0]||'').trim().toLowerCase() === name);
+      const prenom = match ? (match[6]||'').trim() : '';
+      return new Response(JSON.stringify({ prenom }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+    } catch(e) {
+      return new Response(JSON.stringify({ prenom: '', error: e.message }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+    }
+  }
+
   // GET IDS_FBK : liste des IDs Facebook pour la recherche admin
   if (request.method === 'GET' && action === 'getIdsFbk') {
     try {
@@ -729,7 +747,7 @@ document.addEventListener('keydown', function(e) {
       const rows = (data.values || []).slice(1);
       const ids = rows
         .filter(row => row[0] && row[1])
-        .map(row => ({ fb_id: row[0].trim(), name: row[1].trim(), nb: parseInt(row[2]||0), prenom: (row[6]||'').trim() }))
+        .map(row => ({ fb_id: row[0].trim(), name: row[1].trim(), nb: parseInt(row[2]||0) }))
         .sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }));
       return new Response(JSON.stringify({ ids }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'max-age=300' }
