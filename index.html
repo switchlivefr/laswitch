@@ -4506,9 +4506,21 @@ function swAccValidatePinDemande() {
   // Fetch checkAutoReconnect — bloque les boutons jusqu'à la réponse
   _swAccAutoReconnect = false;
   _swAccCheckDone = false;
+  // Timeout de sécurité : si le fetch ne répond pas en 5s → cas normal
+  var _checkTimeout = setTimeout(function() {
+    if (!_swAccCheckDone) {
+      _swAccAutoReconnect = false;
+      _swAccCheckDone = true;
+      if (_swAccCopied) {
+        var s = document.getElementById('sw-acc-social-btns');
+        if (s) { s.style.opacity = '1'; s.style.pointerEvents = 'auto'; }
+      }
+    }
+  }, 5000);
   fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=checkAutoReconnect&name=' + encodeURIComponent(_swAccName))
     .then(function(r){ return r.json(); })
     .then(function(data){
+      clearTimeout(_checkTimeout);
       _swAccAutoReconnect = !!data.autoReconnect;
       _swAccCheckDone = true;
       if (_swAccAutoReconnect) {
@@ -4535,12 +4547,7 @@ function swAccValidatePinDemande() {
         if (sentEl)   sentEl.style.display = 'block';
         if (pendEl)   pendEl.style.display = 'none';
         if (reconnEl) reconnEl.style.display = 'block';
-        // Mémoriser la connexion
-        localStorage.setItem('sw_token', _swAccToken);
-        localStorage.setItem('sw_name', _swAccName);
-        localStorage.setItem('sw_loggedIn', '1');
-        localStorage.setItem('sw_fbId', _swAccAutoFbId);
-        window._swLoaded = true;
+        // NE PAS écrire localStorage ici — sera écrit dans swAccCleanupAndClose si l'utilisateur ferme
         // Écrire B,C,D,F dans le sheets
         fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken) + '&pin=' + encodeURIComponent(_swPinDemande || '')).catch(function(){});
       } else {
@@ -4552,6 +4559,7 @@ function swAccValidatePinDemande() {
       }
     })
     .catch(function(){
+      clearTimeout(_checkTimeout);
       // En cas d'erreur réseau : pas d'exception, activer les boutons si déjà copié
       _swAccAutoReconnect = false;
       _swAccCheckDone = true;
@@ -4709,6 +4717,7 @@ function swAccSend(channel) {
   if (_swAccAutoReconnect) return; // Exception : tout déjà géré par le fetch
 
   // CAS NORMAL : ouvrir réseau + écrire sheets + afficher "En attente de validation"
+  var step2   = document.getElementById('sw-acc-step2');
   var sentEl   = document.getElementById('sw-acc-sent');
   var pendEl   = document.getElementById('sw-acc-sent-pending');
   var reconnEl = document.getElementById('sw-acc-sent-reconnect');
@@ -4718,6 +4727,7 @@ function swAccSend(channel) {
   localStorage.setItem('sw_token', _swAccToken);
   localStorage.setItem('sw_name', _swAccName);
   fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken) + '&pin=' + encodeURIComponent(_swPinDemande || '')).catch(function(){});
+  if (step2)   step2.style.display = 'block';
   if (sentEl)   sentEl.style.display = 'block';
   if (pendEl)   pendEl.style.display = 'block';
   if (reconnEl) reconnEl.style.display = 'none';
@@ -4759,6 +4769,13 @@ function swAccReset() {
   _swAccName = '';
   _swAccSelectedFromList = false;
   _swPinDemande = '';
+  // Remettre sw-acc-sent à l'état initial
+  var sentEl = document.getElementById('sw-acc-sent');
+  var pendEl = document.getElementById('sw-acc-sent-pending');
+  var reconnEl = document.getElementById('sw-acc-sent-reconnect');
+  if (sentEl)   sentEl.style.display = 'none';
+  if (pendEl)   pendEl.style.display = 'block';
+  if (reconnEl) reconnEl.style.display = 'none';
   // Si on réinitialise après une exception, effacer le localStorage pour ne pas bloquer une nouvelle demande
   if (_swAccAutoReconnect) {
     localStorage.removeItem('sw_loggedIn');
@@ -4783,7 +4800,11 @@ function swAccCleanupAndClose() {
   }
   closeM('m-sw-access');
   if (_swAccAutoReconnect) {
-    // Exception reconnexion auto : charger directement les vidéos
+    // Exception reconnexion auto : écrire localStorage et charger les vidéos
+    localStorage.setItem('sw_loggedIn', '1');
+    localStorage.setItem('sw_fbId', _swAccAutoFbId || '');
+    localStorage.setItem('sw_name', _swAccName);
+    window._swLoaded = true;
     _swAccAutoReconnect = false;
     if (currentPage !== 'p-prestas') nav('p-prestas');
     _showAllPrestasStates('prestas-loading');
@@ -4793,15 +4814,6 @@ function swAccCleanupAndClose() {
     loadPrestas(fakeMe);
     _swAccReturnPage = null;
     return;
-  }
-  // Si l'exception avait posé sw_loggedIn mais qu'on ferme sans aller sur prestas,
-  // effacer pour ne pas bloquer une future demande normale
-  if (localStorage.getItem('sw_loggedIn') === '1' && window._swLoaded) {
-    localStorage.removeItem('sw_loggedIn');
-    localStorage.removeItem('sw_token');
-    localStorage.removeItem('sw_name');
-    localStorage.removeItem('sw_fbId');
-    window._swLoaded = false;
   }
   _swAccAutoReconnect = false;
   if (_swAccReturnPage && _swAccReturnPage !== currentPage) {
