@@ -219,7 +219,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .cbox p{font-size:15px;color:var(--muted2);margin-bottom:18px;line-height:1.6}
 .cbtns{display:flex;gap:10px}
 .cbtns button{flex:1;padding:12px;border-radius:var(--rs);border:none;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer}
-.cbtns .cyes{background:var(--pink);color:#fff}
+.cbtns .cyes{background:#1877f2;color:#fff}
 .cbtns .cno{background:var(--card);border:1px solid var(--border2);color:var(--muted2)}
 .home-gif-wrap{padding:4px 16px 14px;text-align:center}
 @keyframes bandeauLeft{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
@@ -1799,7 +1799,7 @@ function openM(id){
       }
     },300);
   }
-  if(id!=='m-marco'&&id!=='m-pin'&&id!=='m-prc'&&id!=='m-resa'&&id!=='m-renseignements'&&id!=='m-sw-access'&&id!=='m-sw-admin'&&id!=='m-sw-pending'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
+  if(id!=='m-marco'&&id!=='m-pin'&&id!=='m-prc'&&id!=='m-resa'&&id!=='m-renseignements'&&id!=='m-sw-access'&&id!=='m-sw-admin'&&id!=='m-sw-pending'&&id!=='m-sw-change-account'){var mb=el.querySelector('.mbody');if(mb)setTimeout(function(){initScrollHintsModal(mb);},100);}
 }
 function closeM(id){
   if(id==='m-resa'){clearTimeout(_prcTimer);_prcTimer=null;}
