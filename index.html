@@ -4682,9 +4682,17 @@ function swAccCopy() {
   var done = function(){
     btn.innerHTML = '<span class="copy-msg-pulsing">\u2705 MESSAGE COPI\u00c9 : CONTACTE MARCO !</span>';
     _swAccCopied = true;
-    // Activer les boutons toujours — dans l'exception swAccSend gère le comportement au clic
-    document.getElementById('sw-acc-social-btns').style.opacity = '1';
-    document.getElementById('sw-acc-social-btns').style.pointerEvents = 'auto';
+    // Ne pas dégriser ici — c'est le fetch checkAutoReconnect qui décide
+    // Si le fetch a déjà répondu, on agit maintenant
+    if (_swAccCheckDone) {
+      if (!_swAccAutoReconnect) {
+        // Cas normal : dégriser les boutons
+        var s = document.getElementById('sw-acc-social-btns');
+        if (s) { s.style.opacity = '1'; s.style.pointerEvents = 'auto'; }
+      }
+      // Si exception : boutons déjà grisés et 2 phrases déjà affichées par le fetch
+    }
+    // Si fetch pas encore répondu : les boutons restent grisés jusqu'à la réponse
   };
   if (navigator.clipboard) {
     navigator.clipboard.writeText(msg).then(done).catch(function(){
@@ -4698,10 +4706,9 @@ function swAccCopy() {
 }
 
 function swAccSend(channel) {
-  // Si exception autoReconnect : tout est déjà géré par le fetch checkAutoReconnect
-  if (_swAccAutoReconnect) return;
+  if (_swAccAutoReconnect) return; // Exception : tout déjà géré par le fetch
 
-  // CAS NORMAL uniquement
+  // CAS NORMAL : ouvrir réseau + écrire sheets + afficher "En attente de validation"
   var sentEl   = document.getElementById('sw-acc-sent');
   var pendEl   = document.getElementById('sw-acc-sent-pending');
   var reconnEl = document.getElementById('sw-acc-sent-reconnect');
