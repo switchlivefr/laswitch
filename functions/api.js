@@ -719,21 +719,19 @@ document.addEventListener('keydown', function(e) {
     }
   }
 
-  // GET getPrenom : cherche le prénom (col G) depuis le nom Facebook (col A) dans IDS_FBK
+  // GET getPrenom
   if (request.method === 'GET' && action === 'getPrenom') {
     try {
       const name = (url.searchParams.get('name') || '').trim().toLowerCase();
-      if (!name) return new Response(JSON.stringify({ prenom: '' }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
       const sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent('IDS_FBK')}?key=${API_KEY}`;
       const r = await fetch(sheetUrl);
       const data = await r.json();
-      if (data.error) throw new Error(data.error.message);
       const rows = (data.values || []).slice(1);
       const match = rows.find(row => (row[0]||'').trim().toLowerCase() === name);
       const prenom = match ? (match[6]||'').trim() : '';
       return new Response(JSON.stringify({ prenom }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
     } catch(e) {
-      return new Response(JSON.stringify({ prenom: '', error: e.message }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+      return new Response(JSON.stringify({ prenom: '' }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
     }
   }
 
