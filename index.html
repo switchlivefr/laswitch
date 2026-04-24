@@ -4636,7 +4636,7 @@ function swAccCopy() {
   }
 }
 
-var _swAccAutoReconnect = false; // true si case E non vide → exception reconnexion auto
+var _swAccAutoReconnect = false;
 
 function swAccSend(channel) {
   var sentEl   = document.getElementById('sw-acc-sent');
@@ -4644,15 +4644,13 @@ function swAccSend(channel) {
   var reconnEl = document.getElementById('sw-acc-sent-reconnect');
   var socialEl = document.getElementById('sw-acc-social-btns');
 
-  // Toujours : ouvrir le réseau immédiatement + afficher "En attente de validation"
-  // (comportement original inchangé pour le cas normal)
-  var url = _swAccLinks[channel] || '';
-  if (url) window.open(url, '_blank');
-  if (sentEl)   sentEl.style.display = 'block';
-  if (pendEl)   pendEl.style.display = 'block';
-  if (reconnEl) reconnEl.style.display = 'none';
+  // Ouvrir une fenêtre vide IMMÉDIATEMENT (événement utilisateur direct → pas bloqué)
+  // On la redirigera ou la fermera selon la réponse du sheets
+  var win = window.open('', '_blank');
 
-  // Écrire dans le sheets en arrière-plan
+  // Griser les boutons pendant le fetch
+  if (socialEl) { socialEl.style.opacity = '0.3'; socialEl.style.pointerEvents = 'none'; }
+
   localStorage.setItem('sw_token', _swAccToken);
   localStorage.setItem('sw_name', _swAccName);
 
@@ -4660,38 +4658,49 @@ function swAccSend(channel) {
     .then(function(r){ return r.json(); })
     .then(function(data) {
       if (data.autoReconnect) {
-        // EXCEPTION UNIQUEMENT : case E non vide → remplacer l'affichage
+        // EXCEPTION : fermer la fenêtre vide, ne pas aller sur le réseau
+        if (win && !win.closed) win.close();
         _swAccAutoReconnect = true;
         localStorage.setItem('sw_loggedIn', '1');
         localStorage.setItem('sw_fbId', data.fbId || '');
         localStorage.setItem('sw_name', _swAccName);
         window._swLoaded = true;
-        // Remplacer "En attente" par les 2 phrases
         if (sentEl)   sentEl.style.display = 'block';
         if (pendEl)   pendEl.style.display = 'none';
         if (reconnEl) reconnEl.style.display = 'block';
-        // Griser les boutons 3s puis les réactiver en mode contact libre
-        if (socialEl) { socialEl.style.opacity = '0.3'; socialEl.style.pointerEvents = 'none'; }
+        // Réactiver après 3s en mode contact libre
         setTimeout(function() {
           if (socialEl) {
             socialEl.style.opacity = '1';
             socialEl.style.pointerEvents = 'auto';
             var btns = socialEl.querySelectorAll('button');
             btns.forEach(function(btn, idx) {
-              var channels = ['messenger','instagram','whatsapp'];
-              (function(ch){
-                btn.onclick = function() {
-                  var u = _swAccLinks[ch] || '';
-                  if (u) window.open(u, '_blank');
-                };
-              })(channels[idx] || '');
+              var chs = ['messenger','instagram','whatsapp'];
+              (function(ch){ btn.onclick = function(){ var u=_swAccLinks[ch]||''; if(u)window.open(u,'_blank'); }; })(chs[idx]||'');
             });
           }
         }, 3000);
+      } else {
+        // CAS NORMAL : rediriger la fenêtre vers le réseau + afficher "En attente"
+        _swAccAutoReconnect = false;
+        var url = _swAccLinks[channel] || '';
+        if (win && !win.closed) { if (url) win.location.href = url; else win.close(); }
+        if (sentEl)   sentEl.style.display = 'block';
+        if (pendEl)   pendEl.style.display = 'block';
+        if (reconnEl) reconnEl.style.display = 'none';
+        // Remettre les boutons actifs (comportement original)
+        if (socialEl) { socialEl.style.opacity = '1'; socialEl.style.pointerEvents = 'auto'; }
       }
-      // CAS NORMAL : rien à faire, tout est déjà géré au-dessus
     })
-    .catch(function() { /* erreur réseau silencieuse — déjà ouvert et affiché */ });
+    .catch(function() {
+      _swAccAutoReconnect = false;
+      var url = _swAccLinks[channel] || '';
+      if (win && !win.closed) { if (url) win.location.href = url; else win.close(); }
+      if (sentEl)   sentEl.style.display = 'block';
+      if (pendEl)   pendEl.style.display = 'block';
+      if (reconnEl) reconnEl.style.display = 'none';
+      if (socialEl) { socialEl.style.opacity = '1'; socialEl.style.pointerEvents = 'auto'; }
+    });
 }
 
 function swAccReset() {
