@@ -3427,7 +3427,6 @@ if('serviceWorker' in navigator){
 // Greeting sablier : afficher le prénom depuis IDS_FBK col G si connecté
 (function(){
   var swName = localStorage.getItem('sw_name');
-  var swFbId = localStorage.getItem('sw_fbId');
   if (!swName || !swName.trim()) return;
   var greet = document.getElementById('loader-greeting');
   var nameEl = document.getElementById('loader-greet-name');
@@ -3436,19 +3435,18 @@ if('serviceWorker' in navigator){
   var fallback = swName.trim().split(' ')[0].toUpperCase();
   nameEl.textContent = fallback;
   greet.style.display = 'flex';
-  // Chercher le vrai prénom (col G) dans IDS_FBK si on a un fbId
-  if (swFbId) {
-    fetch('/api?action=getIdsFbk')
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        var ids = data.ids || [];
-        var match = ids.find(function(item){ return item.fb_id === swFbId; });
-        if (match && match.prenom) {
-          nameEl.textContent = match.prenom.toUpperCase();
-        }
-      })
-      .catch(function(){});
-  }
+  // Chercher le vrai prénom (col G) dans IDS_FBK en matchant sur le NOM FACEBOOK (col A)
+  fetch("/api?action=getIdsFbk")
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      var ids = data.ids || [];
+      var swNameNorm = swName.trim().toLowerCase();
+      var match = ids.find(function(item){ return item.name.toLowerCase() === swNameNorm; });
+      if (match && match.prenom) {
+        nameEl.textContent = match.prenom.toUpperCase();
+      }
+    })
+    .catch(function(){});
 })();
 </script>
 <!-- SDK Facebook Login -->
