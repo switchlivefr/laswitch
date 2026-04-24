@@ -471,7 +471,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
       <span style="color:#fff;font-size:16px;font-weight:700;font-family:'DM Sans',sans-serif">SE CONNECTER</span>
     </button>
     <button onclick="openPrestasInfo()" style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;background:rgba(24,119,242,.08);border:1px solid rgba(24,119,242,.35);border-radius:12px;padding:14px 12px;cursor:pointer;animation:btnpulse-blue 3s ease-in-out infinite;gap:4px">
-      <span id="prestas-info-btn-label" style="color:#fff;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;text-align:center;display:inline-block;animation:prestasInfoPulse 2s ease-in-out infinite;transform-origin:center">▲ À lire si tu n'es pas identifié·e sur le profil</span>
+      <span id="prestas-info-btn-label" style="color:#fff;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;text-align:center;display:inline-block;animation:prestasInfoPulse 2s ease-in-out infinite;transform-origin:center">⚠️ À lire si tu n'es pas identifié·e sur le profil</span>
       <span style="display:flex;align-items:center;justify-content:center;gap:6px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="#1877f2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
         <span style="color:#1877f2;font-size:16px;font-weight:700;font-family:'DM Sans',sans-serif">Marco Kiff Ton SWiTCH</span>
@@ -1599,18 +1599,31 @@ function renderPrestasInfo(){
     if(code==='I'){
       var url=txt;
       if(!url)continue;
+      // Chercher le prochain code LIEN dans les lignes suivantes pour le lien cliquable
+      var nextLienUrl = null;
+      for(var ni=i+1;ni<rows.length;ni++){
+        var nc=(rows[ni][0]||'').trim().toUpperCase();
+        if(nc==='LIEN'){ nextLienUrl='https://www.facebook.com/marco.onlyformusic'; break; }
+        if(nc==='I'||nc==='T'||nc==='H'||nc==='S') break;
+      }
       var pos=(rows[i][2]||'').trim().toUpperCase();
       var isVideo=/\.(mp4|webm|ogg)(\?.*)?$/i.test(url);
       if(pos==='L'||pos==='R'){
         var side=(pos==='L')?'left':'right';
         var margin=(side==='right')?'0 0 10px 16px':'0 16px 10px 0';
         var cssFloat='float:'+side+';max-width:45%;border-radius:8px;margin:'+margin+';display:block';
-        if(isVideo){var vid=document.createElement('video');vid.src=url;vid.muted=true;vid.loop=true;vid.playsInline=true;vid.preload='auto';vid.style.cssText=cssFloat+';height:auto';el.appendChild(vid);}
-        else{var img=document.createElement('img');img.src=url;img.style.cssText=cssFloat;el.appendChild(img);}
+        var mediaEl;
+        if(isVideo){mediaEl=document.createElement('video');mediaEl.src=url;mediaEl.muted=true;mediaEl.loop=true;mediaEl.playsInline=true;mediaEl.preload='auto';mediaEl.style.cssText=cssFloat+';height:auto';}
+        else{mediaEl=document.createElement('img');mediaEl.src=url;mediaEl.style.cssText=cssFloat;}
+        if(nextLienUrl){mediaEl.style.cursor='pointer';mediaEl.onclick=function(u){return function(){document.getElementById('c-marco-fb').classList.add('open');document.body.classList.add('coverlay-open');};}(nextLienUrl);}
+        el.appendChild(mediaEl);
       } else {
         var cssFullW='display:block;width:100%;border-radius:8px;margin:8px 0;clear:both';
-        if(isVideo){var vid2=document.createElement('video');vid2.src=url;vid2.muted=true;vid2.loop=true;vid2.playsInline=true;vid2.preload='auto';vid2.style.cssText=cssFullW+';height:auto';el.appendChild(vid2);}
-        else{var img2=document.createElement('img');img2.src=url;img2.style.cssText=cssFullW;el.appendChild(img2);}
+        var mediaEl2;
+        if(isVideo){mediaEl2=document.createElement('video');mediaEl2.src=url;mediaEl2.muted=true;mediaEl2.loop=true;mediaEl2.playsInline=true;mediaEl2.preload='auto';mediaEl2.style.cssText=cssFullW+';height:auto';}
+        else{mediaEl2=document.createElement('img');mediaEl2.src=url;mediaEl2.style.cssText=cssFullW;}
+        if(nextLienUrl){mediaEl2.style.cursor='pointer';mediaEl2.onclick=function(u){return function(){document.getElementById('c-marco-fb').classList.add('open');document.body.classList.add('coverlay-open');};}(nextLienUrl);}
+        el.appendChild(mediaEl2);
       }
       continue;
     }
@@ -4706,19 +4719,22 @@ function swClosePending() {
 }
 
 function _startPendingPoll(token, name) {
-  // Arrêter tout polling précédent
   if (_swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
 
   var loadEl = document.getElementById('m-sw-pending-load');
   var msgEl  = document.getElementById('m-sw-pending-msg');
 
-  // Vérification silencieuse AVANT d'afficher quoi que ce soit :
-  // si déjà validé → charger directement les vidéos sans aucun message intermédiaire
+  // Afficher le sablier SEUL (sans texte) pendant la vérification initiale
+  if (loadEl) loadEl.style.display = 'block';
+  if (msgEl)  msgEl.style.display  = 'none';
+  openM('m-sw-pending');
+
   fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=verifyToken&token=' + encodeURIComponent(token) + '&name=' + encodeURIComponent(name))
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.ok && data.fbId !== undefined) {
-        // Déjà validé → mémoriser et charger directement, zéro message d'attente
+        // Validé → fermer la modale, charger directement sans aucun message d'attente
+        closeM('m-sw-pending');
         localStorage.setItem('sw_loggedIn', '1');
         localStorage.setItem('sw_fbId', data.fbId || '');
         localStorage.setItem('sw_name', name);
@@ -4727,10 +4743,9 @@ function _startPendingPoll(token, name) {
         var fakeMe = { id: data.fbId || '', name: name, first_name: name.split(' ')[0] };
         loadPrestas(fakeMe);
       } else if (data.pending) {
-        // Vraiment en attente → afficher le message et lancer le polling
+        // Vraiment en attente → remplacer le sablier par le texte et lancer le polling
         if (loadEl) loadEl.style.display = 'none';
         if (msgEl)  msgEl.style.display  = 'block';
-        openM('m-sw-pending');
         _swPendingPollTimer = setInterval(function() {
           var modal = document.getElementById('m-sw-pending');
           if (!modal || !modal.classList.contains('open')) {
@@ -4758,12 +4773,12 @@ function _startPendingPoll(token, name) {
                 closeM('m-sw-pending');
                 _showAllPrestasStates('prestas-nologin');
               }
-              // si encore pending → on attend le prochain tick
             })
             .catch(function() { /* erreur réseau → réessai au prochain tick */ });
         }, 15000);
       } else {
         // Rejeté/expiré
+        closeM('m-sw-pending');
         localStorage.removeItem('sw_token');
         localStorage.removeItem('sw_name');
         window._swLoaded = false;
@@ -4771,10 +4786,10 @@ function _startPendingPoll(token, name) {
       }
     })
     .catch(function() {
-      // Erreur réseau sur la vérif initiale → afficher le message d'attente et relancer plus tard
-      if (loadEl) loadEl.style.display = 'none';
-      if (msgEl)  msgEl.style.display  = 'block';
-      openM('m-sw-pending');
+      // Erreur réseau sur la vérif initiale → garder le sablier, réessayer plus tard
+      // (ne pas afficher le texte "attente" si on ne sait pas encore)
+      if (loadEl) loadEl.style.display = 'block';
+      if (msgEl)  msgEl.style.display  = 'none';
     });
 }
 
@@ -4921,8 +4936,7 @@ function checkFbSession() {
 <div class="moverlay" id="m-sw-change-account" onclick="if(event.target===this)closeM('m-sw-change-account')" style="z-index:800">
   <div class="mbox" style="max-width:320px;text-align:center">
     <div class="mbody" style="padding:24px 20px 12px">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:16px">DEMANDE EN ATTENTE</div>
-      <div style="font-size:14px;color:var(--muted2);line-height:1.6;margin-bottom:20px">Ta demande d'accès est en cours de validation. Tu peux changer de compte si tu veux utiliser un autre nom.</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:16px">DEMANDE D'ACCÉS EN ATTENTE</div>
     </div>
     <div class="mfoot" style="flex-direction:column;gap:10px">
       <button onclick="swChangeAccount()" style="width:100%;background:#1877f2;border:none;border-radius:10px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:#fff;cursor:pointer">Changer de compte</button>
