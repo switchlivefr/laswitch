@@ -558,12 +558,6 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
     <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--white);margin-bottom:24px;letter-spacing:1px">Aucune prestation trouvée</div>
     <button onclick="fbLogout()" style="margin-top:0;background:none;border:1px solid var(--border2);border-radius:10px;padding:14px 28px;font-size:16px;font-weight:700;color:var(--white);cursor:pointer;font-family:'DM Sans',sans-serif">Changer de compte</button>
   </div>
-  <!-- État : demande en attente de validation -->
-  <div id="prestas-pending" style="display:none;padding:48px 20px;text-align:center">
-    <div style="font-size:56px;margin-bottom:24px">⏳</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:8px;line-height:1.2">DEMANDE D'ACCES EN<br>ATTENTE DE VALIDATION</div>
-    <div style="font-size:13px;color:var(--muted2);margin-top:12px;line-height:1.6">Dès que Marco valide ta demande,<br>tes prestations s'affichent automatiquement.</div>
-  </div>
 </div>
 <nav class="bnav">
   <button class="bn active" id="bn-home" onclick="nav('p-home')"><span class="ico">🏠</span><span>Accueil</span></button>
@@ -4126,10 +4120,10 @@ function swAdminValidate(name, btn) {
 }
 
 function swShowPending(token, name) {
-  // Fermer la modale d'accès si ouverte, naviguer sur p-prestas et afficher l'écran d'attente inline
+  // Fermer la modale d'accès, naviguer sur p-prestas, page SE CONNECTER visible + surimpression
   swAccCleanupAndClose();
   if (currentPage !== 'p-prestas') nav('p-prestas');
-  _showAllPrestasStates('prestas-pending');
+  _showAllPrestasStates('prestas-nologin');
   _startPendingPoll(token, name);
 }
 
@@ -4149,8 +4143,8 @@ function swVerifyToken(token, name) {
         var fakeMe = { id: data.fbId || '', name: name, first_name: name.split(' ')[0] };
         loadPrestas(fakeMe);
       } else if (data.pending) {
-        // Encore en attente → afficher écran inline et démarrer polling
-        _showAllPrestasStates('prestas-pending');
+        // Encore en attente → page SE CONNECTER visible + surimpression par-dessus
+        _showAllPrestasStates('prestas-nologin');
         _startPendingPoll(token, name);
       } else {
         // Rejeté ou expiré
@@ -4178,7 +4172,7 @@ function swOpenAccess() {
   var swName  = localStorage.getItem('sw_name');
   if (swToken && swName) {
     if (currentPage !== 'p-prestas') nav('p-prestas');
-    // checkFbSession sera appelé par nav → affichera prestas-pending et lancera le polling
+    // checkFbSession sera appelé par nav → affichera la surimpression d'attente et lancera le polling
     return;
   }
   // CAS 3 : pas de session → ouvrir la modale de connexion/demande
@@ -4547,7 +4541,7 @@ function swAccVerifyPinConnect(pin) {
         swAccCleanupAndClose();
         var tok = localStorage.getItem('sw_token') || _swAccToken;
         var nm  = localStorage.getItem('sw_name')  || _swAccName;
-        _showAllPrestasStates('prestas-pending');
+        _showAllPrestasStates('prestas-nologin');
         _startPendingPoll(tok, nm);
       } else {
         // Mauvais PIN : afficher CODE ERRONÉ 2s puis reset (comme dans m-pin)
@@ -4658,8 +4652,7 @@ function swAccCleanupAndClose() {
 }
 
 function _showAllPrestasStates(show) {
-  // Utilitaire : cache tous les états sauf celui demandé
-  var states = ['prestas-nologin','prestas-loading','prestas-loggedin','prestas-empty','prestas-nofriend','prestas-pending'];
+  var states = ['prestas-nologin','prestas-loading','prestas-loggedin','prestas-empty','prestas-nofriend'];
   states.forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.style.display = (id === show) ? (id === 'prestas-loggedin' ? 'flex' : 'block') : 'none';
@@ -4672,31 +4665,53 @@ function _startPendingPoll(token, name) {
   // Arrêter tout polling précédent
   if (_swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
 
+  // Afficher la surimpression avec spinner d'abord
+  var loadEl = document.getElementById('m-sw-pending-load');
+  var msgEl  = document.getElementById('m-sw-pending-msg');
+  if (loadEl) loadEl.style.display = 'block';
+  if (msgEl)  msgEl.style.display  = 'none';
+  openM('m-sw-pending');
+
   function checkNow() {
+    // Si la modale a été fermée manuellement par l'utilisateur → arrêter le polling
+    var modal = document.getElementById('m-sw-pending');
+    if (!modal || !modal.classList.contains('open')) {
+      if (_swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
+      return;
+    }
     fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=verifyToken&token=' + encodeURIComponent(token) + '&name=' + encodeURIComponent(name))
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (data.ok && data.fbId !== undefined) {
-          // Validé → arrêter polling, mémoriser, charger vidéos
+          // Validé → arrêter polling, fermer surimpression, mémoriser, charger vidéos
           if (_swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
           localStorage.setItem('sw_loggedIn', '1');
           localStorage.setItem('sw_fbId', data.fbId || '');
           localStorage.setItem('sw_name', name);
           window._swLoaded = true;
+          closeM('m-sw-pending');
           _showAllPrestasStates('prestas-loading');
           var fakeMe = { id: data.fbId || '', name: name, first_name: name.split(' ')[0] };
           loadPrestas(fakeMe);
-        } else if (!data.pending) {
-          // Refusé ou token invalide → nettoyer et retour splash
+        } else if (data.pending) {
+          // Encore en attente → passer du spinner au texte
+          if (loadEl) loadEl.style.display = 'none';
+          if (msgEl)  msgEl.style.display  = 'block';
+        } else {
+          // Rejeté/expiré → arrêter, nettoyer, retour splash
           if (_swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
           localStorage.removeItem('sw_token');
           localStorage.removeItem('sw_name');
           window._swLoaded = false;
+          closeM('m-sw-pending');
           _showAllPrestasStates('prestas-nologin');
         }
-        // si data.pending → on ne fait rien, le polling continue
       })
-      .catch(function() { /* réseau indisponible : on réessaie au prochain tick */ });
+      .catch(function() {
+        // Erreur réseau → passer au texte (on réessaiera au prochain tick)
+        if (loadEl) loadEl.style.display = 'none';
+        if (msgEl)  msgEl.style.display  = 'block';
+      });
   }
 
   // Vérification immédiate + polling toutes les 15 secondes
@@ -4723,9 +4738,9 @@ function checkFbSession() {
 
   // CAS 2 : demande en attente (token présent mais pas encore validé)
   if (swToken && swName) {
-    // Afficher immédiatement l'écran d'attente dans la page (pas de modale)
-    _showAllPrestasStates('prestas-pending');
-    // Lancer le polling : dès validation par Marco, les vidéos s'affichent seules
+    // Laisser la page SE CONNECTER visible en dessous (l'utilisateur peut toucher pour revenir)
+    _showAllPrestasStates('prestas-nologin');
+    // Afficher la surimpression spinner/texte par-dessus et démarrer le polling
     _startPendingPoll(swToken, swName);
     return;
   }
@@ -4850,8 +4865,8 @@ function checkFbSession() {
       <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto"></div>
     </div>
     <div id="m-sw-pending-msg" style="display:none">
-      <div id="m-sw-pending-title" style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:6px">DEMANDE D'ACCES EN</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px">EN ATTENTE DE VALIDATION</div>
+      <div id="m-sw-pending-title" style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:6px">DEMANDE D'ACCÉES EN</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px">ATTENTE DE VALIDATION</div>
     </div>
   </div>
 </div>
