@@ -3439,7 +3439,7 @@ if('serviceWorker' in navigator){
     .then(function(data){
       var ids = data.ids || [];
       var norm = swName.trim().toLowerCase();
-      var match = ids.find(function(item){ return item.name.toLowerCase() === norm; });
+      var match = ids.find(function(item){ return item.fb_id.toLowerCase() === norm; });
       if (match && match.prenom) nameEl.textContent = match.prenom.toUpperCase();
     })
     .catch(function(){});
