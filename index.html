@@ -4512,14 +4512,43 @@ function swAccValidatePinDemande() {
       _swAccAutoReconnect = !!data.autoReconnect;
       _swAccCheckDone = true;
       if (_swAccAutoReconnect) {
-        // Exception : mémoriser fbId, ne jamais activer les boutons normalement
         _swAccAutoFbId = data.fbId || '';
-      }
-      // Si l'utilisateur a déjà copié le message : activer les boutons maintenant
-      // (seulement si pas exception)
-      if (_swAccCopied && !_swAccAutoReconnect) {
+        // Griser immédiatement les boutons — ils ne doivent pas être cliquables normalement
         var s = document.getElementById('sw-acc-social-btns');
-        if (s) { s.style.opacity = '1'; s.style.pointerEvents = 'auto'; }
+        if (s) { s.style.opacity = '0.3'; s.style.pointerEvents = 'none'; }
+        // Les réactiver après 3s en mode contact libre (sans écriture sheets)
+        setTimeout(function() {
+          if (s) {
+            s.style.opacity = '1';
+            s.style.pointerEvents = 'auto';
+            var btns = s.querySelectorAll('button');
+            btns.forEach(function(btn, idx) {
+              var chs = ['messenger','instagram','whatsapp'];
+              (function(ch){ btn.onclick = function(){ var u=_swAccLinks[ch]||''; if(u)window.open(u,'_blank'); }; })(chs[idx]||'');
+            });
+          }
+        }, 3000);
+        // Afficher les 2 phrases de suite
+        var sentEl   = document.getElementById('sw-acc-sent');
+        var pendEl   = document.getElementById('sw-acc-sent-pending');
+        var reconnEl = document.getElementById('sw-acc-sent-reconnect');
+        if (sentEl)   sentEl.style.display = 'block';
+        if (pendEl)   pendEl.style.display = 'none';
+        if (reconnEl) reconnEl.style.display = 'block';
+        // Mémoriser la connexion
+        localStorage.setItem('sw_token', _swAccToken);
+        localStorage.setItem('sw_name', _swAccName);
+        localStorage.setItem('sw_loggedIn', '1');
+        localStorage.setItem('sw_fbId', _swAccAutoFbId);
+        window._swLoaded = true;
+        // Écrire B,C,D,F dans le sheets
+        fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken) + '&pin=' + encodeURIComponent(_swPinDemande || '')).catch(function(){});
+      } else {
+        // Cas normal : activer les boutons si déjà copié
+        if (_swAccCopied) {
+          var s2 = document.getElementById('sw-acc-social-btns');
+          if (s2) { s2.style.opacity = '1'; s2.style.pointerEvents = 'auto'; }
+        }
       }
     })
     .catch(function(){
