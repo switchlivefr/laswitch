@@ -4636,15 +4636,68 @@ function swAccCopy() {
   }
 }
 
+var _swAccAutoReconnect = false; // true si case E non vide → exception reconnexion auto
+
 function swAccSend(channel) {
-  // Priorité : ouvrir le réseau immédiatement
-  var url = _swAccLinks[channel] || '';
-  if (url) window.open(url, '_blank');
-  document.getElementById('sw-acc-sent').style.display = 'block';
-  // Sheets et localStorage en arrière-plan (IMPORTANT : transmettre le PIN pour écriture colonne F)
+  var sentEl   = document.getElementById('sw-acc-sent');
+  var pendEl   = document.getElementById('sw-acc-sent-pending');
+  var reconnEl = document.getElementById('sw-acc-sent-reconnect');
+  var socialEl = document.getElementById('sw-acc-social-btns');
+
+  // Écrire dans le sheets (B, C, D, F) et attendre la réponse pour savoir quoi faire
   localStorage.setItem('sw_token', _swAccToken);
   localStorage.setItem('sw_name', _swAccName);
-  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken) + '&pin=' + encodeURIComponent(_swPinDemande || ''));
+
+  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken) + '&pin=' + encodeURIComponent(_swPinDemande || ''))
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (data.autoReconnect) {
+        // CAS EXCEPTION : case E non vide → ne pas ouvrir le réseau, reconnexion auto
+        _swAccAutoReconnect = true;
+        localStorage.setItem('sw_loggedIn', '1');
+        localStorage.setItem('sw_fbId', data.fbId || '');
+        localStorage.setItem('sw_name', _swAccName);
+        window._swLoaded = true;
+        // Afficher les 2 phrases
+        if (sentEl)   sentEl.style.display = 'block';
+        if (pendEl)   pendEl.style.display = 'none';
+        if (reconnEl) reconnEl.style.display = 'block';
+        // Réactiver les boutons réseau après 3s pour contact libre (sans écriture sheets)
+        setTimeout(function() {
+          if (socialEl) {
+            socialEl.style.opacity = '1';
+            socialEl.style.pointerEvents = 'auto';
+            var btns = socialEl.querySelectorAll('button');
+            btns.forEach(function(btn, idx) {
+              var channels = ['messenger','instagram','whatsapp'];
+              (function(ch){
+                btn.onclick = function() {
+                  var url = _swAccLinks[ch] || '';
+                  if (url) window.open(url, '_blank');
+                };
+              })(channels[idx] || '');
+            });
+          }
+        }, 3000);
+      } else {
+        // CAS NORMAL : ouvrir le réseau + afficher "En attente"
+        _swAccAutoReconnect = false;
+        var url = _swAccLinks[channel] || '';
+        if (url) window.open(url, '_blank');
+        if (sentEl)   sentEl.style.display = 'block';
+        if (pendEl)   pendEl.style.display = 'block';
+        if (reconnEl) reconnEl.style.display = 'none';
+      }
+    })
+    .catch(function() {
+      // Erreur réseau → comportement normal par défaut, ouvrir le réseau quand même
+      _swAccAutoReconnect = false;
+      var url = _swAccLinks[channel] || '';
+      if (url) window.open(url, '_blank');
+      if (sentEl)   sentEl.style.display = 'block';
+      if (pendEl)   pendEl.style.display = 'block';
+      if (reconnEl) reconnEl.style.display = 'none';
+    });
 }
 
 function swAccReset() {
@@ -4682,6 +4735,7 @@ function swAccReset() {
   _swAccName = '';
   _swAccSelectedFromList = false;
   _swPinDemande = '';
+  _swAccAutoReconnect = false;
 }
 
 // Nettoie le listener touchstart global AVANT de fermer la modale (sinon il reste actif et ralentit toute l'appli)
@@ -4693,6 +4747,19 @@ function swAccCleanupAndClose() {
     dd._outsideTapHandler = null;
   }
   closeM('m-sw-access');
+  if (_swAccAutoReconnect) {
+    // Exception reconnexion auto : charger directement les vidéos sans passer par l'écran d'attente
+    _swAccAutoReconnect = false;
+    if (currentPage !== 'p-prestas') nav('p-prestas');
+    _showAllPrestasStates('prestas-loading');
+    var name = localStorage.getItem('sw_name') || _swAccName;
+    var fbId = localStorage.getItem('sw_fbId') || '';
+    var fakeMe = { id: fbId, name: name, first_name: name.split(' ')[0] };
+    loadPrestas(fakeMe);
+    _swAccReturnPage = null;
+    return;
+  }
+  _swAccAutoReconnect = false;
   if (_swAccReturnPage && _swAccReturnPage !== currentPage) {
     nav(_swAccReturnPage);
   }
@@ -4922,7 +4989,11 @@ function checkFbSession() {
           </button>
         </div>
         <div id="sw-acc-sent" style="display:none;padding:10px 0">
-          <div style="font-size:14px;font-weight:700;color:var(--cyan)">En attente de validation</div>
+          <div id="sw-acc-sent-pending" style="font-size:14px;font-weight:700;color:var(--cyan)">En attente de validation</div>
+          <div id="sw-acc-sent-reconnect" style="display:none">
+            <div style="font-size:14px;font-weight:700;color:var(--cyan);margin-bottom:2px">Inutile de me recontacter</div>
+            <div style="font-size:14px;font-weight:700;color:var(--cyan)">Ta connexion est rétablie</div>
+          </div>
         </div>
       </div>
     </div>
