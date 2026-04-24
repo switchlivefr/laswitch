@@ -4645,6 +4645,7 @@ function swAccVerifyPinConnect(pin) {
 var _swAccCheckDone = false;
 var _swAccCopied = false;
 var _swAccAutoFbId = '';
+var _swAccAutoReconnect = false;
 
 function swAccCopy() {
   var msg = document.getElementById('sw-acc-msg').textContent;
@@ -4666,8 +4667,6 @@ function swAccCopy() {
     document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){}document.body.removeChild(ta);
   }
 }
-
-var _swAccAutoReconnect = false;
 
 function swAccSend(channel) {
   var sentEl   = document.getElementById('sw-acc-sent');
