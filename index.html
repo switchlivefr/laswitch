@@ -38,12 +38,12 @@ body::-webkit-scrollbar{display:none}
 *::-webkit-scrollbar{display:none}
 img,video{-webkit-touch-callout:none!important;-webkit-user-drag:none!important;user-select:none!important}
 body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none}
+@keyframes prestasInfoPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
 @keyframes pIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes prcColFadeIn{from{opacity:0}to{opacity:1}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 @keyframes titlepulse{0%,100%{opacity:.1}50%{opacity:1}}
 @keyframes hintpulse{0%,100%{color:var(--gold);opacity:.1}50%{color:var(--gold);opacity:1}}
-@keyframes prestasInfoPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
 @keyframes copyMsgPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
 .copy-msg-pulsing{animation:copyMsgPulse 1s ease-in-out infinite;display:inline-block;transform-origin:center}
 @keyframes rainbow{0%{color:#f2c94c}14%{color:#e8943a}28%{color:#e8407a}42%{color:#c471ed}57%{color:#5b9cf6}71%{color:#34d1c0}85%{color:#a8e063}100%{color:#f2c94c}}
@@ -201,9 +201,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .mbody .sec-osl-t{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--cyan);font-weight:700;margin:18px 0 6px;display:block}
 #m-prc-mobile-body.sec-osl-t,#m-prc-mobile-body .sec-osl-t{font-size:17px;margin:12px 0 4px}
 #m-prestas-info-body .sec-osl-t{color:#1877f2;font-size:22px;letter-spacing:1px;font-family:'Bebas Neue',sans-serif;font-weight:700;margin:18px 0 6px;display:block;animation:none;text-align:center}
-#m-prestas-info-body .sec-osl-h{color:var(--white);display:block;animation:none;transform:none}
-#m-prestas-info-body>p{text-align:center}
-#m-prestas-info-body>p a{font-size:18px!important}
+#m-prestas-info-body .sec-osl-h{color:var(--white);display:block;animation:none;transform:none;text-align:center}
+#m-prestas-info-body .sec-osl-s{text-align:center}
+#m-prestas-info-body .marco-link-wrap{text-align:center}
 #m-prc-mobile-body.sec-osl-h,#m-prc-mobile-body .sec-osl-h{font-size:16px;color:var(--gold);margin:8px 0 2px}
 #m-promo-sw-body.sec-osl-t,#m-promo-sw-body .sec-osl-t{font-size:25px;color:var(--gold);margin:12px 0 4px;text-align:center;display:block;animation:promoTPulse 3s ease-in-out infinite}
 #m-promo-sw-body.sec-osl-h,#m-promo-sw-body .sec-osl-h{font-size:16px;color:var(--white);margin:8px 0 2px}
@@ -470,11 +470,11 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
     <button id="prestas-connect-btn" onclick="prestasConnectClick()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#1877f2;border:none;border-radius:12px;padding:16px;cursor:pointer;margin-bottom:14px">
       <span style="color:#fff;font-size:16px;font-weight:700;font-family:'DM Sans',sans-serif">SE CONNECTER</span>
     </button>
-    <button onclick="openPrestasInfo()" id="prestas-info-btn" style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;background:rgba(24,119,242,.08);border:1px solid rgba(24,119,242,.35);border-radius:12px;padding:14px 12px;cursor:pointer;animation:btnpulse-blue 3s ease-in-out infinite;gap:4px">
-      <span id="prestas-info-label" style="color:#fff;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;text-align:center;display:inline-flex;align-items:center;gap:5px;animation:prestasInfoPulse 2s ease-in-out infinite"><span>⚠️</span><span>À lire si tu n'est pas identifié...</span><span>⚠️</span></span>
+    <button onclick="openPrestasInfo()" style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;background:rgba(24,119,242,.08);border:1px solid rgba(24,119,242,.35);border-radius:12px;padding:14px 12px;cursor:pointer;animation:btnpulse-blue 3s ease-in-out infinite;gap:4px">
+      <span id="prestas-info-btn-label" style="color:#fff;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;text-align:center;display:inline-block;animation:prestasInfoPulse 2s ease-in-out infinite;transform-origin:center">▲ À lire si tu n'es pas identifié·e sur le profil</span>
       <span style="display:flex;align-items:center;justify-content:center;gap:6px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="#1877f2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-        <span style="color:#1877f2;font-size:17px;font-weight:700;font-family:'DM Sans',sans-serif">Marco Kiff Ton SWiTCH</span>
+        <span style="color:#1877f2;font-size:16px;font-weight:700;font-family:'DM Sans',sans-serif">Marco Kiff Ton SWiTCH</span>
       </span>
     </button>
   </div>
@@ -1617,8 +1617,8 @@ function renderPrestasInfo(){
     if(txt&&txt.charCodeAt(0)===9658)continue;
     if(!txt){var sp=document.createElement('div');sp.style.height='8px';el.appendChild(sp);continue;}
     if(code==='T'){var t=document.createElement('div');t.className='sec-osl-t';t.textContent=txt;el.appendChild(t);}
-    else if(code==='H'){var h=document.createElement('div');h.className='sec-osl-h';h.style.textAlign='center';h.textContent=txt;el.appendChild(h);}
-    else if(code==='S'){var s=document.createElement('div');s.className='sec-osl-s';s.style.textAlign='center';s.textContent=txt;el.appendChild(s);}
+    else if(code==='H'){var h=document.createElement('div');h.className='sec-osl-h';h.textContent=txt;el.appendChild(h);}
+    else if(code==='S'){var s=document.createElement('div');s.className='sec-osl-s';s.textContent=txt;el.appendChild(s);}
     else if(code==='Z'){var z=document.createElement('div');z.className='sec-osl-z';z.textContent=txt;el.appendChild(z);}
     else if(code==='K'){var lines=txt.split(/[\n\r]+/);for(var li=0;li<lines.length;li++){var line=lines[li].trim();if(!line)continue;var pk=document.createElement('p');pk.textContent=line;el.appendChild(pk);}}
     else{var lines2=txt.split(/[\n\r]+/);for(var li2=0;li2<lines2.length;li2++){var line2=lines2[li2].trim();if(!line2)continue;var p2=document.createElement('p');p2.textContent=line2;el.appendChild(p2);}}
@@ -2184,7 +2184,8 @@ var _rulesBigMode = false;
 
 function makeMarcoLink() {
   var wrap = document.createElement('p');
-  wrap.style.cssText = 'display:flex;align-items:center;gap:6px';
+  wrap.className = 'marco-link-wrap';
+  wrap.style.cssText = 'display:flex;align-items:center;gap:6px;justify-content:center';
   var a = document.createElement('a');
   a.href = '#';
   a.style.color = '#1877f2';
@@ -3939,32 +3940,40 @@ function unlockPrestas() {
 }
 
 function prestasConnectClick() {
-  // Si demande en attente → ouvrir la modale d'options (Changer de compte / Fermer)
+  // Si demande en attente → proposer de changer de compte
   var swToken = localStorage.getItem('sw_token');
   var swName  = localStorage.getItem('sw_name');
-  var swLoggedIn = localStorage.getItem('sw_loggedIn');
-  if (swToken && swName && swLoggedIn !== '1') {
-    openM('m-sw-pending-options');
+  if (swToken && swName) {
+    openM('m-sw-change-account');
     return;
   }
-  // Sinon → flow normal
+  // Sinon flow normal
   swOpenAccess();
 }
 
-function swPendingChangeAccount() {
-  // Fermer la modale options, fermer la surimpression d'attente, nettoyer et ouvrir la modale de saisie du nom
-  closeM('m-sw-pending-options');
-  closeM('m-sw-pending');
-  if (_swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
-  // NE PAS supprimer sw_token/sw_name ici : si l'utilisateur ferme sans rien saisir, les données restent
-  // La suppression n'aura lieu que si un nouveau nom est validé
+function swChangeAccount() {
+  // Fermer la modale de changement
+  closeM('m-sw-change-account');
+  // Arrêter tout polling en cours
+  if (typeof _swPendingPollTimer !== 'undefined' && _swPendingPollTimer) {
+    clearInterval(_swPendingPollTimer);
+    _swPendingPollTimer = null;
+  }
+  // Fermer la surimpression pending si ouverte
+  var pending = document.getElementById('m-sw-pending');
+  if (pending && pending.classList.contains('open')) closeM('m-sw-pending');
+  // Effacer les données de session (déconnexion complète)
+  localStorage.removeItem('sw_token');
+  localStorage.removeItem('sw_name');
+  localStorage.removeItem('sw_fbId');
+  localStorage.removeItem('sw_loggedIn');
+  window._swLoaded = false;
+  _swAccHasPinCache = {};
+  // Ouvrir directement la modale de saisie du nom
   _swAccReturnPage = 'p-prestas';
-  if (currentPage !== 'p-prestas') nav('p-prestas');
   swAccReset();
   swLoadNames();
   openM('m-sw-access');
-  // Si l'utilisateur ferme la modale m-sw-access sans rien saisir : les données persistent
-  // → checkFbSession les retrouvera et ré-affichera la surimpression d'attente
 }
 
 
@@ -4616,14 +4625,6 @@ function swAccCopy() {
 }
 
 function swAccSend(channel) {
-  // Afficher immédiatement le sablier (la bascule vers la messagerie peut prendre du temps)
-  swAccShowLoading('Ouverture de la messagerie…');
-  // Masquer le sablier dès que la page perd le focus (bascule effective vers la messagerie)
-  var hideOnBlur = function() {
-    swAccHideLoading();
-    window.removeEventListener('blur', hideOnBlur);
-  };
-  window.addEventListener('blur', hideOnBlur);
   // Priorité : ouvrir le réseau immédiatement
   var url = _swAccLinks[channel] || '';
   if (url) window.open(url, '_blank');
@@ -4679,22 +4680,11 @@ function swAccCleanupAndClose() {
     document.removeEventListener('touchstart', dd._outsideTapHandler);
     dd._outsideTapHandler = null;
   }
-  // Vérifier si une demande vient d'être envoyée (token posé par swAccSend)
-  var justSent = (document.getElementById('sw-acc-sent') && document.getElementById('sw-acc-sent').style.display !== 'none');
   closeM('m-sw-access');
   if (_swAccReturnPage && _swAccReturnPage !== currentPage) {
     nav(_swAccReturnPage);
   }
   _swAccReturnPage = null;
-  // Si une demande vient d'être envoyée → afficher immédiatement la surimpression d'attente
-  if (justSent) {
-    var token = localStorage.getItem('sw_token');
-    var name  = localStorage.getItem('sw_name');
-    if (token && name) {
-      _showAllPrestasStates('prestas-nologin');
-      _startPendingPoll(token, name);
-    }
-  }
 }
 
 function _showAllPrestasStates(show) {
@@ -4707,15 +4697,23 @@ function _showAllPrestasStates(show) {
 
 var _swPendingPollTimer = null;
 
+function swClosePending() {
+  // Ferme la modale pending ET arrête le poll — revient sur prestas-nologin avec message d'attente
+  if (_swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
+  closeM('m-sw-pending');
+  // Rester sur prestas-nologin — le token est toujours là donc l'état d'attente est conservé
+  _showAllPrestasStates('prestas-nologin');
+}
+
 function _startPendingPoll(token, name) {
   // Arrêter tout polling précédent
   if (_swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
 
-  // Afficher la surimpression avec spinner d'abord
+  // Afficher directement le texte (pas le spinner — il tourne indéfiniment si réseau lent)
   var loadEl = document.getElementById('m-sw-pending-load');
   var msgEl  = document.getElementById('m-sw-pending-msg');
-  if (loadEl) loadEl.style.display = 'block';
-  if (msgEl)  msgEl.style.display  = 'none';
+  if (loadEl) loadEl.style.display = 'none';
+  if (msgEl)  msgEl.style.display  = 'block';
   openM('m-sw-pending');
 
   function checkNow() {
@@ -4740,7 +4738,7 @@ function _startPendingPoll(token, name) {
           var fakeMe = { id: data.fbId || '', name: name, first_name: name.split(' ')[0] };
           loadPrestas(fakeMe);
         } else if (data.pending) {
-          // Encore en attente → passer du spinner au texte
+          // Encore en attente — texte déjà affiché, rien à faire
           if (loadEl) loadEl.style.display = 'none';
           if (msgEl)  msgEl.style.display  = 'block';
         } else {
@@ -4754,7 +4752,7 @@ function _startPendingPoll(token, name) {
         }
       })
       .catch(function() {
-        // Erreur réseau → passer au texte (on réessaiera au prochain tick)
+        // Erreur réseau → texte déjà affiché, on réessaiera au prochain tick
         if (loadEl) loadEl.style.display = 'none';
         if (msgEl)  msgEl.style.display  = 'block';
       });
@@ -4874,9 +4872,6 @@ function checkFbSession() {
         </div>
       </div>
       <div id="sw-acc-step2" style="display:none;padding:0 4px">
-        <div style="text-align:center;margin-bottom:4px">
-          <span style="font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;color:var(--white)">DERNIÈRE ÉTAPE !</span>
-        </div>
         <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;margin-bottom:12px;text-align:left">
           <div id="sw-acc-msg" style="font-size:13px;color:var(--white);line-height:1.5;font-style:italic;margin-bottom:8px"></div>
           <button id="sw-acc-copy-btn" onclick="swAccCopy()"
@@ -4908,20 +4903,20 @@ function checkFbSession() {
   </div>
 </div>
 
-<!-- MODALE : Options en attente de validation -->
-<div class="moverlay" id="m-sw-pending-options" onclick="if(event.target===this)closeM('m-sw-pending-options')" style="z-index:800">
-  <div class="mbox" style="max-width:320px;padding:0">
-    <div class="mhead" style="text-align:center">
-      <h3 style="color:var(--gold)">DEMANDE EN ATTENTE</h3>
+<div class="moverlay" id="m-sw-change-account" onclick="if(event.target===this)closeM('m-sw-change-account')" style="z-index:800">
+  <div class="mbox" style="max-width:320px;text-align:center">
+    <div class="mbody" style="padding:24px 20px 12px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:16px">DEMANDE EN ATTENTE</div>
+      <div style="font-size:14px;color:var(--muted2);line-height:1.6;margin-bottom:20px">Ta demande d'accès est en cours de validation. Tu peux changer de compte si tu veux utiliser un autre nom.</div>
     </div>
-    <div class="mbody" style="padding:16px 18px;display:flex;flex-direction:column;gap:10px">
-      <button onclick="swPendingChangeAccount()" style="width:100%;background:#1877f2;border:none;border-radius:10px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:#fff;cursor:pointer">Changer de compte</button>
-      <button onclick="closeM('m-sw-pending-options')" style="width:100%;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--muted2);cursor:pointer">Fermer</button>
+    <div class="mfoot" style="flex-direction:column;gap:10px">
+      <button onclick="swChangeAccount()" style="width:100%;background:#1877f2;border:none;border-radius:10px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:#fff;cursor:pointer">Changer de compte</button>
+      <button onclick="closeM('m-sw-change-account')" style="width:100%;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;color:var(--muted2);cursor:pointer">Fermer</button>
     </div>
   </div>
 </div>
 
-
+<div class="moverlay" id="m-sw-pending" onclick="swClosePending()" style="z-index:700">
   <div style="text-align:center">
     <div id="m-sw-pending-load">
       <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto"></div>
