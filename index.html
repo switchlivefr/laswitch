@@ -4698,49 +4698,23 @@ function swAccCopy() {
 }
 
 function swAccSend(channel) {
+  // Si exception autoReconnect : tout est déjà géré par le fetch checkAutoReconnect
+  if (_swAccAutoReconnect) return;
+
+  // CAS NORMAL uniquement
   var sentEl   = document.getElementById('sw-acc-sent');
   var pendEl   = document.getElementById('sw-acc-sent-pending');
   var reconnEl = document.getElementById('sw-acc-sent-reconnect');
   var socialEl = document.getElementById('sw-acc-social-btns');
-
-  if (_swAccAutoReconnect) {
-    // EXCEPTION : écrire dans le sheets MAIS ne pas ouvrir le réseau
-    localStorage.setItem('sw_token', _swAccToken);
-    localStorage.setItem('sw_name', _swAccName);
-    localStorage.setItem('sw_loggedIn', '1');
-    localStorage.setItem('sw_fbId', _swAccAutoFbId || '');
-    window._swLoaded = true;
-    fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken) + '&pin=' + encodeURIComponent(_swPinDemande || '')).catch(function(){});
-    // Afficher les 2 phrases
-    if (sentEl)   sentEl.style.display = 'block';
-    if (pendEl)   pendEl.style.display = 'none';
-    if (reconnEl) reconnEl.style.display = 'block';
-    // Griser les boutons puis réactiver après 3s en mode contact libre
-    if (socialEl) { socialEl.style.opacity = '0.3'; socialEl.style.pointerEvents = 'none'; }
-    setTimeout(function() {
-      if (socialEl) {
-        socialEl.style.opacity = '1';
-        socialEl.style.pointerEvents = 'auto';
-        var btns = socialEl.querySelectorAll('button');
-        btns.forEach(function(btn, idx) {
-          var chs = ['messenger','instagram','whatsapp'];
-          (function(ch){ btn.onclick = function(){ var u=_swAccLinks[ch]||''; if(u)window.open(u,'_blank'); }; })(chs[idx]||'');
-        });
-      }
-    }, 3000);
-  } else {
-    // CAS NORMAL : ouvrir le réseau immédiatement + écrire sheets en arrière-plan
-    var url = _swAccLinks[channel] || '';
-    if (url) window.open(url, '_blank');
-    localStorage.setItem('sw_token', _swAccToken);
-    localStorage.setItem('sw_name', _swAccName);
-    fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken) + '&pin=' + encodeURIComponent(_swPinDemande || '')).catch(function(){});
-    if (sentEl)   sentEl.style.display = 'block';
-    if (pendEl)   pendEl.style.display = 'block';
-    if (reconnEl) reconnEl.style.display = 'none';
-    // Boutons restent actifs
-    if (socialEl) { socialEl.style.opacity = '1'; socialEl.style.pointerEvents = 'auto'; }
-  }
+  var url = _swAccLinks[channel] || '';
+  if (url) window.open(url, '_blank');
+  localStorage.setItem('sw_token', _swAccToken);
+  localStorage.setItem('sw_name', _swAccName);
+  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken) + '&pin=' + encodeURIComponent(_swPinDemande || '')).catch(function(){});
+  if (sentEl)   sentEl.style.display = 'block';
+  if (pendEl)   pendEl.style.display = 'block';
+  if (reconnEl) reconnEl.style.display = 'none';
+  if (socialEl) { socialEl.style.opacity = '1'; socialEl.style.pointerEvents = 'auto'; }
 }
 
 function swAccReset() {
