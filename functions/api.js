@@ -14,8 +14,7 @@ const SHEETS = {
   'reglesBig':     'REGLES BIG',
   'proRaceCafe':   'PRO RACE CAFE',
   'reservation':   'RESERVATION',
-  'promoSw':       'PROMO SWiTCH',
-  'pitchMesPrestas': 'PITCH MES PRESTAS'
+  'promoSw':       'PROMO SWiTCH'
 };
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRxLRh2URcPDRhMKC9mQwDsToEBTGCkrRrULgAFqYSvaldTh2wWRZGP7vbZa9eMYWP/exec';
 const FB_APP_ID = '3170724703113870';
@@ -794,16 +793,13 @@ document.addEventListener('keydown', function(e) {
     }
   }
 
-  // GET : lecture des sheets en parallèle
+  // GET : lecture des sheets
   try {
     const result = {};
-    const entries = Object.entries(SHEETS);
-    const values = await Promise.all(
-      entries.map(([key, name]) =>
-        readSheet(name).catch(e => ({ error: e.message }))
-      )
-    );
-    entries.forEach(([key], i) => { result[key] = values[i]; });
+    for (const [key, name] of Object.entries(SHEETS)) {
+      try { result[key] = await readSheet(name); }
+      catch(e) { result[key] = { error: e.message }; }
+    }
     const homeMode = await env.LASWITCH_KV.get('home_mode');
     const resaMode = await env.LASWITCH_KV.get('resa_mode');
     const videoUrl = await env.LASWITCH_KV.get('video_url');
