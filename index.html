@@ -1962,11 +1962,6 @@ window.addEventListener('resize', function(){
 
 function renderHome(){
   if(!RAW.switch||RAW.switch.error)return;
-  if (!window._prenomSaved) {
-    window._prenomSaved = true;
-    var _snp = localStorage.getItem('sw_name');
-    if (_snp) _savePrenom(_snp);
-  }
   var rows=RAW.switch.rows;
   var ed=g(rows,0,0);if(ed)document.getElementById('home-edition').textContent=ed;
   var ct=g(rows,0,2);var sw=document.getElementById('sw-count-sub');if(sw&&ct)sw.textContent=ct;
@@ -3431,13 +3426,20 @@ if('serviceWorker' in navigator){
 </script>
 <script>
 (function(){
-  if (!localStorage.getItem('sw_name')) return;
+  var swName = localStorage.getItem('sw_name');
+  if (!swName || !swName.trim()) return;
   var greet = document.getElementById('loader-greeting');
   var nameEl = document.getElementById('loader-greet-name');
   if (!greet || !nameEl) return;
-  var prenom = localStorage.getItem('sw_prenom');
-  if (prenom && prenom.trim()) nameEl.textContent = prenom.trim().toUpperCase();
   greet.style.display = 'flex';
+  fetch('/api?action=getPrenom&name=' + encodeURIComponent(swName.trim()))
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (data.prenom && data.prenom.trim()) {
+        nameEl.textContent = data.prenom.trim().toUpperCase();
+      }
+    })
+    .catch(function(){});
 })();
 </script>
 <!-- SDK Facebook Login -->
@@ -3473,34 +3475,25 @@ function fbLogin() {
   }, { scope: 'public_profile' });
 }
 
-function _savePrenom(name) {
-  fetch('/api?action=getPrenom&name=' + encodeURIComponent((name||'').trim()))
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if (data.prenom && data.prenom.trim()) {
-        localStorage.setItem('sw_prenom', data.prenom.trim());
-      } else {
-        localStorage.removeItem('sw_prenom');
-      }
-    })
-    .catch(function(){});
-}
-
 function fbLogout() {
   stopPrestasVideo();
   _fbUser = null;
   window._swLoaded = false;
+  // Arrêter tout polling en cours
   if (typeof _swPendingPollTimer !== 'undefined' && _swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
   localStorage.removeItem('sw_token');
   localStorage.removeItem('sw_name');
   localStorage.removeItem('sw_fbId');
   localStorage.removeItem('sw_loggedIn');
-  localStorage.removeItem('sw_prenom');
   _swAccHasPinCache = {};
   _prestasUnlocked = false;
   window._swLoaded = false;
-  window._prenomSaved = false;
-  if (_adminMode) { nav('p-home'); return; }
+  if (_adminMode) {
+    // Mode admin : retour accueil, pas de splash utilisateur
+    nav('p-home');
+    return;
+  }
+  // Mode utilisateur : revenir sur p-prestas et afficher la splash
   if (currentPage !== 'p-prestas') nav('p-prestas');
   _showAllPrestasStates('prestas-nologin');
   document.getElementById('prestas-sub').textContent = 'Tes prestations SWiTCH';
@@ -4571,7 +4564,6 @@ function swAccValidatePinDemande() {
         localStorage.setItem('sw_name', _swAccName);
         localStorage.setItem('sw_loggedIn', '1');
         localStorage.setItem('sw_fbId', _swAccAutoFbId);
-        _savePrenom(_swAccName);
         window._swLoaded = true;
         // Écrire B,C,D,F dans le sheets
         fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken) + '&pin=' + encodeURIComponent(_swPinDemande || '')).catch(function(){});
@@ -4666,7 +4658,6 @@ function swAccVerifyPinConnect(pin) {
         localStorage.setItem('sw_fbId', data.fbId || '');
         localStorage.setItem('sw_name', _swAccName);
         localStorage.setItem('sw_token', _swAccToken || ('sw' + Date.now()));
-        _savePrenom(_swAccName);
         window._swLoaded = true;
         swAccCleanupAndClose();
         nav('p-prestas');
@@ -4866,7 +4857,6 @@ function _startPendingPoll(token, name) {
         localStorage.setItem('sw_loggedIn', '1');
         localStorage.setItem('sw_fbId', data.fbId || '');
         localStorage.setItem('sw_name', name);
-        _savePrenom(name);
         window._swLoaded = true;
         _showAllPrestasStates('prestas-loading');
         var fakeMe = { id: data.fbId || '', name: name, first_name: name.split(' ')[0] };
@@ -4889,7 +4879,6 @@ function _startPendingPoll(token, name) {
                 localStorage.setItem('sw_loggedIn', '1');
                 localStorage.setItem('sw_fbId', d2.fbId || '');
                 localStorage.setItem('sw_name', name);
-                _savePrenom(name);
                 window._swLoaded = true;
                 closeM('m-sw-pending');
                 _showAllPrestasStates('prestas-loading');
