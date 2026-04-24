@@ -103,7 +103,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .hslogan-l1{display:block;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:700;letter-spacing:0px;color:var(--gold);line-height:1.15;animation:sloganPulse 3s ease-in-out infinite}
 .hslogan-l2{display:block;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:700;letter-spacing:0px;color:var(--gold);line-height:1.15;animation:sloganPulse 3s ease-in-out infinite}
 .hmeta{margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:3px}
-.hedition{background:transparent;border:none;border-radius:var(--rs);padding:8px 18px;font-size:21px;font-weight:600;animation:rainbow .6s linear infinite}
+.hedition-placeholder{}
 .sub-hero{position:relative;padding:34px 20px 22px;text-align:center;overflow:hidden}
 .sh-amber,.sh-blue,.sh-cyan{position:sticky;top:0;z-index:10}
 #osl-sticky-wrap .sh-cyan{position:static}
@@ -161,6 +161,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 #app-loader{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
 #app-loader .loader-title{font-family:'Bebas Neue',sans-serif;font-size:56px;color:var(--gold);letter-spacing:4px}
 #app-loader .loader-spin{width:40px;height:40px;border:3px solid rgba(255,200,50,.2);border-top:3px solid var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+#loader-greeting{display:none;flex-direction:column;align-items:center;gap:4px;margin-top:8px;text-align:center}
+#loader-greeting .greet-hello{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:4px;animation:rainbow 2s linear infinite}
+#loader-greeting .greet-name{font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:5px;animation:rainbow 2s linear infinite;animation-delay:.3s}
+.hedition{background:transparent;border:none;border-radius:var(--rs);padding:8px 18px;font-size:26px;font-weight:600;animation:rainbow 2s linear infinite}
 .nav-disabled{pointer-events:none;opacity:.4}
 .bnav{position:fixed;bottom:0;left:0;right:0;height:calc(var(--nh) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:rgba(8,8,16,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;z-index:200}
 .bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;text-transform:uppercase;cursor:pointer;transition:color .18s;padding:0 1px;position:relative;-webkit-appearance:none;line-height:1.2;text-align:center}
@@ -3406,6 +3410,10 @@ document.querySelector('.bnav').classList.add('nav-disabled');
 <div id="app-loader">
   <div class="loader-title">SWiTCH 💫</div>
   <div class="loader-spin" id="loader-spin"></div>
+  <div id="loader-greeting">
+    <span class="greet-hello">HELLO</span>
+    <span class="greet-name" id="loader-greet-name"></span>
+  </div>
   <div id="loader-weak" style="display:none;flex-direction:column;align-items:center;gap:10px;text-align:center">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);letter-spacing:2px">Echec de connexion</div>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--muted2);letter-spacing:2px">Relance de l'appli</div>
@@ -3416,6 +3424,19 @@ document.querySelector('.bnav').classList.add('nav-disabled');
 if('serviceWorker' in navigator){
   window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js');});
 }
+// Greeting sablier : afficher le prénom si déjà connecté
+(function(){
+  var swName = localStorage.getItem('sw_name');
+  if (swName && swName.trim()) {
+    var prenom = swName.trim().split(' ')[0].toUpperCase();
+    var greet = document.getElementById('loader-greeting');
+    var nameEl = document.getElementById('loader-greet-name');
+    if (greet && nameEl) {
+      nameEl.textContent = prenom;
+      greet.style.display = 'flex';
+    }
+  }
+})();
 </script>
 <!-- SDK Facebook Login -->
 <div id="fb-root"></div>
