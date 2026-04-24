@@ -1962,7 +1962,6 @@ window.addEventListener('resize', function(){
 
 function renderHome(){
   if(!RAW.switch||RAW.switch.error)return;
-  // Sauvegarder le prénom (col G) si connecté et pas encore sauvegardé
   if (!window._prenomSaved) {
     window._prenomSaved = true;
     var _snp = localStorage.getItem('sw_name');
@@ -3475,14 +3474,11 @@ function fbLogin() {
 }
 
 function _savePrenom(name) {
-  fetch('/api?action=getIdsFbk')
+  fetch('/api?action=getPrenom&name=' + encodeURIComponent((name||'').trim()))
     .then(function(r){ return r.json(); })
     .then(function(data){
-      var ids = data.ids || [];
-      var norm = (name || '').trim().toLowerCase();
-      var match = ids.find(function(item){ return item.fb_id.toLowerCase() === norm; });
-      if (match && match.prenom && match.prenom.trim()) {
-        localStorage.setItem('sw_prenom', match.prenom.trim());
+      if (data.prenom && data.prenom.trim()) {
+        localStorage.setItem('sw_prenom', data.prenom.trim());
       } else {
         localStorage.removeItem('sw_prenom');
       }
@@ -3494,7 +3490,6 @@ function fbLogout() {
   stopPrestasVideo();
   _fbUser = null;
   window._swLoaded = false;
-  // Arrêter tout polling en cours
   if (typeof _swPendingPollTimer !== 'undefined' && _swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
   localStorage.removeItem('sw_token');
   localStorage.removeItem('sw_name');
@@ -3504,12 +3499,8 @@ function fbLogout() {
   _swAccHasPinCache = {};
   _prestasUnlocked = false;
   window._swLoaded = false;
-  if (_adminMode) {
-    // Mode admin : retour accueil, pas de splash utilisateur
-    nav('p-home');
-    return;
-  }
-  // Mode utilisateur : revenir sur p-prestas et afficher la splash
+  window._prenomSaved = false;
+  if (_adminMode) { nav('p-home'); return; }
   if (currentPage !== 'p-prestas') nav('p-prestas');
   _showAllPrestasStates('prestas-nologin');
   document.getElementById('prestas-sub').textContent = 'Tes prestations SWiTCH';
