@@ -4652,13 +4652,9 @@ function swAccCopy() {
   var done = function(){
     btn.innerHTML = '<span class="copy-msg-pulsing">\u2705 MESSAGE COPI\u00c9 : CONTACTE MARCO !</span>';
     _swAccCopied = true;
-    // N'activer les boutons que si le fetch checkAutoReconnect est terminé ET pas exception
-    if (_swAccCheckDone && !_swAccAutoReconnect) {
-      document.getElementById('sw-acc-social-btns').style.opacity = '1';
-      document.getElementById('sw-acc-social-btns').style.pointerEvents = 'auto';
-    }
-    // Si pas encore terminé : les boutons s'activeront dans le .then du fetch
-    // Si exception : les boutons restent grisés, swAccSend gère tout
+    // Activer les boutons toujours — dans l'exception swAccSend gère le comportement au clic
+    document.getElementById('sw-acc-social-btns').style.opacity = '1';
+    document.getElementById('sw-acc-social-btns').style.pointerEvents = 'auto';
   };
   if (navigator.clipboard) {
     navigator.clipboard.writeText(msg).then(done).catch(function(){
@@ -4680,17 +4676,18 @@ function swAccSend(channel) {
   var socialEl = document.getElementById('sw-acc-social-btns');
 
   if (_swAccAutoReconnect) {
-    // EXCEPTION : ne pas ouvrir le réseau, connexion immédiate
+    // EXCEPTION : écrire dans le sheets MAIS ne pas ouvrir le réseau
     localStorage.setItem('sw_token', _swAccToken);
     localStorage.setItem('sw_name', _swAccName);
     localStorage.setItem('sw_loggedIn', '1');
     localStorage.setItem('sw_fbId', _swAccAutoFbId || '');
     window._swLoaded = true;
-    // Écrire B,C,D,F dans le sheets en arrière-plan sans attendre
     fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken) + '&pin=' + encodeURIComponent(_swPinDemande || '')).catch(function(){});
+    // Afficher les 2 phrases
     if (sentEl)   sentEl.style.display = 'block';
     if (pendEl)   pendEl.style.display = 'none';
     if (reconnEl) reconnEl.style.display = 'block';
+    // Griser les boutons puis réactiver après 3s en mode contact libre
     if (socialEl) { socialEl.style.opacity = '0.3'; socialEl.style.pointerEvents = 'none'; }
     setTimeout(function() {
       if (socialEl) {
