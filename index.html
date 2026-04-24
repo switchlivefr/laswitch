@@ -4759,11 +4759,18 @@ function swAccReset() {
   _swAccName = '';
   _swAccSelectedFromList = false;
   _swPinDemande = '';
+  // Si on réinitialise après une exception, effacer le localStorage pour ne pas bloquer une nouvelle demande
+  if (_swAccAutoReconnect) {
+    localStorage.removeItem('sw_loggedIn');
+    localStorage.removeItem('sw_token');
+    localStorage.removeItem('sw_name');
+    localStorage.removeItem('sw_fbId');
+    window._swLoaded = false;
+  }
   _swAccAutoReconnect = false;
   _swAccCheckDone = false;
   _swAccCopied = false;
   _swAccAutoFbId = '';
-  window._swLoaded = false;
 }
 
 // Nettoie le listener touchstart global AVANT de fermer la modale (sinon il reste actif et ralentit toute l'appli)
@@ -4776,7 +4783,7 @@ function swAccCleanupAndClose() {
   }
   closeM('m-sw-access');
   if (_swAccAutoReconnect) {
-    // Exception reconnexion auto : charger directement les vidéos sans passer par l'écran d'attente
+    // Exception reconnexion auto : charger directement les vidéos
     _swAccAutoReconnect = false;
     if (currentPage !== 'p-prestas') nav('p-prestas');
     _showAllPrestasStates('prestas-loading');
@@ -4786,6 +4793,15 @@ function swAccCleanupAndClose() {
     loadPrestas(fakeMe);
     _swAccReturnPage = null;
     return;
+  }
+  // Si l'exception avait posé sw_loggedIn mais qu'on ferme sans aller sur prestas,
+  // effacer pour ne pas bloquer une future demande normale
+  if (localStorage.getItem('sw_loggedIn') === '1' && window._swLoaded) {
+    localStorage.removeItem('sw_loggedIn');
+    localStorage.removeItem('sw_token');
+    localStorage.removeItem('sw_name');
+    localStorage.removeItem('sw_fbId');
+    window._swLoaded = false;
   }
   _swAccAutoReconnect = false;
   if (_swAccReturnPage && _swAccReturnPage !== currentPage) {
