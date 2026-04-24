@@ -102,6 +102,24 @@ body::before{
   letter-spacing:2px;
 }
 .btn.reset-mode:not(:disabled):active{transform:scale(0.98);opacity:.8}
+.btn.pin-mode{
+  background:#e8407a;
+  color:#fff;
+  border:none;
+  font-size:16px;
+  letter-spacing:1.5px;
+  line-height:1.2;
+  padding:13px 15px;
+}
+.btn.pin-mode:not(:disabled):active{transform:scale(0.98);opacity:.85}
+.btn.autre-nom-mode{
+  background:transparent;
+  color:var(--green);
+  border:2px solid var(--green);
+  font-size:17px;
+  letter-spacing:2px;
+}
+.btn.autre-nom-mode:not(:disabled):active{transform:scale(0.98);opacity:.8}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinner{
   display:none;width:22px;height:22px;
@@ -168,7 +186,7 @@ var API_KEY  = 'AIzaSyCTADjNIhq3jXSJiI_WO_jPsp63pTklT_A';
 
 var DATA = [];
 var prenoms_col_g = [];
-var state = { nomSelectionne: false, prenomExistant: '', resultShown: false };
+var state = { nomSelectionne: false, prenomExistant: '', codePin: '', resultShown: false };
 
 function norm(s) {
   return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
@@ -199,8 +217,9 @@ function loadData() {
     var pset = {};
     rows.forEach(function(row){
       var nom    = (row[0] || '').trim();
+      var pin    = (row[5] || '').trim(); // colonne F = index 5
       var prenom = (row[6] || '').trim(); // colonne G = index 6
-      if (nom) DATA.push({ nom: nom, prenom: prenom });
+      if (nom) DATA.push({ nom: nom, prenom: prenom, pin: pin });
       if (prenom) pset[norm(prenom)] = prenom;
     });
     prenoms_col_g = Object.values(pset);
@@ -282,17 +301,32 @@ window.addEventListener('load', function(){
   });
 
   submitBtn.addEventListener('click', function(){
-    // Si en mode reset → recharger la page
+    // Mode "ENTRER UN AUTRE NOM" ou "AUTRE NOM FACEBOOK" → reset complet
     if (state.resultShown) {
-      window.location.reload();
+      doFullReset();
+      setTimeout(function(){ nomInput.focus(); }, 50);
       return;
     }
     doSubmit();
   });
 
+  // Clic ailleurs sur la page → reset complet (si un résultat est affiché)
+  document.addEventListener('click', function(e){
+    if (!state.resultShown) return;
+    var wrap = document.querySelector('.wrap');
+    if (!wrap.contains(e.target)) {
+      doFullReset();
+      setTimeout(function(){ nomInput.focus(); }, 50);
+    }
+  });
+
   document.addEventListener('keydown', function(e){
     if (e.key === 'Enter') {
-      if (state.resultShown) { window.location.reload(); return; }
+      if (state.resultShown) {
+        doFullReset();
+        setTimeout(function(){ nomInput.focus(); }, 50);
+        return;
+      }
       if (!submitBtn.disabled) doSubmit();
     }
   });
@@ -304,6 +338,7 @@ function selectNom(nom) {
   state.nomSelectionne = true;
   var found = DATA.find(function(d){ return d.nom === nom; });
   state.prenomExistant = found ? found.prenom : '';
+  state.codePin        = found ? found.pin    : '';
   prenomInput.value = '';
   prenomInput.placeholder = state.prenomExistant || 'Prénom';
   submitBtn.disabled = true;
@@ -312,13 +347,29 @@ function selectNom(nom) {
 
 function updateBtn() {
   var prenomSaisi = prenomInput.value.trim();
-  if (!prenomSaisi) { submitBtn.disabled = true; btnLabel.textContent = 'AJOUTER'; return; }
+  if (!prenomSaisi) {
+    submitBtn.disabled = true;
+    btnLabel.textContent = 'AJOUTER';
+    submitBtn.className = 'btn';
+    return;
+  }
   if (state.nomSelectionne) {
-    submitBtn.disabled = false;
-    btnLabel.textContent = (state.prenomExistant && norm(prenomSaisi) !== norm(state.prenomExistant))
-      ? 'REMPLACER' : 'AJOUTER';
+    // Prénom identique → mode réinitialisation PIN (rouge)
+    if (state.prenomExistant && norm(prenomSaisi) === norm(state.prenomExistant)) {
+      submitBtn.disabled = false;
+      submitBtn.className = 'btn pin-mode';
+      btnLabel.textContent = state.codePin
+        ? 'RÉINITIALISER LE CODE PIN ' + state.codePin
+        : 'RÉINITIALISER LE CODE PIN';
+    } else {
+      submitBtn.disabled = false;
+      submitBtn.className = 'btn';
+      btnLabel.textContent = (state.prenomExistant && norm(prenomSaisi) !== norm(state.prenomExistant))
+        ? 'REMPLACER' : 'AJOUTER';
+    }
   } else {
     submitBtn.disabled = !nomInput.value.trim();
+    submitBtn.className = 'btn';
     btnLabel.textContent = 'AJOUTER';
   }
 }
@@ -328,9 +379,9 @@ function doSubmit() {
   var prenom = prenomInput.value.trim();
   if (!nom || !prenom || submitBtn.disabled) return;
 
-  // Prénom identique → abandon
+  // Prénom identique → réinitialisation code PIN
   if (state.nomSelectionne && state.prenomExistant && norm(prenom) === norm(state.prenomExistant)) {
-    showFeedback('ABANDON', true);
+    doResetPin(nom);
     return;
   }
 
@@ -362,12 +413,43 @@ function doSubmit() {
     });
 }
 
+function doResetPin(nom) {
+  submitBtn.classList.add('loading');
+  submitBtn.disabled = true;
+
+  var url = APPS_SCRIPT_URL
+    + '?action=resetPin'
+    + '&name=' + encodeURIComponent(nom);
+
+  fetch(url)
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      submitBtn.classList.remove('loading');
+      if (data.ok) {
+        showFeedback('CODE PIN RÉINITIALISÉ !', true);
+        showAutreNomBtn();
+      } else {
+        showFeedback('ERREUR', true);
+      }
+    })
+    .catch(function(){
+      submitBtn.classList.remove('loading');
+      showFeedback('ERREUR RÉSEAU', true);
+    });
+}
+
 function showResetBtn() {
-  // Passe le bouton en mode "ENTRER UN AUTRE NOM"
   submitBtn.disabled = false;
   submitBtn.classList.remove('loading');
-  submitBtn.classList.add('reset-mode');
+  submitBtn.className = 'btn reset-mode';
   btnLabel.textContent = 'ENTRER UN AUTRE NOM';
+}
+
+function showAutreNomBtn() {
+  submitBtn.disabled = false;
+  submitBtn.classList.remove('loading');
+  submitBtn.className = 'btn autre-nom-mode';
+  btnLabel.textContent = 'AUTRE NOM FACEBOOK';
 }
 
 function showFeedback(msg, isAbandon) {
@@ -384,6 +466,7 @@ function hideFeedback() {
 function doFullReset() {
   state.nomSelectionne = false;
   state.prenomExistant = '';
+  state.codePin        = '';
   state.resultShown    = false;
   nomInput.value       = '';
   prenomInput.value    = '';
@@ -393,8 +476,7 @@ function doFullReset() {
   hideFeedback();
   btnLabel.textContent = 'AJOUTER';
   submitBtn.disabled   = true;
-  submitBtn.classList.remove('loading');
-  submitBtn.classList.remove('reset-mode');
+  submitBtn.className  = 'btn';
 }
 </script>
 </body>
