@@ -4128,7 +4128,8 @@ function swAccFilterFocus(val) {
     inp.style.caretColor = '';
     _swAccSelectedFromList = false;
     _swAccName = '';
-
+    var ab = document.getElementById('sw-acc-action-btn');
+    if (ab) { ab.disabled = true; ab.textContent = 'EN ATTENTE DE...'; ab.style.background = '#555'; ab.style.color = '#333'; ab.style.display = ''; ab._mode = ''; }
     document.getElementById('sw-acc-dropdown').style.display = 'none';
     return;
   }
@@ -4245,7 +4246,11 @@ var _swAccHasPinCache = {};
 var _swAccHasPinSeq = 0; // séquence pour ignorer les réponses obsolètes
 function swAccUpdateButtons(name) {
   var n = (name || '').trim();
-  if (!n) return;
+  if (!n) {
+    var btn = document.getElementById('sw-acc-action-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'EN ATTENTE DE...'; btn.style.background = '#555'; btn.style.color = '#333'; btn._mode = ''; }
+    return;
+  }
   // Cache disponible : appliquer immédiatement sans sablier
   var cached = _swAccHasPinCache[n.toLowerCase()];
   if (cached !== undefined) {
@@ -4280,20 +4285,35 @@ function swAccUpdateButtons(name) {
     });
 }
 
-// _applyBtnState : affiche directement le bon step sous le champ de saisie
+// _applyBtnState :
+//   hasPin=true  → connexion automatique immédiate
+//   hasPin=false → bouton bleu "Demande d'accès", l'utilisateur clique pour continuer
 function _applyBtnState(hasPin) {
-  var name = (document.getElementById('sw-acc-input').value || '').trim();
-  if (!name || name.length < 2) return;
-  _swAccName = name;
+  var btn = document.getElementById('sw-acc-action-btn');
+  if (!btn) return;
+  btn.disabled = false;
+  btn.style.opacity = '1';
   if (hasPin) {
+    // Connexion automatique — pas de bouton
+    btn.style.display = 'none';
+    var name = (document.getElementById('sw-acc-input').value || '').trim();
+    _swAccName = name;
     swAccGoConnect();
   } else {
-    swAccGoDemande();
+    // Demande d'accès — bouton bleu, attend le clic
+    btn.style.display = '';
+    btn.textContent = "Demande d'accès";
+    btn.style.background = '#1877f2';
+    btn.style.color = '#fff';
+    btn._mode = 'demande';
   }
 }
 
-// swAccActionClick conservé pour compatibilité (ne devrait plus être appelé)
-function swAccActionClick() {}
+function swAccActionClick() {
+  var btn = document.getElementById('sw-acc-action-btn');
+  if (!btn || btn.disabled) return;
+  if (btn._mode === 'demande') swAccGoDemande();
+}
 
 // ============================================================
 // FLUX DEMANDE D'ACCÈS (CAS 1)
@@ -4608,7 +4628,10 @@ function checkFbSession() {
               style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#fff;color:#000;font-size:15px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
           <div id="sw-acc-dropdown" style="display:none;position:fixed;background:#fff;border-radius:8px;max-height:200px;overflow-y:auto;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.5);text-align:left"></div>
-          <div id="sw-acc-action-area" style="margin-top:4px"></div>
+          <div style="margin-top:12px">
+            <button id="sw-acc-action-btn" onclick="swAccActionClick()"
+              style="width:100%;padding:12px 10px;border-radius:8px;border:none;background:#555;color:#333;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer;opacity:1" disabled>EN ATTENTE DE...</button>
+          </div>
         </div>
       </div>
       <!-- STEP PIN DEMANDE : saisie d'un nouveau PIN pour demande d'accès -->
