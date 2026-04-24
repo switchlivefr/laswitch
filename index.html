@@ -4503,13 +4503,34 @@ function swAccValidatePinDemande() {
   document.getElementById('sw-acc-sent').style.display = 'none';
   document.getElementById('sw-acc-copy-btn').innerHTML = '📋 COPIE LE MESSAGE';
 
-  // Pré-charger silencieusement le flag autoReconnect (case E non vide ?)
-  // Résultat disponible avant que l'utilisateur clique sur un bouton réseau
+  // Fetch checkAutoReconnect — bloque les boutons jusqu'à la réponse
   _swAccAutoReconnect = false;
+  _swAccCheckDone = false;
   fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=checkAutoReconnect&name=' + encodeURIComponent(_swAccName))
     .then(function(r){ return r.json(); })
-    .then(function(data){ if (data.autoReconnect) _swAccAutoReconnect = true; })
-    .catch(function(){ _swAccAutoReconnect = false; });
+    .then(function(data){
+      _swAccAutoReconnect = !!data.autoReconnect;
+      _swAccCheckDone = true;
+      if (_swAccAutoReconnect) {
+        // Exception : mémoriser fbId, ne jamais activer les boutons normalement
+        _swAccAutoFbId = data.fbId || '';
+      }
+      // Si l'utilisateur a déjà copié le message : activer les boutons maintenant
+      // (seulement si pas exception)
+      if (_swAccCopied && !_swAccAutoReconnect) {
+        var s = document.getElementById('sw-acc-social-btns');
+        if (s) { s.style.opacity = '1'; s.style.pointerEvents = 'auto'; }
+      }
+    })
+    .catch(function(){
+      // En cas d'erreur réseau : pas d'exception, activer les boutons si déjà copié
+      _swAccAutoReconnect = false;
+      _swAccCheckDone = true;
+      if (_swAccCopied) {
+        var s = document.getElementById('sw-acc-social-btns');
+        if (s) { s.style.opacity = '1'; s.style.pointerEvents = 'auto'; }
+      }
+    });
 }
 
 // ============================================================
@@ -4621,15 +4642,23 @@ function swAccVerifyPinConnect(pin) {
     });
 }
 
+var _swAccCheckDone = false;
+var _swAccCopied = false;
+var _swAccAutoFbId = '';
+
 function swAccCopy() {
   var msg = document.getElementById('sw-acc-msg').textContent;
   var btn = document.getElementById('sw-acc-copy-btn');
   var done = function(){
     btn.innerHTML = '<span class="copy-msg-pulsing">\u2705 MESSAGE COPI\u00c9 : CONTACTE MARCO !</span>';
-    document.getElementById('sw-acc-social-btns').style.opacity = '1';
-    document.getElementById('sw-acc-social-btns').style.pointerEvents = 'auto';
-    // NE PAS écrire le localStorage ici : seulement dans swAccSend() après clic réseau social
-    // Sinon checkFbSession() trouve sw_token et affiche "EN ATTENTE" si on ferme sans envoyer
+    _swAccCopied = true;
+    // N'activer les boutons que si le fetch checkAutoReconnect est terminé ET pas exception
+    if (_swAccCheckDone && !_swAccAutoReconnect) {
+      document.getElementById('sw-acc-social-btns').style.opacity = '1';
+      document.getElementById('sw-acc-social-btns').style.pointerEvents = 'auto';
+    }
+    // Si pas encore terminé : les boutons s'activeront dans le .then du fetch
+    // Si exception : les boutons restent grisés, swAccSend gère tout
   };
   if (navigator.clipboard) {
     navigator.clipboard.writeText(msg).then(done).catch(function(){
@@ -4654,14 +4683,11 @@ function swAccSend(channel) {
     // EXCEPTION : ne pas ouvrir le réseau, connexion immédiate
     localStorage.setItem('sw_token', _swAccToken);
     localStorage.setItem('sw_name', _swAccName);
-    // Écrire dans le sheets en arrière-plan (B,C,D,F) sans attendre
-    fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken) + '&pin=' + encodeURIComponent(_swPinDemande || ''))
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        localStorage.setItem('sw_loggedIn', '1');
-        localStorage.setItem('sw_fbId', data.fbId || '');
-        window._swLoaded = true;
-      }).catch(function(){});
+    localStorage.setItem('sw_loggedIn', '1');
+    localStorage.setItem('sw_fbId', _swAccAutoFbId || '');
+    window._swLoaded = true;
+    // Écrire B,C,D,F dans le sheets en arrière-plan sans attendre
+    fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=addRequest&name=' + encodeURIComponent(_swAccName) + '&token=' + encodeURIComponent(_swAccToken) + '&pin=' + encodeURIComponent(_swPinDemande || '')).catch(function(){});
     if (sentEl)   sentEl.style.display = 'block';
     if (pendEl)   pendEl.style.display = 'none';
     if (reconnEl) reconnEl.style.display = 'block';
@@ -4728,6 +4754,9 @@ function swAccReset() {
   _swAccSelectedFromList = false;
   _swPinDemande = '';
   _swAccAutoReconnect = false;
+  _swAccCheckDone = false;
+  _swAccCopied = false;
+  _swAccAutoFbId = '';
 }
 
 // Nettoie le listener touchstart global AVANT de fermer la modale (sinon il reste actif et ralentit toute l'appli)
