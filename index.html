@@ -3579,6 +3579,13 @@ function checkFriendshipAndLoad(me) {
 }
 
 function loadPrestas(me) {
+  // DEBUG
+  var dbg = document.createElement('div');
+  dbg.textContent = 'loadPrestas: ' + me.name + ' id=' + me.id;
+  dbg.style.cssText = 'position:fixed;top:10px;left:10px;right:10px;background:#e53935;color:#fff;padding:8px;border-radius:8px;font-size:12px;z-index:99999;font-family:monospace';
+  document.body.appendChild(dbg);
+  setTimeout(function(){ if(dbg.parentNode) dbg.parentNode.removeChild(dbg); }, 5000);
+  // FIN DEBUG
   document.getElementById('prestas-nologin').style.display = 'none';
   document.getElementById('prestas-loggedin').style.display = 'none';
   document.getElementById('prestas-empty').style.display = 'none';
@@ -3594,6 +3601,11 @@ function loadPrestas(me) {
   fetch('/api?action=getVideos&fbid=' + encodeURIComponent(me.id) + '&nom=' + encodeURIComponent(prenom) + '&fullname=' + encodeURIComponent((me.name||'').toLowerCase()))
     .then(function(r) { return r.json(); })
     .then(function(data) {
+      var dbg2 = document.createElement('div');
+      dbg2.textContent = 'videos: ' + (data.videos||[]).length + ' err:' + (data.error||'none');
+      dbg2.style.cssText = 'position:fixed;top:60px;left:10px;right:10px;background:#1877f2;color:#fff;padding:8px;border-radius:8px;font-size:12px;z-index:99999;font-family:monospace';
+      document.body.appendChild(dbg2);
+      setTimeout(function(){ if(dbg2.parentNode) dbg2.parentNode.removeChild(dbg2); }, 5000);
       document.getElementById('prestas-loading').style.display = 'none';
       var videos = data.videos || [];
 
