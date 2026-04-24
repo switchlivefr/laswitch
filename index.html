@@ -3385,6 +3385,9 @@ document.querySelector('.bnav').classList.add('nav-disabled');
       if(nd.videoUrl)applyVideoUrl(nd.videoUrl);
       loadVideoList();
       setInterval(silentRefresh,30000);
+      // Sauvegarder le prénom (col G IDS_FBK) si connecté
+      var _snForPrenom = localStorage.getItem('sw_name');
+      if (_snForPrenom) _savePrenom(_snForPrenom);
       setTimeout(function(){ var ed=document.getElementById('home-edition'); if(ed)ed.classList.add('anim-in'); },1000);
       setTimeout(function(){
         var prc=document.getElementById('home-prc-link');
@@ -3468,6 +3471,22 @@ function fbLogin() {
   }, { scope: 'public_profile' });
 }
 
+function _savePrenom(name) {
+  fetch('/api?action=getIdsFbk')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      var ids = data.ids || [];
+      var norm = (name || '').trim().toLowerCase();
+      var match = ids.find(function(item){ return item.fb_id.toLowerCase() === norm; });
+      if (match && match.prenom && match.prenom.trim()) {
+        localStorage.setItem('sw_prenom', match.prenom.trim());
+      } else {
+        localStorage.removeItem('sw_prenom');
+      }
+    })
+    .catch(function(){});
+}
+
 function fbLogout() {
   stopPrestasVideo();
   _fbUser = null;
@@ -3492,22 +3511,6 @@ function fbLogout() {
   _showAllPrestasStates('prestas-nologin');
   document.getElementById('prestas-sub').textContent = 'Tes prestations SWiTCH';
   swAccReset();
-}
-
-function _savePrenom(name) {
-  fetch('/api?action=getIdsFbk')
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      var ids = data.ids || [];
-      var norm = (name || '').trim().toLowerCase();
-      var match = ids.find(function(item){ return item.fb_id.toLowerCase() === norm; });
-      if (match && match.prenom && match.prenom.trim()) {
-        localStorage.setItem('sw_prenom', match.prenom.trim());
-      } else {
-        localStorage.removeItem('sw_prenom');
-      }
-    })
-    .catch(function(){});
 }
 
 function showNoFriend(me) {
@@ -4935,7 +4938,6 @@ function checkFbSession() {
   // CAS 1 : déjà authentifié (validé par Marco dans une session précédente)
   if (swLoggedIn === '1' && swName) {
     window._swLoaded = true;
-    if (!localStorage.getItem('sw_prenom')) _savePrenom(swName);
     var swFbId = localStorage.getItem('sw_fbId') || '';
     var fakeMe = { id: swFbId, name: swName, first_name: swName.split(' ')[0] };
     loadPrestas(fakeMe);
