@@ -103,7 +103,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .hslogan-l1{display:block;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:700;letter-spacing:0px;color:var(--gold);line-height:1.15;animation:sloganPulse 3s ease-in-out infinite}
 .hslogan-l2{display:block;font-family:'DM Sans',sans-serif;font-size:20px;font-weight:700;letter-spacing:0px;color:var(--gold);line-height:1.15;animation:sloganPulse 3s ease-in-out infinite}
 .hmeta{margin-top:8px;display:flex;flex-direction:column;align-items:center;gap:3px}
-.hedition{background:transparent;border:none;border-radius:var(--rs);padding:8px 18px;font-size:21px;font-weight:600;animation:rainbow .6s linear infinite}
+.hedition{background:transparent;border:none;border-radius:var(--rs);padding:8px 18px;font-size:26px;font-weight:600;animation:rainbow 2s linear infinite}
+#loader-greeting{display:none;flex-direction:column;align-items:center;gap:4px;margin-top:8px;text-align:center}
+#loader-greeting .greet-hello{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:4px;animation:rainbow 2s linear infinite}
+#loader-greeting .greet-name{font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:5px;animation:rainbow 2s linear infinite;animation-delay:.3s}
 .sub-hero{position:relative;padding:34px 20px 22px;text-align:center;overflow:hidden}
 .sh-amber,.sh-blue,.sh-cyan{position:sticky;top:0;z-index:10}
 #osl-sticky-wrap .sh-cyan{position:static}
@@ -3406,6 +3409,10 @@ document.querySelector('.bnav').classList.add('nav-disabled');
 <div id="app-loader">
   <div class="loader-title">SWiTCH 💫</div>
   <div class="loader-spin" id="loader-spin"></div>
+  <div id="loader-greeting">
+    <span class="greet-hello">HELLO</span>
+    <span class="greet-name" id="loader-greet-name"></span>
+  </div>
   <div id="loader-weak" style="display:none;flex-direction:column;align-items:center;gap:10px;text-align:center">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);letter-spacing:2px">Echec de connexion</div>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--muted2);letter-spacing:2px">Relance de l'appli</div>
@@ -3416,6 +3423,26 @@ document.querySelector('.bnav').classList.add('nav-disabled');
 if('serviceWorker' in navigator){
   window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js');});
 }
+</script>
+<script>
+(function(){
+  var swName = localStorage.getItem('sw_name');
+  if (!swName || !swName.trim()) return;
+  var greet = document.getElementById('loader-greeting');
+  var nameEl = document.getElementById('loader-greet-name');
+  if (!greet || !nameEl) return;
+  nameEl.textContent = swName.trim().split(' ')[0].toUpperCase();
+  greet.style.display = 'flex';
+  fetch('/api?action=getIdsFbk')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      var ids = data.ids || [];
+      var norm = swName.trim().toLowerCase();
+      var match = ids.find(function(item){ return item.fb_id.toLowerCase() === norm; });
+      if (match && match.prenom) nameEl.textContent = match.prenom.toUpperCase();
+    })
+    .catch(function(){});
+})();
 </script>
 <!-- SDK Facebook Login -->
 <div id="fb-root"></div>
@@ -4863,7 +4890,7 @@ function _startPendingPoll(token, name) {
               } else if (!d2.pending) {
                 clearInterval(_swPendingPollTimer); _swPendingPollTimer = null;
                 localStorage.removeItem('sw_token');
-                localStorage.removeItem('sw_name');
+                if (localStorage.getItem('sw_loggedIn') !== '1') { localStorage.removeItem('sw_name'); }
                 window._swLoaded = false;
                 closeM('m-sw-pending');
                 _showAllPrestasStates('prestas-nologin');
@@ -4875,7 +4902,7 @@ function _startPendingPoll(token, name) {
         // Rejeté/expiré
         closeM('m-sw-pending');
         localStorage.removeItem('sw_token');
-        localStorage.removeItem('sw_name');
+        if (localStorage.getItem('sw_loggedIn') !== '1') { localStorage.removeItem('sw_name'); }
         window._swLoaded = false;
         _showAllPrestasStates('prestas-nologin');
       }
