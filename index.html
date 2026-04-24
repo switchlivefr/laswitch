@@ -3487,10 +3487,9 @@ function fbLogout() {
   localStorage.removeItem('sw_name');
   localStorage.removeItem('sw_fbId');
   localStorage.removeItem('sw_loggedIn');
-  _swAccHasPinCache = {}; // invalider le cache pour forcer une revérif à la prochaine saisie
+  _swAccHasPinCache = {};
   _prestasUnlocked = false;
   window._swLoaded = false;
-  if (typeof FB !== 'undefined') FB.logout(function(){});
   if (_adminMode) {
     // Mode admin : retour accueil, pas de splash utilisateur
     nav('p-home');
