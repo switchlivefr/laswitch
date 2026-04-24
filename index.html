@@ -1728,7 +1728,12 @@ history.pushState(null,'',window.location.href);
     if(document.querySelector('.moverlay.open')||document.querySelector('.coverlay.open'))return;
     var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
     if(Math.abs(dy)>Math.abs(dx)||Math.abs(dx)<th)return;
-    var pages=_resaOff?['p-home','p-switch','p-osl','p-rules','p-resa']:['p-home','p-switch','p-osl','p-rules'];
+    var pages;
+    if (_adminMode) {
+      pages = _resaOff ? ['p-home','p-switch','p-osl','p-rules','p-resa'] : ['p-home','p-switch','p-osl','p-rules'];
+    } else {
+      pages = _resaOff ? ['p-home','p-prestas','p-switch','p-osl','p-rules','p-resa'] : ['p-home','p-prestas','p-switch','p-osl','p-rules'];
+    }
     var idx=pages.indexOf(currentPage);if(idx===-1)return;
     if(dx<0&&idx<pages.length-1)nav(pages[idx+1],'left');
     else if(dx>0&&idx>0)nav(pages[idx-1],'right');
@@ -3355,9 +3360,13 @@ function fbLogout() {
   _prestasUnlocked = false;
   window._swLoaded = false;
   if (typeof FB !== 'undefined') FB.logout(function(){});
-  // Revenir sur p-prestas et afficher la splash page
+  if (_adminMode) {
+    // Mode admin : retour accueil, pas de splash utilisateur
+    nav('p-home');
+    return;
+  }
+  // Mode utilisateur : revenir sur p-prestas et afficher la splash
   if (currentPage !== 'p-prestas') nav('p-prestas');
-  // Masquer tous les états connectés, afficher la splash
   ['prestas-loggedin','prestas-loading','prestas-empty','prestas-nofriend'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.style.display = 'none';
   });
@@ -3803,6 +3812,20 @@ function adminTap() {
     _adminMode = !_adminMode;
     _prestasUnlocked = false;
     _prestasClicks = 0;
+    // Quand on repasse en mode utilisateur : nettoyer p-prestas (vider les vidéos admin)
+    if (!_adminMode) {
+      var list = document.getElementById('prestas-list');
+      if (list) list.innerHTML = '';
+      ['prestas-loggedin','prestas-loading','prestas-empty','prestas-nofriend'].forEach(function(id){
+        var el = document.getElementById(id); if (el) el.style.display = 'none';
+      });
+      var nologin = document.getElementById('prestas-nologin');
+      if (nologin) nologin.style.display = '';
+      document.getElementById('prestas-sub').textContent = 'Tes prestations SWiTCH';
+      window._swLoaded = false;
+      // Si on est sur p-prestas, s'assurer que checkFbSession se relance proprement
+      if (currentPage === 'p-prestas') checkFbSession();
+    }
     var t = document.createElement('div');
     t.textContent = _adminMode ? '🔧 MODE ADMIN ACTIF' : '👤 MODE UTILISATEUR';
     t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:' + (_adminMode ? '#e53935' : '#1877f2') + ';color:#fff;padding:10px 24px;border-radius:20px;font-size:15px;font-weight:700;z-index:9999;font-family:DM Sans,sans-serif';
