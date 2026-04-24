@@ -174,14 +174,14 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .mbox{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);width:100%;max-width:460px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;touch-action:auto}#m-sw-access .mbox{max-height:none}#m-sw-access{overflow:hidden}#m-sw-access .mbody{overflow:hidden;flex:none}
 /* Modale pitch : layout avec colonne photos gauche */
 #m-home-pitch .mbox,#m-pitch-big .mbox,#m-prestas-info .mbox{max-width:460px;flex-direction:column}
-#m-home-pitch .mbox-inner,#m-pitch-big .mbox-inner,#m-prestas-info .mbox-inner{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
+#m-home-pitch .mbox-inner,#m-pitch-big .mbox-inner{display:flex;flex-direction:row;flex:1;overflow:hidden;min-height:0}
 #m-home-pitch-photos,#m-pitch-big-photos{width:100px;flex-shrink:0;overflow:hidden;position:relative;background:var(--card)}
 #m-home-pitch-photos-inner,#m-pitch-big-photos-inner{display:flex;flex-direction:column;will-change:transform;animation:pitchPhotoUp 120s linear infinite}
 @keyframes pitchPhotoUp{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
 .pitch-photo-frame{width:100px;height:100px;overflow:hidden;cursor:pointer;flex-shrink:0;contain:strict}
 .pitch-photo-frame img{width:100px;height:100px;object-fit:cover;display:block;filter:brightness(0.65);transition:filter .2s;decoding:async}
 .pitch-photo-frame:hover img,.pitch-photo-frame:active img{filter:brightness(0.9)}
-#m-home-pitch .mbody,#m-pitch-big .mbody,#m-prestas-info .mbody{flex:1;overflow-y:auto;min-height:0}
+#m-home-pitch .mbody,#m-pitch-big .mbody{flex:1;overflow-y:auto;min-height:0}
 #m-home-pitch-hint{position:absolute;bottom:60px;left:50px;transform:translateX(-50%);pointer-events:none;opacity:0;transition:opacity .3s;z-index:2}
 .mhead{padding:16px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .mhead h3{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--cyan)}
@@ -199,10 +199,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .cc .sec.sub-z{font-size:15px;font-family:'DM Sans',sans-serif;font-weight:700;margin:6px 0 2px;display:block;animation:rainbow 1.2s linear infinite}
 .mbody .sec-osl-t{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--cyan);font-weight:700;margin:18px 0 6px;display:block}
 #m-prc-mobile-body.sec-osl-t,#m-prc-mobile-body .sec-osl-t{font-size:17px;margin:12px 0 4px}
-#m-prestas-info-photos{width:100px;flex-shrink:0;overflow:hidden;position:relative;background:var(--card)}
-#m-prestas-info-photos-inner{display:flex;flex-direction:column;will-change:transform;animation:pitchPhotoUp 120s linear infinite}
 #m-prestas-info-body .sec-osl-t{color:#1877f2;font-size:22px;letter-spacing:1px;font-family:'Bebas Neue',sans-serif;font-weight:700;margin:18px 0 6px;display:block;animation:none}
-#m-prestas-info-body .sec-osl-h{color:var(--white);display:inline-block;animation:pitchHPulse 3s ease-in-out infinite}
+#m-prestas-info-body .sec-osl-h{color:var(--white);display:block;animation:none;transform:none}
 #m-prc-mobile-body.sec-osl-h,#m-prc-mobile-body .sec-osl-h{font-size:16px;color:var(--gold);margin:8px 0 2px}
 #m-promo-sw-body.sec-osl-t,#m-promo-sw-body .sec-osl-t{font-size:25px;color:var(--gold);margin:12px 0 4px;text-align:center;display:block;animation:promoTPulse 3s ease-in-out infinite}
 #m-promo-sw-body.sec-osl-h,#m-promo-sw-body .sec-osl-h{font-size:16px;color:var(--white);margin:8px 0 2px}
@@ -651,12 +649,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 <!-- MODALE : A lire si tu n'es pas identifie (PITCH MES PRESTAS) -->
 <div class="moverlay" id="m-prestas-info" onclick="if(event.target===this)closeM('m-prestas-info')" style="z-index:550">
   <div class="mbox">
-    <div class="mbox-inner">
-      <div id="m-prestas-info-photos">
-        <div id="m-prestas-info-photos-inner"></div>
-      </div>
-      <div class="mbody" id="m-prestas-info-body"></div>
-    </div>
+    <div class="mbody" id="m-prestas-info-body"></div>
     <div class="mfoot" style="gap:8px">
       <button class="mbtn sec" onclick="closeM('m-prestas-info')" style="flex:1">Fermer</button>
     </div>
@@ -1585,45 +1578,6 @@ function initPitchBigPhotos(){
 // ============================================================
 // MODALE PITCH MES PRESTAS
 // ============================================================
-function fillPrestasInfoPhotos(photos){
-  var inner=document.getElementById('m-prestas-info-photos-inner');
-  if(!inner)return;
-  inner.innerHTML='';
-  var list=photos.slice().concat(photos.slice());
-  list.forEach(function(p){
-    var frame=document.createElement('div');
-    frame.className='pitch-photo-frame';
-    var img=document.createElement('img');
-    img.src=p.thumb||p.url||p.full;
-    img.loading='lazy';img.decoding='async';img.alt='';
-    frame.appendChild(img);
-    var _src=p.full||p.url||p.thumb;
-    frame.addEventListener('click',function(){ window.openViewer(_src); });
-    var _touchMoved=false;
-    frame.addEventListener('touchstart',function(){ _touchMoved=false; },{passive:true});
-    frame.addEventListener('touchmove',function(){ _touchMoved=true; },{passive:true});
-    frame.addEventListener('touchend',function(e){
-      if(!_touchMoved){ e.preventDefault(); window.openViewer(_src); }
-    },{passive:false});
-    inner.appendChild(frame);
-  });
-}
-
-function initPrestasInfoPhotos(){
-  if(window._pitchPhotos&&window._pitchPhotos.length){
-    fillPrestasInfoPhotos(window._pitchPhotos);
-    return;
-  }
-  fetch('/api?action=getAssets')
-    .then(function(r){return r.json();})
-    .then(function(data){
-      var photos=(data.photos||[]).map(function(f){return {url:f.url,thumb:f.url,full:f.full||f.url};});
-      window._allPhotos=photos;window._pitchPhotos=photos;
-      fillPrestasInfoPhotos(photos);
-    })
-    .catch(function(){});
-}
-
 function renderPrestasInfo(){
   var el=document.getElementById('m-prestas-info-body');
   if(!el)return;
@@ -1691,9 +1645,9 @@ function renderPrestasInfo(){
 
 function openPrestasInfo(){
   renderPrestasInfo();
-  initPrestasInfoPhotos();
   openM('m-prestas-info');
-  setTimeout(function(){ initScrollHintsModal(document.getElementById('m-prestas-info-body')); },100);
+  var mb=document.getElementById('m-prestas-info-body');if(mb)mb.scrollTop=0;
+  setTimeout(function(){ initScrollHintsModal(mb); },100);
 }
 // ============================================================
 
