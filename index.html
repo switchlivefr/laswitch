@@ -4156,8 +4156,13 @@ function swAdminValidate(name, btn) {
   fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=validateRequest&name=' + encodeURIComponent(name))
     .then(function(r){ return r.json(); })
     .then(function(data) {
-      if (data.ok) swLoadAdminRequests();
-      else { btn.textContent = 'ERREUR'; btn.disabled = false; }
+      if (data.ok) {
+        // Remplacer le bouton par le tag "VALIDÉ" sans recharger toute la liste
+        var tag = document.createElement('div');
+        tag.textContent = 'VALIDE';
+        tag.style.cssText = 'color:#34d1c0;font-size:12px;font-weight:700;font-family:Bebas Neue,sans-serif;letter-spacing:1px;flex-shrink:0';
+        btn.parentNode.replaceChild(tag, btn);
+      } else { btn.textContent = 'ERREUR'; btn.disabled = false; }
     })
     .catch(function(){ btn.textContent = 'ERREUR'; btn.disabled = false; });
 }
