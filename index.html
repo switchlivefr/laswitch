@@ -4709,58 +4709,73 @@ function _startPendingPoll(token, name) {
   // Arrêter tout polling précédent
   if (_swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
 
-  // Afficher directement le texte (pas le spinner — il tourne indéfiniment si réseau lent)
   var loadEl = document.getElementById('m-sw-pending-load');
   var msgEl  = document.getElementById('m-sw-pending-msg');
-  if (loadEl) loadEl.style.display = 'none';
-  if (msgEl)  msgEl.style.display  = 'block';
-  openM('m-sw-pending');
 
-  function checkNow() {
-    // Si la modale a été fermée manuellement par l'utilisateur → arrêter le polling
-    var modal = document.getElementById('m-sw-pending');
-    if (!modal || !modal.classList.contains('open')) {
-      if (_swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
-      return;
-    }
-    fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=verifyToken&token=' + encodeURIComponent(token) + '&name=' + encodeURIComponent(name))
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.ok && data.fbId !== undefined) {
-          // Validé → arrêter polling, fermer surimpression, mémoriser, charger vidéos
-          if (_swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
-          localStorage.setItem('sw_loggedIn', '1');
-          localStorage.setItem('sw_fbId', data.fbId || '');
-          localStorage.setItem('sw_name', name);
-          window._swLoaded = true;
-          closeM('m-sw-pending');
-          _showAllPrestasStates('prestas-loading');
-          var fakeMe = { id: data.fbId || '', name: name, first_name: name.split(' ')[0] };
-          loadPrestas(fakeMe);
-        } else if (data.pending) {
-          // Encore en attente — texte déjà affiché, rien à faire
-          if (loadEl) loadEl.style.display = 'none';
-          if (msgEl)  msgEl.style.display  = 'block';
-        } else {
-          // Rejeté/expiré → arrêter, nettoyer, retour splash
-          if (_swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
-          localStorage.removeItem('sw_token');
-          localStorage.removeItem('sw_name');
-          window._swLoaded = false;
-          closeM('m-sw-pending');
-          _showAllPrestasStates('prestas-nologin');
-        }
-      })
-      .catch(function() {
-        // Erreur réseau → texte déjà affiché, on réessaiera au prochain tick
+  // Vérification silencieuse AVANT d'afficher quoi que ce soit :
+  // si déjà validé → charger directement les vidéos sans aucun message intermédiaire
+  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=verifyToken&token=' + encodeURIComponent(token) + '&name=' + encodeURIComponent(name))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok && data.fbId !== undefined) {
+        // Déjà validé → mémoriser et charger directement, zéro message d'attente
+        localStorage.setItem('sw_loggedIn', '1');
+        localStorage.setItem('sw_fbId', data.fbId || '');
+        localStorage.setItem('sw_name', name);
+        window._swLoaded = true;
+        _showAllPrestasStates('prestas-loading');
+        var fakeMe = { id: data.fbId || '', name: name, first_name: name.split(' ')[0] };
+        loadPrestas(fakeMe);
+      } else if (data.pending) {
+        // Vraiment en attente → afficher le message et lancer le polling
         if (loadEl) loadEl.style.display = 'none';
         if (msgEl)  msgEl.style.display  = 'block';
-      });
-  }
-
-  // Vérification immédiate + polling toutes les 15 secondes
-  checkNow();
-  _swPendingPollTimer = setInterval(checkNow, 15000);
+        openM('m-sw-pending');
+        _swPendingPollTimer = setInterval(function() {
+          var modal = document.getElementById('m-sw-pending');
+          if (!modal || !modal.classList.contains('open')) {
+            clearInterval(_swPendingPollTimer); _swPendingPollTimer = null;
+            return;
+          }
+          fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=verifyToken&token=' + encodeURIComponent(token) + '&name=' + encodeURIComponent(name))
+            .then(function(r2) { return r2.json(); })
+            .then(function(d2) {
+              if (d2.ok && d2.fbId !== undefined) {
+                clearInterval(_swPendingPollTimer); _swPendingPollTimer = null;
+                localStorage.setItem('sw_loggedIn', '1');
+                localStorage.setItem('sw_fbId', d2.fbId || '');
+                localStorage.setItem('sw_name', name);
+                window._swLoaded = true;
+                closeM('m-sw-pending');
+                _showAllPrestasStates('prestas-loading');
+                var fakeMe2 = { id: d2.fbId || '', name: name, first_name: name.split(' ')[0] };
+                loadPrestas(fakeMe2);
+              } else if (!d2.pending) {
+                clearInterval(_swPendingPollTimer); _swPendingPollTimer = null;
+                localStorage.removeItem('sw_token');
+                localStorage.removeItem('sw_name');
+                window._swLoaded = false;
+                closeM('m-sw-pending');
+                _showAllPrestasStates('prestas-nologin');
+              }
+              // si encore pending → on attend le prochain tick
+            })
+            .catch(function() { /* erreur réseau → réessai au prochain tick */ });
+        }, 15000);
+      } else {
+        // Rejeté/expiré
+        localStorage.removeItem('sw_token');
+        localStorage.removeItem('sw_name');
+        window._swLoaded = false;
+        _showAllPrestasStates('prestas-nologin');
+      }
+    })
+    .catch(function() {
+      // Erreur réseau sur la vérif initiale → afficher le message d'attente et relancer plus tard
+      if (loadEl) loadEl.style.display = 'none';
+      if (msgEl)  msgEl.style.display  = 'block';
+      openM('m-sw-pending');
+    });
 }
 
 function checkFbSession() {
