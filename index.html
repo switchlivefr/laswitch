@@ -464,8 +464,8 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
     <div style="font-size:72px;margin-bottom:20px">🎬</div>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;margin-bottom:16px">TES VIDÉOS SWiTCH</div>
     <div style="font-size:15px;color:var(--white);line-height:1.7;margin-bottom:28px;font-weight:500">Connecte-toi avec ton nom Facebook exact<br>pour accéder à toutes tes prestations SWiTCH</div>
-    <button onclick="prestasConnectClick()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#1877f2;border:none;border-radius:12px;padding:16px;cursor:pointer;margin-bottom:14px">
-      <span style="color:#fff;font-size:16px;font-weight:700;font-family:'DM Sans',sans-serif">SE CONNECTER</span>
+    <button id="prestas-connect-btn" onclick="prestasConnectClick()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#1877f2;border:none;border-radius:12px;padding:16px;cursor:pointer;margin-bottom:14px">
+      <span id="prestas-connect-lbl" style="color:#fff;font-size:16px;font-weight:700;font-family:'DM Sans',sans-serif">SE CONNECTER</span>
     </button>
     <button onclick="openPrestasInfo()" style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;background:rgba(24,119,242,.08);border:1px solid rgba(24,119,242,.35);border-radius:12px;padding:14px 12px;cursor:pointer;animation:btnpulse-blue 3s ease-in-out infinite;gap:4px">
       <span style="color:#fff;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;text-align:center">À lire si tu n'es pas identifié sur le profil</span>
@@ -648,7 +648,11 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 
 <!-- MODALE : A lire si tu n'es pas identifie (PITCH MES PRESTAS) -->
 <div class="moverlay" id="m-prestas-info" onclick="if(event.target===this)closeM('m-prestas-info')" style="z-index:550">
-  <div class="mbox">
+  <div class="mbox" style="position:relative">
+    <div id="m-prestas-info-loading" style="display:none;position:absolute;inset:0;background:rgba(10,10,20,.75);z-index:10;border-radius:var(--r);align-items:center;justify-content:center;flex-direction:column;gap:12px">
+      <div style="width:40px;height:40px;border:3px solid rgba(255,255,255,.2);border-top:3px solid #fff;border-radius:50%;animation:spin .8s linear infinite"></div>
+      <div style="color:#fff;font-size:13px;font-family:'DM Sans',sans-serif;opacity:.8">Ouverture en cours…</div>
+    </div>
     <div class="mbody" id="m-prestas-info-body"></div>
     <div class="mfoot" style="gap:8px">
       <button class="mbtn sec" onclick="closeM('m-prestas-info')" style="flex:1">Fermer</button>
@@ -1638,9 +1642,17 @@ function renderPrestasInfo(){
     a.href=b.href;a.target='_blank';
     a.style.cssText='display:flex;flex-direction:column;align-items:center;gap:6px;border:none;cursor:pointer;border-radius:12px;padding:14px 18px;flex:1;background:'+b.bg+';text-decoration:none';
     a.innerHTML='<svg width="28" height="28" viewBox="0 0 24 24" fill="white">'+b.svg+'</svg><span style="color:white;font-size:12px;font-weight:700;font-family:DM Sans,sans-serif">'+b.label+'</span>';
+    a.addEventListener('click', function(){ showPrestasInfoLoading(); });
     btnWrap.appendChild(a);
   });
   el.appendChild(btnWrap);
+}
+
+function showPrestasInfoLoading(){
+  var ld = document.getElementById('m-prestas-info-loading');
+  if (!ld) return;
+  ld.style.display = 'flex';
+  setTimeout(function(){ ld.style.display = 'none'; }, 4000);
 }
 
 function openPrestasInfo(){
@@ -3462,6 +3474,7 @@ function fbLogout() {
   var nologin = document.getElementById('prestas-nologin');
   if (nologin) nologin.style.display = '';
   document.getElementById('prestas-sub').textContent = 'Tes prestations SWiTCH';
+  _updatePrestasConnectBtn();
   swAccReset();
 }
 
@@ -3933,6 +3946,28 @@ function unlockPrestas() {
   }
   // Toujours aller sur p-prestas : la page gère elle-même l'état connecté/déconnecté
   if (currentPage !== 'p-prestas') nav('p-prestas');
+}
+
+function _updatePrestasConnectBtn() {
+  var btn = document.getElementById('prestas-connect-btn');
+  var lbl = document.getElementById('prestas-connect-lbl');
+  if (!btn || !lbl) return;
+  var hasPending = localStorage.getItem('sw_token') && !localStorage.getItem('sw_loggedIn');
+  if (hasPending) {
+    btn.style.background = 'transparent';
+    btn.style.border = '2px solid #1877f2';
+    btn.style.cursor = 'default';
+    btn.onclick = null;
+    lbl.style.color = '#fff';
+    lbl.innerHTML = '<span style="display:block;font-size:13px;color:#1877f2;font-weight:700">EN ATTENTE DE VALIDATION</span>';
+  } else {
+    btn.style.background = '#1877f2';
+    btn.style.border = 'none';
+    btn.style.cursor = 'pointer';
+    btn.onclick = prestasConnectClick;
+    lbl.style.color = '#fff';
+    lbl.innerHTML = 'SE CONNECTER';
+  }
 }
 
 function prestasConnectClick() {
@@ -4690,6 +4725,7 @@ function checkFbSession() {
   // Non connecté : s'assurer que la splash est visible, pas de modale automatique
   var nologin = document.getElementById('prestas-nologin');
   if (nologin) nologin.style.display = '';
+  _updatePrestasConnectBtn();
   if (typeof FB === 'undefined') return;
   FB.getLoginStatus(function(response) {
     if (response.status === 'connected' && !_fbUser) {
