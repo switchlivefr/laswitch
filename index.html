@@ -4720,17 +4720,13 @@ function swAccCopy() {
   var done = function(){
     btn.innerHTML = '<span class="copy-msg-pulsing">\u2705 MESSAGE COPI\u00c9 : CONTACTE MARCO !</span>';
     _swAccCopied = true;
-    // Ne pas dégriser ici — c'est le fetch checkAutoReconnect qui décide
-    // Si le fetch a déjà répondu, on agit maintenant
+    window.open('https://wa.me/33613634346?text=' + encodeURIComponent(msg), '_blank');
     if (_swAccCheckDone) {
       if (!_swAccAutoReconnect) {
-        // Cas normal : dégriser les boutons
         var s = document.getElementById('sw-acc-social-btns');
         if (s) { s.style.opacity = '1'; s.style.pointerEvents = 'auto'; }
       }
-      // Si exception : boutons déjà grisés et 2 phrases déjà affichées par le fetch
     }
-    // Si fetch pas encore répondu : les boutons restent grisés jusqu'à la réponse
   };
   if (navigator.clipboard) {
     navigator.clipboard.writeText(msg).then(done).catch(function(){
