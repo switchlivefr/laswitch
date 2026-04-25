@@ -2220,7 +2220,7 @@ function makeMarcoLink() {
   var finger = document.createElement('span');
   finger.className = 'rules-finger';
   finger.textContent = '👈';
-  finger.style.cssText = 'position:absolute;left:100%;padding-left:4px;margin-left:0;';
+  finger.style.cssText = 'position:absolute;left:calc(100% + 4px);margin-left:0;';
   group.appendChild(fbIcon);
   group.appendChild(a);
   group.appendChild(finger);
