@@ -4531,7 +4531,7 @@ function swAccValidatePinDemande() {
   _swAccLinks = {
     messenger: 'https://m.me/marco.onlyformusic',
     instagram: 'https://ig.me/m/marco.el.grande',
-    whatsapp:  'https://wa.me/33613634346'
+    whatsapp:  'https://wa.me/33613634346?text=' + encodeURIComponent(msg)
   };
   document.getElementById('sw-acc-step-pin-demande').style.display = 'none';
   document.getElementById('sw-acc-pin-validate-btn').style.display = 'none';
@@ -4720,7 +4720,6 @@ function swAccCopy() {
   var done = function(){
     btn.innerHTML = '<span class="copy-msg-pulsing">\u2705 MESSAGE COPI\u00c9 : CONTACTE MARCO !</span>';
     _swAccCopied = true;
-    window.open('https://wa.me/33613634346?text=' + encodeURIComponent(msg), '_blank');
     if (_swAccCheckDone) {
       if (!_swAccAutoReconnect) {
         var s = document.getElementById('sw-acc-social-btns');
