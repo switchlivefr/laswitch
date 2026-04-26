@@ -1094,11 +1094,19 @@ var NV = {
   saveBlink: function(fbId, videos) {
     var seenDate = localStorage.getItem('nv_seen_date_' + fbId);
     if (NV._blinkStillActive(seenDate)) {
-      // Période active : ne pas écraser le snapshot
-      console.log('NV.saveBlink — période active, snapshot préservé');
+      // Période active : mettre à jour UNIQUEMENT newYtIds dans le snapshot (pas ids ni count)
+      var snapRaw = localStorage.getItem(NV._snapKey(fbId));
+      if (snapRaw) {
+        try {
+          var snap = JSON.parse(snapRaw);
+          snap.newYtIds = NV.newYtIds;  // fusionnés par checkBlink
+          localStorage.setItem(NV._snapKey(fbId), JSON.stringify(snap));
+          console.log('NV.saveBlink — période active, newYtIds mis à jour=['+NV.newYtIds.join(',')+']');
+        } catch(e) {}
+      }
       return;
     }
-    // Première visite ou période expirée : sauver snapshot + date
+    // Première visite ou période expirée : sauver snapshot complet + date
     NV._saveSnapshot(fbId, videos, NV.newYtIds);
     localStorage.setItem('nv_seen_date_' + fbId, NV._today());
     console.log('NV.saveBlink — snapshot sauvé, seen_date='+NV._today());
