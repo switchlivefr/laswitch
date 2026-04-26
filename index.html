@@ -912,34 +912,48 @@ var allSongs = [];
 // Principe : on mémorise le NOMBRE de vidéos au moment où
 // l'utilisateur visite MES PRESTAS. Au lancement suivant,
 // si le nombre a augmenté → nouvelles vidéos.
-// nv_count_{fbId} n'est mis à jour QUE lors d'une visite sur MES PRESTAS.
+// nv_count_{fbId}   : nombre de vidéos mémorisé (mis à jour au lancement suivant si nv_visited_=1)
+// nv_visited_{fbId} : flag posé dès la visite MES PRESTAS, remis à 0 au lancement suivant
 // ============================================================
 var NV = {
   hasNew: false,
   fbId: null,
   blinkEls: [],
-  visitedThisSession: false,  // true si l'utilisateur est allé sur MES PRESTAS
-  currentVideos: null,        // vidéos actuelles, pour sauvegarde à la fermeture
-
   diff: 0,  // différentiel current - saved
 
-  // Appelé au lancement : compare nombre actuel vs nombre mémorisé
+  // Appelé au lancement : compare nombre actuel vs nombre mémorisé.
+  // Si nv_visited_{fbId} === '1' (l'utilisateur avait visité MES PRESTAS avant
+  // de fermer l'appli) → on remet saved = current silencieusement et on remet
+  // le flag à 0. Aucun banner, aucun clignotement.
   check: function(fbId, videos) {
     NV.fbId = fbId;
-    var key = 'nv_count_' + fbId;
-    var saved = localStorage.getItem(key);
+    var countKey   = 'nv_count_'   + fbId;
+    var visitedKey = 'nv_visited_' + fbId;
+    var saved   = localStorage.getItem(countKey);
+    var visited = localStorage.getItem(visitedKey);
     console.log('NV.check — saved='+saved+' current='+videos.length);
+    console.log('NV.check — nv_visited_'+fbId+'='+visited+' (1=a visité MES PRESTAS avant fermeture, 0/null=non)');
+
+    // Cas 1 : première utilisation ever
     if (saved === null) {
-      // Première fois : mémoriser et ne rien afficher
-      localStorage.setItem(key, String(videos.length));
-      NV.hasNew = false;
-      NV.diff = 0;
+      localStorage.setItem(countKey, String(videos.length));
+      NV.hasNew = false; NV.diff = 0;
       return;
     }
+
+    // Cas 2 : l'utilisateur avait visité MES PRESTAS → recaler sans rien afficher
+    if (visited === '1') {
+      localStorage.setItem(countKey, String(videos.length));
+      localStorage.setItem(visitedKey, '0');
+      NV.hasNew = false; NV.diff = 0;
+      console.log('NV.check — visite précédente détectée, saved recalé silencieusement');
+      return;
+    }
+
     NV.diff = videos.length - parseInt(saved, 10);
-    // Si des vidéos ont été supprimées (diff négative), recaler saved sur current immédiatement
+    // Cas 3 : diff négative (vidéo(s) supprimée(s)) → recaler sans rien afficher
     if (NV.diff < 0) {
-      localStorage.setItem(key, String(videos.length));
+      localStorage.setItem(countKey, String(videos.length));
       NV.diff = 0;
     }
     NV.hasNew = (NV.diff > 0);
@@ -959,7 +973,6 @@ var NV = {
         l2.textContent = 'VIDÉOS À DÉCOUVRIR';
       }
     }
-    // openM gère le positionnement desktop automatiquement (comme tous les overlays)
     openM('nv-banner');
   },
 
@@ -967,12 +980,19 @@ var NV = {
     closeM('nv-banner');
   },
 
+  // Pose le flag "visité" dès que l'utilisateur arrive sur MES PRESTAS.
+  // Le recalage de saved se fera au prochain lancement via NV.check.
+  markVisited: function() {
+    if (!NV.fbId) return;
+    localStorage.setItem('nv_visited_' + NV.fbId, '1');
+    console.log('NV.markVisited — flag posé');
+  },
+
   // Clignoter les N premières cartes (nouvelles vidéos = en haut, triées par date desc)
   startBlink: function(cards, videos) {
     NV.stopBlink();
     if (!NV.hasNew || !NV.fbId) return;
-    var key = 'nv_count_' + NV.fbId;
-    var saved = parseInt(localStorage.getItem(key)||'0', 10);
+    var saved = parseInt(localStorage.getItem('nv_count_' + NV.fbId)||'0', 10);
     var newCount = videos.length - saved;
     if (newCount <= 0) return;
     for (var i = 0; i < newCount && i < cards.length; i++) {
@@ -989,20 +1009,7 @@ var NV = {
     NV.blinkEls = [];
   },
 
-  // Appelé quand l'utilisateur arrive sur MES PRESTAS
-  // Sauvegarde IMMEDIATEMENT le compteur - seule solution fiable Android/iPhone
-  updateCount: function(videos) {
-    if (!NV.fbId) return;
-    var key = 'nv_count_' + NV.fbId;
-    localStorage.setItem(key, String(videos.length));
-    console.log('NV.updateCount — compteur sauvé:'+videos.length);
-    NV.hasNew = false;
-    NV.diff = 0;
-    NV.stopBlink();
-    NV.dismissBanner();
-  },
-
-  // Garde saveCount pour compatibilité (ne fait rien de plus)
+  // Garde saveCount pour compatibilité (ne fait rien)
   saveCount: function() {}
 };
 
@@ -3774,14 +3781,10 @@ function loadPrestas(me) {
       renderVideoList(videos, function(cards){
         if (NV.hasNew) {
           NV.startBlink(cards, videos);
-          // Sauver le compteur sans stopper le clignotement
-          if (NV.fbId) {
-            localStorage.setItem('nv_count_' + NV.fbId, String(videos.length));
-            NV.diff = 0;
-          }
-        } else {
-          NV.updateCount(videos);
         }
+        // Poser le flag "visité" dans tous les cas : le recalage de saved
+        // se fera au prochain lancement via NV.check
+        NV.markVisited();
       });
 
       document.getElementById('prestas-loggedin').style.display = 'flex';
