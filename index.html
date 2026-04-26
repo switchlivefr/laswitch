@@ -973,7 +973,7 @@ var NV = {
   // Clignoter les cartes dont le ytId est dans NV.newYtIds
   startBlink: function(cards) {
     NV.stopBlink();
-    if (!NV.hasNew || !NV.fbId || !NV.newYtIds.length) return;
+    if (!NV.fbId || !NV.newYtIds.length) return;
     console.log('NV.startBlink — newYtIds=['+NV.newYtIds.join(',')+'] sur '+cards.length+' cartes');
     cards.forEach(function(card) {
       var ytId = card.dataset.ytid;
