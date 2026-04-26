@@ -993,10 +993,9 @@ var NV = {
     NV.blinkEls = [];
   },
 
-  // Marquer comme vu : stopper tout et mémoriser
+  // Marquer comme vu : stopper tout et mémoriser les vidéos actuelles comme "vues"
   markVisited: function(videos) {
     if (!NV.fbId) return;
-    // Sauvegarder la liste actuelle comme "déjà vues"
     var currentUrls = videos.map(function(v){ return v.youtube||''; }).filter(Boolean);
     localStorage.setItem(NV.seenKey(), JSON.stringify(currentUrls));
     localStorage.setItem(NV.visitedKey(), '1');
@@ -3471,7 +3470,11 @@ function openLink(url,modalId){if(modalId)closeM(modalId);setTimeout(function(){
 function openResa(){window.open('https://www.proracecafe.com/reservation-pro-race-cafe','_blank');}
 
 document.addEventListener('visibilitychange',function(){
-  if(document.hidden){NV.stopBlink();}
+  if(document.hidden){
+    NV.stopBlink();
+    // Effacer le flag visited à la fermeture pour que le prochain lancement re-détecte
+    if(NV.fbId) localStorage.removeItem('nv_visited_'+NV.fbId);
+  }
 });
 
 
@@ -3772,9 +3775,12 @@ function loadPrestas(me) {
           NV.startBlink(cards, videos);
           setTimeout(function(){ NV.markVisited(videos); }, 4000);
         } else {
-          // Pas de nouvelles → juste mémoriser si pas encore fait
-          if (!NV.fbId) NV.check(me.id, videos);
-          else NV.markVisited(videos);
+          // Pas de nouvelles → initialiser la clé seulement si elle n'existe pas encore
+          var seenKey = 'nv_seen_' + me.id;
+          if (!localStorage.getItem(seenKey)) {
+            var urls = videos.map(function(v){ return v.youtube||''; }).filter(Boolean);
+            localStorage.setItem(seenKey, JSON.stringify(urls));
+          }
         }
       });
 
