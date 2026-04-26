@@ -937,6 +937,11 @@ var NV = {
       return;
     }
     NV.diff = videos.length - parseInt(saved, 10);
+    // Si des vidéos ont été supprimées (diff négative), recaler saved sur current immédiatement
+    if (NV.diff < 0) {
+      localStorage.setItem(key, String(videos.length));
+      NV.diff = 0;
+    }
     NV.hasNew = (NV.diff > 0);
     console.log('NV.check — hasNew='+NV.hasNew+' diff='+NV.diff);
   },
