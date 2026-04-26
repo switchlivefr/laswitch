@@ -3888,9 +3888,12 @@ function loadPrestas(me) {
         if (NV.hasNew) {
           NV.startBlink(cards);
           NV.saveBlink(NV.fbId, videos);
+          // Ne PAS appeler updateCount ici : il ferait stopBlink() et tuerait le clignotement
+          // nv_count_ est déjà à jour via nvCheckAtLaunch au lancement
+        } else {
+          // Pas de nouvelles vidéos : updateCount original pour mettre à jour nv_count_
+          NV.updateCount(videos);
         }
-        // updateCount gère nv_count_ (code original intact)
-        NV.updateCount(videos);
       });
 
       document.getElementById('prestas-loggedin').style.display = 'flex';
