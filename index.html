@@ -1102,21 +1102,24 @@ var NV = {
       // Première visite MES PRESTAS : sauver snapshot + enregistrer la date
       NV._saveSnapshot(NV.fbId, videos, NV.newYtIds);
       localStorage.setItem(seenKey, today);
-      console.log('NV.updateCount — 1ère visite MES PRESTAS, seen_date='+today+', clignotement actif jusqu\'à minuit J+3');
+      localStorage.setItem('nv_banner_seen_' + NV.fbId, today);  // banner ne s'affiche plus
+      console.log('NV.updateCount — 1ère visite MES PRESTAS, seen_date='+today+', banner masqué pour la période');
       NV.bannerShownThisSession = true;
       return;
     }
 
     if (NV._blinkStillActive(seenDate)) {
       // Période active → NE PAS écraser le snapshot, juste marquer le banner comme vu
-      console.log('NV.updateCount — période active (seen='+seenDate+'), snapshot préservé, clignotement maintenu');
+      localStorage.setItem('nv_banner_seen_' + NV.fbId, today);  // banner ne s'affiche plus
+      console.log('NV.updateCount — période active (seen='+seenDate+'), snapshot préservé, banner masqué');
       NV.bannerShownThisSession = true;
       return;
     }
 
-    // Période expirée → sauver le nouveau snapshot et couper tout
+    // Période expirée → sauver le nouveau snapshot, effacer banner_seen, et couper tout
     NV._saveSnapshot(NV.fbId, videos);
     localStorage.setItem(seenKey, today);
+    localStorage.removeItem('nv_banner_seen_' + NV.fbId);  // prochaine période repart de zéro
     console.log('NV.updateCount — période expirée (seen='+seenDate+'), clignotement coupé');
     NV.hasNew   = false;
     NV.diff     = 0;
@@ -1143,8 +1146,18 @@ function nvCheckAtLaunch() {
       if (!videos.length) return;
       window._nvVideos = videos;
       NV.check(fbId, videos);
-      if (NV.hasNew && currentPage === 'p-home') {
+      // Afficher le banner seulement si :
+      // 1. il y a des nouvelles vidéos
+      // 2. on est sur l'accueil
+      // 3. l'utilisateur n'a PAS encore visité MES PRESTAS pendant cette période
+      var bannerSeenKey = 'nv_banner_seen_' + fbId;
+      var bannerSeen = localStorage.getItem(bannerSeenKey);
+      var bannerAlreadySeen = bannerSeen && NV._blinkStillActive(bannerSeen);
+      console.log('nvCheckAtLaunch — bannerAlreadySeen='+bannerAlreadySeen+' hasNew='+NV.hasNew+' diff='+NV.diff);
+      if (NV.hasNew && currentPage === 'p-home' && !bannerAlreadySeen) {
         NV.showBanner(NV.diff);
+      } else {
+        NV.bannerShownThisSession = true; // bloquer nav() aussi
       }
     })
     .catch(function(e){ console.log('nvCheckAtLaunch erreur:'+e); });
