@@ -928,23 +928,57 @@ var NV = {
   // → impossible d'avoir count et ids désynchronisés
   _snapKey: function(fbId) { return 'nv_snap_' + fbId; },
 
-  _saveSnapshot: function(fbId, videos) {
+  _saveSnapshot: function(fbId, videos, newYtIds) {
     var ytIds = videos.map(function(v) { return extractYtId(v.youtube); }).filter(Boolean);
     var snap = { count: videos.length, ids: ytIds };
+    if (newYtIds && newYtIds.length) snap.newYtIds = newYtIds;  // conservés pour relancement même jour
     localStorage.setItem(NV._snapKey(fbId), JSON.stringify(snap));
     // Maintenir nv_count_ en parallèle pour compatibilité avec l'affichage du message d'accueil
     localStorage.setItem('nv_count_' + fbId, String(videos.length));
-    console.log('NV._saveSnapshot — count='+videos.length+' ids='+ytIds.length);
+    console.log('NV._saveSnapshot — count='+videos.length+' ids='+ytIds.length+(newYtIds&&newYtIds.length?' newYtIds=['+newYtIds.join(',')+']':''));
     return ytIds;
   },
 
   // Appelé au lancement : compare snapshot sauvegardé vs état actuel
   check: function(fbId, videos) {
     NV.fbId = fbId;
-    var snapRaw = localStorage.getItem(NV._snapKey(fbId));
+    var snapRaw  = localStorage.getItem(NV._snapKey(fbId));
+    var seenKey  = 'nv_seen_date_' + fbId;
+    var seenDate = localStorage.getItem(seenKey);
+    var today    = NV._today();
     var currentYtIds = videos.map(function(v) { return extractYtId(v.youtube); }).filter(Boolean);
 
-    console.log('NV.check — snapRaw='+(snapRaw ? 'présent' : 'null')+' current='+videos.length);
+    console.log('NV.check — snapRaw='+(snapRaw ? 'présent' : 'null')+' current='+videos.length+' seenDate='+seenDate+' today='+today);
+
+    if (!snapRaw) {
+      // Première fois ou snapshot corrompu : initialiser et ne rien afficher
+      NV._saveSnapshot(fbId, videos);
+      NV.hasNew   = false;
+      NV.diff     = 0;
+      NV.newYtIds = [];
+      console.log('NV.check — 1ère utilisation, snapshot initialisé avec '+videos.length+' vidéos');
+      return;
+    }
+
+    var snap;
+    try { snap = JSON.parse(snapRaw); } catch(e) {
+      NV._saveSnapshot(fbId, videos);
+      NV.hasNew = false; NV.diff = 0; NV.newYtIds = [];
+      console.log('NV.check — snapshot corrompu, réinitialisé');
+      return;
+    }
+
+    // Cas : consulté aujourd'hui → restaurer le clignotement depuis les newYtIds sauvegardés
+    if (seenDate === today && snap.newYtIds && snap.newYtIds.length) {
+      NV.hasNew   = true;
+      NV.diff     = 0;  // diff est 0 (snapshot déjà à jour) mais on clignote quand même
+      NV.newYtIds = snap.newYtIds;
+      console.log('NV.check — consulté aujourd\'hui, clignotement restauré newYtIds=['+NV.newYtIds.join(',')+']');
+      return;
+    }
+
+    var savedCount = snap.count || 0;
+    var savedIds   = snap.ids   || [];
 
     if (!snapRaw) {
       // Première fois ou snapshot corrompu : initialiser et ne rien afficher
@@ -1054,12 +1088,45 @@ var NV = {
     NV.blinkEls = [];
   },
 
+  // Retourne la date du jour au format "YYYY-MM-DD"
+  _today: function() {
+    var d = new Date();
+    return d.getFullYear()+'-'+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1)+'-'+(d.getDate()<10?'0':'')+d.getDate();
+  },
+
   // Appelé quand l'utilisateur arrive sur MES PRESTAS
-  // Sauvegarde IMMEDIATEMENT le snapshot atomique — seule solution fiable Android/iPhone
+  // - Sauvegarde toujours le snapshot (count+ids) pour que diff et newYtIds soient corrects
+  // - MAIS ne remet hasNew à false que le lendemain (après minuit)
+  //   → le clignotement persiste toute la journée de découverte, même si on relance l'appli
+  // - Le banner d'accueil lui est masqué dès la visite (via bannerShownThisSession)
   updateCount: function(videos) {
     if (!NV.fbId) return;
+    var seenKey  = 'nv_seen_date_' + NV.fbId;
+    var today    = NV._today();
+    var seenDate = localStorage.getItem(seenKey);
+
+    // Toujours sauvegarder le snapshot pour garder count+ids à jour
     NV._saveSnapshot(NV.fbId, videos);
-    console.log('NV.updateCount — snapshot sauvé: '+videos.length+' vidéos');
+
+    if (!seenDate) {
+      // Première visite MES PRESTAS : enregistrer la date du jour
+      localStorage.setItem(seenKey, today);
+      console.log('NV.updateCount — 1ère visite MES PRESTAS, seen_date='+today+', clignotement maintenu');
+      // Ne pas couper hasNew ni newYtIds → clignotement reste actif aujourd'hui
+      NV.bannerShownThisSession = true;  // banner accueil masqué
+      return;
+    }
+
+    if (seenDate === today) {
+      // Déjà consulté aujourd'hui → clignotement maintenu jusqu'à minuit
+      console.log('NV.updateCount — consulté aujourd\'hui ('+today+'), clignotement maintenu');
+      NV.bannerShownThisSession = true;
+      return;
+    }
+
+    // Lendemain ou après → on coupe tout normalement
+    localStorage.setItem(seenKey, today);
+    console.log('NV.updateCount — nouveau jour ('+today+' vs seen='+seenDate+'), clignotement coupé');
     NV.hasNew   = false;
     NV.diff     = 0;
     NV.newYtIds = [];
@@ -3839,11 +3906,11 @@ function loadPrestas(me) {
       renderVideoList(videos, function(cards){
         if (NV.hasNew) {
           NV.startBlink(cards);
-          // Sauver le snapshot atomique sans stopper le clignotement
+          // Sauver le snapshot atomique avec les newYtIds → clignotement restaurable si relance même jour
           if (NV.fbId) {
-            NV._saveSnapshot(NV.fbId, videos);
+            NV._saveSnapshot(NV.fbId, videos, NV.newYtIds);
             NV.diff = 0;
-            console.log('loadPrestas — snapshot sauvé après startBlink ('+videos.length+' vidéos)');
+            console.log('loadPrestas — snapshot sauvé après startBlink ('+videos.length+' vidéos, newYtIds=['+NV.newYtIds.join(',')+'])');
           }
         } else {
           NV.updateCount(videos);
