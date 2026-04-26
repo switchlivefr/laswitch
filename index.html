@@ -989,9 +989,12 @@ var NV = {
       // Fusionner sans doublons
       extraNew.forEach(function(id){ if(restoredIds.indexOf(id)===-1) restoredIds.push(id); });
       NV.hasNew   = true;
-      NV.diff     = extraNew.length;  // pour le banner : nb vraiment nouveaux ce lancement
+      NV.diff     = extraNew.length > 0 ? extraNew.length : restoredIds.length;
       NV.newYtIds = restoredIds;
-      console.log('NV.check — consulté aujourd\'hui, newYtIds=['+restoredIds.join(',')+'] extraNew=['+extraNew.join(',')+']');
+      // Banner déjà consulté (période active) → bloquer le réaffichage en navigation
+      // Il sera quand même affiché une fois au lancement via nvCheckAtLaunch si diff > 0
+      NV.bannerShownThisSession = true;
+      console.log('NV.check — période active, newYtIds=['+restoredIds.join(',')+'] extraNew=['+extraNew.join(',')+'] diff='+NV.diff);
       return;
     }
 
