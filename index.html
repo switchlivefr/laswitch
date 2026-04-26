@@ -3769,9 +3769,14 @@ function loadPrestas(me) {
       renderVideoList(videos, function(cards){
         if (NV.hasNew) {
           NV.startBlink(cards, videos);
+          // Sauver le compteur sans stopper le clignotement
+          if (NV.fbId) {
+            localStorage.setItem('nv_count_' + NV.fbId, String(videos.length));
+            NV.diff = 0;
+          }
+        } else {
+          NV.updateCount(videos);
         }
-        // Marquer la visite — compteur sauvé à la fermeture de l'appli
-        NV.updateCount(videos);
       });
 
       document.getElementById('prestas-loggedin').style.display = 'flex';
