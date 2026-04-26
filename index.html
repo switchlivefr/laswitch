@@ -3883,15 +3883,14 @@ function loadPrestas(me) {
       }
 
       renderVideoList(videos, function(cards){
-        // checkBlink calcule NV.newYtIds indépendamment de nv_count_
         if (NV.fbId) NV.checkBlink(NV.fbId, videos);
         if (NV.hasNew) {
           NV.startBlink(cards);
           NV.saveBlink(NV.fbId, videos);
-          // Ne PAS appeler updateCount ici : il ferait stopBlink() et tuerait le clignotement
-          // nv_count_ est déjà à jour via nvCheckAtLaunch au lancement
+          // Mettre à jour nv_count_ sans appeler stopBlink
+          localStorage.setItem('nv_count_' + NV.fbId, String(videos.length));
+          console.log('loadPrestas — nv_count_ sauvé:'+videos.length+' (clignotement maintenu)');
         } else {
-          // Pas de nouvelles vidéos : updateCount original pour mettre à jour nv_count_
           NV.updateCount(videos);
         }
       });
