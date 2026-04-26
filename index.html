@@ -42,8 +42,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 @keyframes pIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes prcColFadeIn{from{opacity:0}to{opacity:1}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-@keyframes newVideoCardBlink{0%,100%{background:#101828}50%{background:rgba(24,119,242,.32)}}
-@keyframes newVideoBannerFadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes newVidCardBlink{0%,100%{background:#101828}50%{background:rgba(24,119,242,.3)}}
+@keyframes newVidBannerIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes titlepulse{0%,100%{opacity:.1}50%{opacity:1}}
 @keyframes hintpulse{0%,100%{color:var(--gold);opacity:.1}50%{color:var(--gold);opacity:1}}
 @keyframes copyMsgPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
@@ -325,14 +325,12 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 </style>
 </head>
 <body>
-<!-- BANNER NOUVELLES VIDÉOS — surimpression accueil -->
-<div id="new-videos-banner" onclick="dismissNewVideosBanner()" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0);pointer-events:none;align-items:center;justify-content:center">
-  <div id="new-videos-banner-msg" style="text-align:center;pointer-events:none">
+<div id="nv-banner" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0);pointer-events:none;align-items:center;justify-content:center">
+  <div style="text-align:center;pointer-events:none;animation:newVidBannerIn .5s ease forwards">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;line-height:1.35">Tu as de nouvelles</div>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;line-height:1.35">vidéos à découvrir</div>
   </div>
 </div>
-
 <div id="fb-browser-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(30,20,0,.92);color:#f2c94c;font-family:'DM Sans',sans-serif;font-size:11px;padding:6px 14px;text-align:center;letter-spacing:0.3px">
   Pour une meilleure expérience → <b>trois points en haut</b> → <b>Ouvrir dans le navigateur</b>
   <span onclick="document.getElementById('fb-browser-banner').style.display='none'" style="margin-left:10px;opacity:0.6;cursor:pointer;font-size:14px">✕</span>
@@ -910,160 +908,129 @@ var searchQuery = '';
 var allSongs = [];
 
 // ============================================================
-// SYSTÈME NOTIFICATION NOUVELLES VIDÉOS MES PRESTAS
+// NOUVELLES VIDÉOS MES PRESTAS
 // ============================================================
-(function(){
-  var _newVidFbId = null;
-  var _newVideosToHighlight = [];
-  var _blinkTargets = null;
-  var _bannerDismissed = false;
-  var _bannerShownThisLaunch = false;
-  var _bannerPending = false; // true = nouvelles vidéos détectées, banner en attente du retour sur accueil
+var NV = {
+  newIds: [],          // ytUrls des nouvelles vidéos détectées
+  fbId: null,          // fbId courant
+  blinkEls: [],        // éléments .presta-info qui clignotent
+  bannerShown: false,  // banner déjà affiché cette session
+  dismissed: false,    // banner dismissé par l'utilisateur
 
-  // Appelé depuis loadPrestas() après réception des vidéos
-  window.checkNewVideos = function(fbId, videos) {
-    if (!fbId || !videos || !videos.length) return;
-    _newVidFbId = fbId;
-    var seenKey    = 'sw_newvid_seen_'    + fbId;
-    var visitedKey = 'sw_newvid_visited_' + fbId;
-    var sessionKey = 'sw_newvid_session_' + fbId;
-    var currentIds = videos.map(function(v){ return v.youtube||''; }).filter(Boolean);
-    var seenRaw = localStorage.getItem(seenKey);
-    var seenIds = seenRaw ? (function(){ try{return JSON.parse(seenRaw);}catch(e){return null;} })() : null;
-    // Première connexion ever → initialiser silencieusement
-    if (!seenIds) {
-      localStorage.setItem(seenKey, JSON.stringify(currentIds));
-      return;
+  // Clés localStorage
+  seenKey:    function(){ return 'nv_seen_'    + NV.fbId; },
+  visitedKey: function(){ return 'nv_visited_' + NV.fbId; },
+
+  // Comparer les vidéos reçues avec celles mémorisées
+  // Retourne true si nouvelles vidéos trouvées
+  check: function(fbId, videos) {
+    NV.fbId = fbId;
+    var currentUrls = videos.map(function(v){ return v.youtube||''; }).filter(Boolean);
+    var raw = localStorage.getItem(NV.seenKey());
+    var seenUrls = raw ? JSON.parse(raw) : null;
+
+    // Première fois → mémoriser et sortir
+    if (!seenUrls) {
+      localStorage.setItem(NV.seenKey(), JSON.stringify(currentUrls));
+      return false;
     }
+
+    // Déjà visité cette session → sortir
+    if (localStorage.getItem(NV.visitedKey()) === '1') {
+      return false;
+    }
+
+    // Chercher les nouvelles
     var seenMap = {};
-    seenIds.forEach(function(id){ seenMap[id]=1; });
-    var newIds = currentIds.filter(function(id){ return !seenMap[id]; });
-    // Pas de nouvelles vidéos
-    if (!newIds.length) { _newVideosToHighlight = []; return; }
+    seenUrls.forEach(function(u){ seenMap[u] = 1; });
+    NV.newIds = currentUrls.filter(function(u){ return !seenMap[u]; });
+    return NV.newIds.length > 0;
+  },
 
-    _newVideosToHighlight = newIds;
-
-    // Déjà vu pendant cette session → silence
-    var alreadyVisited = localStorage.getItem(visitedKey) === '1';
-    var sessionVisited = sessionStorage.getItem(sessionKey) === '1';
-    if (alreadyVisited && sessionVisited) { _newVideosToHighlight = []; return; }
-
-    // Nouvelles vidéos détectées !
-    // Si on est sur l'accueil → afficher immédiatement
-    // Sinon → mettre en attente, le banner s'affichera au retour sur l'accueil
-    if (!_bannerShownThisLaunch) {
-      _bannerShownThisLaunch = true;
-      if (currentPage === 'p-home') {
-        _showBanner();
-      } else {
-        _bannerPending = true; // sera déclenché par nav('p-home')
-      }
-    }
-  };
-
-  function _showBanner() {
-    if (_bannerDismissed) return;
-    if (!_newVideosToHighlight.length) return;
-    _bannerPending = false;
-    var el = document.getElementById('new-videos-banner');
+  // Afficher le banner sur l'accueil
+  showBanner: function() {
+    if (NV.dismissed || NV.bannerShown) return;
+    NV.bannerShown = true;
+    var el = document.getElementById('nv-banner');
     if (!el) return;
     el.style.display = 'flex';
     el.style.pointerEvents = 'auto';
-    var msg = document.getElementById('new-videos-banner-msg');
-    if (msg) { msg.style.animation='none'; void msg.offsetWidth; msg.style.animation='newVideoBannerFadeIn .5s ease forwards'; }
+    // Fermer au premier touch/click
     setTimeout(function(){
-      document.addEventListener('touchstart', _dismissOnTouch, {passive:true, capture:true});
-      document.addEventListener('click',      _dismissOnTouch, {capture:true});
-    }, 400);
-  }
+      document.addEventListener('touchstart', NV.dismiss, {passive:true, capture:true});
+      document.addEventListener('click', NV.dismiss, {capture:true});
+    }, 300);
+  },
 
-  function _dismissOnTouch() { window.dismissNewVideosBanner(); }
-
-  window.dismissNewVideosBanner = function() {
-    _bannerDismissed = true;
-    _bannerPending = false;
-    var el = document.getElementById('new-videos-banner');
+  dismiss: function() {
+    NV.dismissed = true;
+    var el = document.getElementById('nv-banner');
     if (el) { el.style.display='none'; el.style.pointerEvents='none'; }
-    document.removeEventListener('touchstart', _dismissOnTouch, {capture:true});
-    document.removeEventListener('click',      _dismissOnTouch, {capture:true});
-  };
+    document.removeEventListener('touchstart', NV.dismiss, {capture:true});
+    document.removeEventListener('click', NV.dismiss, {capture:true});
+  },
 
-  window.startNewVideoBlink = function(cards, videos) {
-    window.stopNewVideoBlink();
-    if (!_newVideosToHighlight.length) return;
+  // Faire clignoter les cartes nouvelles dans MES PRESTAS
+  startBlink: function(cards, videos) {
+    NV.stopBlink();
+    if (!NV.newIds.length) return;
     var newMap = {};
-    _newVideosToHighlight.forEach(function(id){ newMap[id]=1; });
-    var targets = [];
-    videos.forEach(function(v, i) {
-      if (newMap[v.youtube]) {
-        var card = cards[i];
-        if (card) { var info=card.querySelector('.presta-info'); if(info) targets.push(info); }
+    NV.newIds.forEach(function(u){ newMap[u]=1; });
+    NV.blinkEls = [];
+    videos.forEach(function(v, i){
+      if (newMap[v.youtube] && cards[i]) {
+        var info = cards[i].querySelector('.presta-info');
+        if (info) {
+          info.style.animation = 'newVidCardBlink 2s ease-in-out infinite';
+          NV.blinkEls.push(info);
+        }
       }
     });
-    if (!targets.length) return;
-    targets.forEach(function(el){ el.style.animation='newVideoCardBlink 2s ease-in-out infinite'; });
-    _blinkTargets = targets;
-  };
+  },
 
-  window.stopNewVideoBlink = function() {
-    if (_blinkTargets && _blinkTargets.length) {
-      _blinkTargets.forEach(function(el){ el.style.animation=''; });
-    }
-    _blinkTargets = null;
-  };
+  stopBlink: function() {
+    NV.blinkEls.forEach(function(el){ el.style.animation=''; });
+    NV.blinkEls = [];
+  },
 
-  // Appelé quand l'utilisateur arrive sur MES PRESTAS ET a vu les nouvelles vidéos
-  window.markPrestasVisited = function() {
-    if (!_newVidFbId) return;
-    localStorage.setItem('sw_newvid_visited_'+_newVidFbId, '1');
-    sessionStorage.setItem('sw_newvid_session_'+_newVidFbId, '1');
-    window.stopNewVideoBlink();
-    _newVideosToHighlight = [];
-    _bannerDismissed = true;
-    _bannerPending = false;
-    window.dismissNewVideosBanner();
-  };
+  // Marquer comme vu : stopper tout et mémoriser
+  markVisited: function(videos) {
+    if (!NV.fbId) return;
+    // Sauvegarder la liste actuelle comme "déjà vues"
+    var currentUrls = videos.map(function(v){ return v.youtube||''; }).filter(Boolean);
+    localStorage.setItem(NV.seenKey(), JSON.stringify(currentUrls));
+    localStorage.setItem(NV.visitedKey(), '1');
+    NV.stopBlink();
+    NV.newIds = [];
+    NV.dismiss();
+  }
+};
 
-  window.saveCurrentVideosAsSeen = function(fbId, videos) {
-    if (!fbId || !videos) return;
-    var ids = videos.map(function(v){ return v.youtube||''; }).filter(Boolean);
-    localStorage.setItem('sw_newvid_seen_'+fbId, JSON.stringify(ids));
-  };
-
-  // Appelé par nav('p-home') ou par le fetch de fond : affiche le banner si en attente
-  window._showNewVideosBannerIfNeeded = function() {
-    if (_bannerDismissed || !_newVideosToHighlight.length) return;
-    if (_bannerPending || _bannerShownThisLaunch) {
-      _showBanner();
-    }
-  };
-
-  // Appelé par nav('p-prestas') : démarre le clignotement SANS marquer visité
-  // Le marquage se fait seulement après (dans un setTimeout) pour laisser le clignotement démarrer
-  window._startBlinkAndScheduleMark = function(cards, videos) {
-    if (!_newVideosToHighlight.length) return;
-    window.startNewVideoBlink(cards, videos);
-    // Marquer visité après 800ms (le clignotement est bien visible avant d'être stoppé)
-    setTimeout(function(){
-      markPrestasVisited();
-      saveCurrentVideosAsSeen(videos[0] ? _newVidFbId : null, videos);
-    }, 800);
-  };
-
-  document.addEventListener('visibilitychange', function() {
-    if (document.hidden) {
-      window.stopNewVideoBlink();
-    } else {
-      if (!_newVidFbId || !_newVideosToHighlight.length) return;
-      var alreadyVisited = localStorage.getItem('sw_newvid_visited_'+_newVidFbId)==='1';
-      var sessionVisited = sessionStorage.getItem('sw_newvid_session_'+_newVidFbId)==='1';
-      if (alreadyVisited && sessionVisited) return;
-      if (!_bannerDismissed && currentPage==='p-home') _showBanner();
-    }
-  });
-})();
-// ── FIN SYSTÈME NOUVELLES VIDÉOS ─────────────────────────────
-
+// Fetch silencieux au lancement si utilisateur déjà connecté
+// Appelé depuis hideLoader() après affichage de l'accueil
+function nvCheckAtLaunch() {
+  var fbId  = localStorage.getItem('sw_fbId');
+  var name  = localStorage.getItem('sw_name');
+  var loggedIn = localStorage.getItem('sw_loggedIn');
+  console.log('nvCheckAtLaunch — loggedIn:'+loggedIn+' fbId:'+fbId+' name:'+name);
+  if (loggedIn !== '1' || !fbId || !name) return;
+  fetch('/api?action=getVideos&fbid=' + encodeURIComponent(fbId) + '&nom=' + encodeURIComponent(name.toLowerCase()) + '&fullname=' + encodeURIComponent(name.toLowerCase()))
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      var videos = data.videos || [];
+      console.log('nvCheckAtLaunch — videos reçues:'+videos.length);
+      if (!videos.length) return;
+      // Stocker pour MES PRESTAS (évite double fetch)
+      window._nvVideos = { fbId:fbId, videos:videos };
+      var hasNew = NV.check(fbId, videos);
+      console.log('nvCheckAtLaunch — nouvelles vidéos:'+hasNew+' newIds:'+NV.newIds.length);
+      if (hasNew && currentPage === 'p-home') {
+        NV.showBanner();
+      }
+    })
+    .catch(function(e){ console.log('nvCheckAtLaunch erreur:'+e); });
+}
+// ── FIN NOUVELLES VIDÉOS ──────────────────────────────────────
 
 
 (function(){
@@ -1115,18 +1082,7 @@ function nav(id,direction){
       setTimeout(function(){ne.style.transition='';ne.style.transform='';ne.classList.remove('sliding');ne.classList.add('active');},330);
     }else{ne.classList.add('active');}
   }
-  if(id==='p-prestas'){
-    checkFbSession();
-    hideHint();
-    // Démarrer le clignotement si nouvelles vidéos détectées, puis marquer visité
-    if(window._pendingPrestas){
-      var _pp=window._pendingPrestas;
-      var _vk='sw_newvid_visited_'+_pp.fbId;
-      if(localStorage.getItem(_vk)!=='1'){
-        window._startBlinkAndScheduleMark(_pp.cards,_pp.videos);
-      }
-    }
-  }
+  if(id==='p-prestas'){checkFbSession();hideHint();}
   if(oldId==='p-prestas'&&id!=='p-prestas'){stopPrestasVideo();if(typeof _swPendingPollTimer!=='undefined'&&_swPendingPollTimer){clearInterval(_swPendingPollTimer);_swPendingPollTimer=null;}}
   if(id==='p-switch'){renderSwitch();showHint();
     var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
@@ -1165,12 +1121,7 @@ function nav(id,direction){
     setTimeout(initScrollHints,400);
   }
   if(id==='p-resa'){renderInfo();hideHint();var shdI=document.getElementById('scroll-hint-down');if(shdI){shdI.classList.remove('visible');shdI.style.bottom='calc(var(--nh) + 112px)';}setTimeout(initScrollHints,400);}
-  if(id==='p-home'){
-    hideHint();
-    hideScrollHints();
-    // Afficher banner nouvelles vidéos si pertinent (et pas encore dismissé)
-    window._showNewVideosBannerIfNeeded && window._showNewVideosBannerIfNeeded();
-  }
+  if(id==='p-home'){hideHint();hideScrollHints();if(NV.newIds.length&&!NV.dismissed)NV.showBanner();}
   if(id!=='p-rules'){var moreBtn=document.getElementById('rules-more-btn');if(moreBtn)moreBtn.style.display='none';}
   // Bandeau répertoire : visible seulement sur p-switch si pas encore dismissed
   (function(){
@@ -3519,7 +3470,10 @@ function secretTap(){
 function openLink(url,modalId){if(modalId)closeM(modalId);setTimeout(function(){window.location.href=url;},150);}
 function openResa(){window.open('https://www.proracecafe.com/reservation-pro-race-cafe','_blank');}
 
-document.querySelector('.bnav').classList.add('nav-disabled');
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden){NV.stopBlink();}
+});
+
 
 // ── Chargement initial avec détection données incomplètes ──────────────────
 (function(){
@@ -3595,33 +3549,7 @@ document.querySelector('.bnav').classList.add('nav-disabled');
         },500);
       },1500);
       hideLoader();
-      // ── Vérification silencieuse nouvelles vidéos au lancement ──
-      // Si l'utilisateur est déjà connecté (sw_loggedIn=1), on fetch ses vidéos
-      // en arrière-plan pour détecter d'éventuelles nouvelles vidéos et afficher
-      // le banner sur l'accueil sans attendre qu'il aille sur MES PRESTAS.
-      (function(){
-        if (_adminMode) return;
-        var swLoggedIn = localStorage.getItem('sw_loggedIn');
-        var swName     = localStorage.getItem('sw_name');
-        var swFbId     = localStorage.getItem('sw_fbId');
-        if (swLoggedIn !== '1' || !swName || !swFbId) return;
-        // Ne pas refaire si les vidéos sont déjà chargées (navigation intra-session)
-        if (window._pendingPrestas) return;
-        var prenom = swName.toLowerCase();
-        fetch('/api?action=getVideos&fbid=' + encodeURIComponent(swFbId) + '&nom=' + encodeURIComponent(prenom) + '&fullname=' + encodeURIComponent(swName.toLowerCase()))
-          .then(function(r){ return r.json(); })
-          .then(function(data){
-            var videos = data.videos || [];
-            if (!videos.length) return;
-            window._pendingPrestas = { fbId: swFbId, videos: videos, cards: [] };
-            // Comparer avec les vidéos mémorisées
-            checkNewVideos(swFbId, videos);
-            // Afficher le banner immédiatement si on est encore sur l'accueil
-            // (checkNewVideos a posé _bannerPending mais on est déjà sur p-home)
-            window._showNewVideosBannerIfNeeded && window._showNewVideosBannerIfNeeded();
-          })
-          .catch(function(){});
-      })();
+      nvCheckAtLaunch();
     })
     .catch(function(){
       startWeakConnectionUI();
@@ -3709,8 +3637,6 @@ function fbLogout() {
   localStorage.removeItem('sw_name');
   localStorage.removeItem('sw_fbId');
   localStorage.removeItem('sw_loggedIn');
-  window._pendingPrestas = null;
-  window.stopNewVideoBlink && window.stopNewVideoBlink();
   _swAccHasPinCache = {};
   _prestasUnlocked = false;
   window._swLoaded = false;
@@ -3841,17 +3767,14 @@ function loadPrestas(me) {
       }
 
       renderVideoList(videos, function(cards){
-        // Vérifier nouvelles vidéos (compare avec les ytIds mémorisés)
-        // (si déjà fait par le fetch de fond au lancement, checkNewVideos ne re-déclenche pas le banner)
-        checkNewVideos(me.id, videos);
-        // Mémoriser / mettre à jour avec les vraies cards DOM
-        window._pendingPrestas = { fbId: me.id, videos: videos, cards: cards };
-        // Si on est déjà sur MES PRESTAS au moment du chargement → démarrer le clignotement
-        if (currentPage === 'p-prestas') {
-          var vk = 'sw_newvid_visited_' + me.id;
-          if (localStorage.getItem(vk) !== '1') {
-            window._startBlinkAndScheduleMark(cards, videos);
-          }
+        // Nouvelles vidéos détectées au lancement → clignoter puis marquer vu
+        if (NV.newIds.length && NV.fbId === me.id) {
+          NV.startBlink(cards, videos);
+          setTimeout(function(){ NV.markVisited(videos); }, 4000);
+        } else {
+          // Pas de nouvelles → juste mémoriser si pas encore fait
+          if (!NV.fbId) NV.check(me.id, videos);
+          else NV.markVisited(videos);
         }
       });
 
