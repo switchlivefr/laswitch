@@ -909,83 +909,65 @@ var allSongs = [];
 
 // ============================================================
 // NOUVELLES VIDÉOS MES PRESTAS
+// Principe : on mémorise le NOMBRE de vidéos au moment où
+// l'utilisateur visite MES PRESTAS. Au lancement suivant,
+// si le nombre a augmenté → nouvelles vidéos.
+// nv_count_{fbId} n'est mis à jour QUE lors d'une visite sur MES PRESTAS.
 // ============================================================
 var NV = {
-  newIds: [],          // ytUrls des nouvelles vidéos détectées
-  fbId: null,          // fbId courant
-  blinkEls: [],        // éléments .presta-info qui clignotent
-  bannerShown: false,  // banner déjà affiché cette session
-  dismissed: false,    // banner dismissé par l'utilisateur
+  hasNew: false,
+  fbId: null,
+  blinkEls: [],
 
-  // Clés localStorage
-  seenKey:    function(){ return 'nv_seen_'    + NV.fbId; },
-  visitedKey: function(){ return 'nv_visited_' + NV.fbId; },
-
-  // Comparer les vidéos reçues avec celles mémorisées
-  // Retourne true si nouvelles vidéos trouvées
+  // Appelé au lancement : compare nombre actuel vs nombre mémorisé
   check: function(fbId, videos) {
     NV.fbId = fbId;
-    var currentUrls = videos.map(function(v){ return v.youtube||''; }).filter(Boolean);
-    var raw = localStorage.getItem(NV.seenKey());
-    var seenUrls = raw ? JSON.parse(raw) : null;
-
-    // Première fois → mémoriser et sortir
-    if (!seenUrls) {
-      localStorage.setItem(NV.seenKey(), JSON.stringify(currentUrls));
-      return false;
+    var key = 'nv_count_' + fbId;
+    var saved = localStorage.getItem(key);
+    console.log('NV.check — saved='+saved+' current='+videos.length);
+    if (saved === null) {
+      // Première fois : mémoriser et ne rien afficher
+      localStorage.setItem(key, String(videos.length));
+      NV.hasNew = false;
+      return;
     }
-
-    // Déjà visité cette session → sortir
-    if (localStorage.getItem(NV.visitedKey()) === '1') {
-      return false;
-    }
-
-    // Chercher les nouvelles
-    var seenMap = {};
-    seenUrls.forEach(function(u){ seenMap[u] = 1; });
-    NV.newIds = currentUrls.filter(function(u){ return !seenMap[u]; });
-    return NV.newIds.length > 0;
+    NV.hasNew = (videos.length > parseInt(saved, 10));
+    console.log('NV.check — hasNew='+NV.hasNew);
   },
 
-  // Afficher le banner sur l'accueil
   showBanner: function() {
-    if (NV.dismissed || NV.bannerShown) return;
-    NV.bannerShown = true;
     var el = document.getElementById('nv-banner');
     if (!el) return;
     el.style.display = 'flex';
     el.style.pointerEvents = 'auto';
-    // Fermer au premier touch/click
     setTimeout(function(){
-      document.addEventListener('touchstart', NV.dismiss, {passive:true, capture:true});
-      document.addEventListener('click', NV.dismiss, {capture:true});
+      document.addEventListener('touchstart', NV.dismissBanner, {passive:true, capture:true});
+      document.addEventListener('click', NV.dismissBanner, {capture:true});
     }, 300);
   },
 
-  dismiss: function() {
-    NV.dismissed = true;
+  dismissBanner: function() {
     var el = document.getElementById('nv-banner');
     if (el) { el.style.display='none'; el.style.pointerEvents='none'; }
-    document.removeEventListener('touchstart', NV.dismiss, {capture:true});
-    document.removeEventListener('click', NV.dismiss, {capture:true});
+    document.removeEventListener('touchstart', NV.dismissBanner, {capture:true});
+    document.removeEventListener('click', NV.dismissBanner, {capture:true});
   },
 
-  // Faire clignoter les cartes nouvelles dans MES PRESTAS
+  // Clignoter les N premières cartes (nouvelles vidéos = en haut, triées par date desc)
   startBlink: function(cards, videos) {
     NV.stopBlink();
-    if (!NV.newIds.length) return;
-    var newMap = {};
-    NV.newIds.forEach(function(u){ newMap[u]=1; });
-    NV.blinkEls = [];
-    videos.forEach(function(v, i){
-      if (newMap[v.youtube] && cards[i]) {
-        var info = cards[i].querySelector('.presta-info');
-        if (info) {
-          info.style.animation = 'newVidCardBlink 2s ease-in-out infinite';
-          NV.blinkEls.push(info);
-        }
+    if (!NV.hasNew || !NV.fbId) return;
+    var key = 'nv_count_' + NV.fbId;
+    var saved = parseInt(localStorage.getItem(key)||'0', 10);
+    var newCount = videos.length - saved;
+    if (newCount <= 0) return;
+    for (var i = 0; i < newCount && i < cards.length; i++) {
+      var info = cards[i].querySelector('.presta-info');
+      if (info) {
+        info.style.animation = 'newVidCardBlink 2s ease-in-out infinite';
+        NV.blinkEls.push(info);
       }
-    });
+    }
   },
 
   stopBlink: function() {
@@ -993,37 +975,34 @@ var NV = {
     NV.blinkEls = [];
   },
 
-  // Marquer comme vu : stopper tout et mémoriser les vidéos actuelles comme "vues"
-  markVisited: function(videos) {
+  // Appelé UNIQUEMENT quand l'utilisateur arrive sur MES PRESTAS
+  // Met à jour le compteur avec le nombre actuel de vidéos
+  updateCount: function(videos) {
     if (!NV.fbId) return;
-    var currentUrls = videos.map(function(v){ return v.youtube||''; }).filter(Boolean);
-    localStorage.setItem(NV.seenKey(), JSON.stringify(currentUrls));
-    localStorage.setItem(NV.visitedKey(), '1');
+    var key = 'nv_count_' + NV.fbId;
+    localStorage.setItem(key, String(videos.length));
+    console.log('NV.updateCount — nouveau compteur:'+videos.length);
+    NV.hasNew = false;
     NV.stopBlink();
-    NV.newIds = [];
-    NV.dismiss();
+    NV.dismissBanner();
   }
 };
 
-// Fetch silencieux au lancement si utilisateur déjà connecté
-// Appelé depuis hideLoader() après affichage de l'accueil
 function nvCheckAtLaunch() {
-  var fbId  = localStorage.getItem('sw_fbId');
-  var name  = localStorage.getItem('sw_name');
+  var fbId     = localStorage.getItem('sw_fbId');
+  var name     = localStorage.getItem('sw_name');
   var loggedIn = localStorage.getItem('sw_loggedIn');
-  console.log('nvCheckAtLaunch — loggedIn:'+loggedIn+' fbId:'+fbId+' name:'+name);
+  console.log('nvCheckAtLaunch — loggedIn:'+loggedIn+' fbId:'+fbId);
   if (loggedIn !== '1' || !fbId || !name) return;
   fetch('/api?action=getVideos&fbid=' + encodeURIComponent(fbId) + '&nom=' + encodeURIComponent(name.toLowerCase()) + '&fullname=' + encodeURIComponent(name.toLowerCase()))
     .then(function(r){ return r.json(); })
     .then(function(data){
       var videos = data.videos || [];
-      console.log('nvCheckAtLaunch — videos reçues:'+videos.length);
+      console.log('nvCheckAtLaunch — '+videos.length+' vidéos reçues');
       if (!videos.length) return;
-      // Stocker pour MES PRESTAS (évite double fetch)
-      window._nvVideos = { fbId:fbId, videos:videos };
-      var hasNew = NV.check(fbId, videos);
-      console.log('nvCheckAtLaunch — nouvelles vidéos:'+hasNew+' newIds:'+NV.newIds.length);
-      if (hasNew && currentPage === 'p-home') {
+      window._nvVideos = videos;
+      NV.check(fbId, videos);
+      if (NV.hasNew && currentPage === 'p-home') {
         NV.showBanner();
       }
     })
@@ -1082,7 +1061,10 @@ function nav(id,direction){
     }else{ne.classList.add('active');}
   }
   if(id==='p-prestas'){checkFbSession();hideHint();}
-  if(oldId==='p-prestas'&&id!=='p-prestas'){stopPrestasVideo();if(typeof _swPendingPollTimer!=='undefined'&&_swPendingPollTimer){clearInterval(_swPendingPollTimer);_swPendingPollTimer=null;}}
+  if(oldId==='p-prestas'&&id!=='p-prestas'){stopPrestasVideo();if(typeof _swPendingPollTimer!=='undefined'&&_swPendingPollTimer){clearInterval(_swPendingPollTimer);_swPendingPollTimer=null;}
+    // Mettre à jour le compteur NV quand on quitte MES PRESTAS
+    if(window._nvCurrentVideos){NV.updateCount(window._nvCurrentVideos);}
+  }
   if(id==='p-switch'){renderSwitch();showHint();
     var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
     var isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -3472,8 +3454,7 @@ function openResa(){window.open('https://www.proracecafe.com/reservation-pro-rac
 document.addEventListener('visibilitychange',function(){
   if(document.hidden){
     NV.stopBlink();
-    // Effacer le flag visited à la fermeture pour que le prochain lancement re-détecte
-    if(NV.fbId) localStorage.removeItem('nv_visited_'+NV.fbId);
+    if(currentPage==='p-prestas'&&window._nvCurrentVideos){NV.updateCount(window._nvCurrentVideos);}
   }
 });
 
@@ -3770,13 +3751,13 @@ function loadPrestas(me) {
       }
 
       renderVideoList(videos, function(cards){
-        // Clignoter uniquement si nouvelles vidéos détectées au lancement
-        if (NV.newIds.length && NV.fbId === me.id) {
+        if (NV.hasNew) {
           NV.startBlink(cards, videos);
-          // Mettre à jour nv_seen seulement APRES que l'utilisateur a vu le clignotement
-          setTimeout(function(){ NV.markVisited(videos); }, 4000);
+          // Le compteur se met à jour quand l'utilisateur quitte MES PRESTAS
+          // via nav() → voir la modification dans nav()
         }
-        // Dans tous les autres cas : ne rien toucher à nv_seen
+        // Toujours mémoriser les vidéos pour usage dans nav()
+        window._nvCurrentVideos = videos;
       });
 
       document.getElementById('prestas-loggedin').style.display = 'flex';
