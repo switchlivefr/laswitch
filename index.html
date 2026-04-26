@@ -981,8 +981,8 @@ var NV = {
       return news;
     }
 
-    // Cas : consulté aujourd'hui → restaurer les newYtIds sauvegardés + détecter d'éventuelles nouvelles vidéos ajoutées depuis
-    if (seenDate === today && snap.newYtIds && snap.newYtIds.length) {
+    // Cas : période de clignotement encore active (jusqu'à minuit du 3ème jour suivant la 1ère visite)
+    if (NV._blinkStillActive(seenDate) && snap.newYtIds && snap.newYtIds.length) {
       var restoredIds = snap.newYtIds.slice();
       // Chercher des vidéos supplémentaires ajoutées depuis le dernier snapshot
       var extraNew = calcNewIds(savedIds, currentYtIds);
@@ -1071,6 +1071,19 @@ var NV = {
     return d.getFullYear()+'-'+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1)+'-'+(d.getDate()<10?'0':'')+d.getDate();
   },
 
+  // Retourne true si la période de clignotement est encore active
+  // Règle : clignote jusqu'à minuit du 3ème jour suivant la 1ère visite (soit ~72h+ selon l'heure de visite)
+  // Ex : visite samedi 14h → expire mardi 00h00
+  _blinkStillActive: function(seenDate) {
+    if (!seenDate) return false;
+    var parts = seenDate.split('-');
+    if (parts.length !== 3) return false;
+    // Minuit au début du 4ème jour après seenDate (= fin du 3ème jour suivant)
+    var expiry = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+    expiry.setDate(expiry.getDate() + 4);  // +4 jours → minuit qui termine le 3ème jour suivant
+    return new Date() < expiry;
+  },
+
   // Appelé quand l'utilisateur arrive sur MES PRESTAS
   // - Sauvegarde toujours le snapshot (count+ids) pour que diff et newYtIds soient corrects
   // - MAIS ne remet hasNew à false que le lendemain (après minuit)
@@ -1082,28 +1095,26 @@ var NV = {
     var today    = NV._today();
     var seenDate = localStorage.getItem(seenKey);
 
-    // Toujours sauvegarder le snapshot pour garder count+ids à jour
-    NV._saveSnapshot(NV.fbId, videos);
-
     if (!seenDate) {
-      // Première visite MES PRESTAS : enregistrer la date du jour
+      // Première visite MES PRESTAS : sauver snapshot + enregistrer la date
+      NV._saveSnapshot(NV.fbId, videos, NV.newYtIds);
       localStorage.setItem(seenKey, today);
-      console.log('NV.updateCount — 1ère visite MES PRESTAS, seen_date='+today+', clignotement maintenu');
-      // Ne pas couper hasNew ni newYtIds → clignotement reste actif aujourd'hui
-      NV.bannerShownThisSession = true;  // banner accueil masqué
-      return;
-    }
-
-    if (seenDate === today) {
-      // Déjà consulté aujourd'hui → clignotement maintenu jusqu'à minuit
-      console.log('NV.updateCount — consulté aujourd\'hui ('+today+'), clignotement maintenu');
+      console.log('NV.updateCount — 1ère visite MES PRESTAS, seen_date='+today+', clignotement actif jusqu\'à minuit J+3');
       NV.bannerShownThisSession = true;
       return;
     }
 
-    // Lendemain ou après → on coupe tout normalement
+    if (NV._blinkStillActive(seenDate)) {
+      // Période active → NE PAS écraser le snapshot, juste marquer le banner comme vu
+      console.log('NV.updateCount — période active (seen='+seenDate+'), snapshot préservé, clignotement maintenu');
+      NV.bannerShownThisSession = true;
+      return;
+    }
+
+    // Période expirée → sauver le nouveau snapshot et couper tout
+    NV._saveSnapshot(NV.fbId, videos);
     localStorage.setItem(seenKey, today);
-    console.log('NV.updateCount — nouveau jour ('+today+' vs seen='+seenDate+'), clignotement coupé');
+    console.log('NV.updateCount — période expirée (seen='+seenDate+'), clignotement coupé');
     NV.hasNew   = false;
     NV.diff     = 0;
     NV.newYtIds = [];
@@ -3892,11 +3903,17 @@ function loadPrestas(me) {
       renderVideoList(videos, function(cards){
         if (NV.hasNew) {
           NV.startBlink(cards);
-          // Sauver le snapshot atomique avec les newYtIds → clignotement restaurable si relance même jour
+          // Sauver le snapshot SEULEMENT si la période n'est pas déjà active
+          // (sinon on écraserait le snapshot avec les nouveaux ids, rendant les newYtIds introuvables au prochain lancement)
           if (NV.fbId) {
-            NV._saveSnapshot(NV.fbId, videos, NV.newYtIds);
+            var seenDateNow = localStorage.getItem('nv_seen_date_' + NV.fbId);
+            if (!NV._blinkStillActive(seenDateNow)) {
+              NV._saveSnapshot(NV.fbId, videos, NV.newYtIds);
+              console.log('loadPrestas — snapshot sauvé ('+videos.length+' vidéos, newYtIds=['+NV.newYtIds.join(',')+'])');
+            } else {
+              console.log('loadPrestas — période active, snapshot NON écrasé');
+            }
             NV.diff = 0;
-            console.log('loadPrestas — snapshot sauvé après startBlink ('+videos.length+' vidéos, newYtIds=['+NV.newYtIds.join(',')+'])');
           }
         } else {
           NV.updateCount(videos);
