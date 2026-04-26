@@ -922,6 +922,7 @@ var NV = {
   currentVideos: null,        // vidéos actuelles, pour sauvegarde à la fermeture
   diff: 0,                    // différentiel current - saved
   newYtIds: [],               // ytIds des vidéos nouvelles (inconnues au dernier snapshot)
+  bannerShownThisSession: false, // true après le 1er affichage du banner — bloque le réaffichage en navigation
 
   // Snapshot atomique : {count, ids} toujours ensemble dans une seule clé
   // → impossible d'avoir count et ids désynchronisés
@@ -985,6 +986,8 @@ var NV = {
 
   showBanner: function(diff) {
     if (diff <= 0) return;
+    NV.bannerShownThisSession = true;
+    console.log('NV.showBanner — bannerShownThisSession=true diff='+diff);
     var l1 = document.getElementById('nv-banner-l1');
     var l2 = document.getElementById('nv-banner-l2');
     if (l1 && l2) {
@@ -1155,7 +1158,7 @@ function nav(id,direction){
     setTimeout(initScrollHints,400);
   }
   if(id==='p-resa'){renderInfo();hideHint();var shdI=document.getElementById('scroll-hint-down');if(shdI){shdI.classList.remove('visible');shdI.style.bottom='calc(var(--nh) + 112px)';}setTimeout(initScrollHints,400);}
-  if(id==='p-home'){hideHint();hideScrollHints();if(NV.hasNew&&!document.getElementById('nv-banner').classList.contains('open'))NV.showBanner(NV.diff);}
+  if(id==='p-home'){hideHint();hideScrollHints();if(NV.hasNew&&!NV.bannerShownThisSession&&!document.getElementById('nv-banner').classList.contains('open')){console.log('nav p-home — bannerShownThisSession='+NV.bannerShownThisSession+', affichage banner');NV.showBanner(NV.diff);}else if(NV.hasNew){console.log('nav p-home — bannerShownThisSession='+NV.bannerShownThisSession+', banner bloqué');}}
   if(id!=='p-rules'){var moreBtn=document.getElementById('rules-more-btn');if(moreBtn)moreBtn.style.display='none';}
   // Bandeau répertoire : visible seulement sur p-switch si pas encore dismissed
   (function(){
