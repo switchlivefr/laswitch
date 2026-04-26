@@ -1112,7 +1112,7 @@ function nav(id,direction){
     setTimeout(initScrollHints,400);
   }
   if(id==='p-resa'){renderInfo();hideHint();var shdI=document.getElementById('scroll-hint-down');if(shdI){shdI.classList.remove('visible');shdI.style.bottom='calc(var(--nh) + 112px)';}setTimeout(initScrollHints,400);}
-  if(id==='p-home'){hideHint();hideScrollHints();if(NV.newIds.length&&!NV.dismissed)NV.showBanner();}
+  if(id==='p-home'){hideHint();hideScrollHints();if(NV.hasNew&&!document.getElementById('nv-banner').classList.contains('open'))NV.showBanner(NV.diff);}
   if(id!=='p-rules'){var moreBtn=document.getElementById('rules-more-btn');if(moreBtn)moreBtn.style.display='none';}
   // Bandeau répertoire : visible seulement sur p-switch si pas encore dismissed
   (function(){
