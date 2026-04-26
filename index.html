@@ -918,56 +918,56 @@ var NV = {
   hasNew: false,
   fbId: null,
   blinkEls: [],
-  diff: 0,  // différentiel current - saved
-  newYtIds: [],  // ytId des vidéos vraiment nouvelles (pour cibler le clignotement)
-  bannerShownThisSession: false,  // true dès que le banner a été affiché une fois dans la session (navigation uniquement)
+  diff: 0,
+  newYtIds: [],
+  bannerShownThisSession: false,
 
-  // Appelé au lancement : compare nombre actuel vs nombre mémorisé.
-  // Si nv_visited_{fbId} === '1' (l'utilisateur avait visité MES PRESTAS avant
-  // de fermer l'appli) → on remet saved = current silencieusement et on remet
-  // le flag à 0. Aucun banner, aucun clignotement.
   check: function(fbId, videos) {
     NV.fbId = fbId;
     var countKey   = 'nv_count_'   + fbId;
+    var idsKey     = 'nv_ids_'     + fbId;
     var visitedKey = 'nv_visited_' + fbId;
     var saved   = localStorage.getItem(countKey);
     var visited = localStorage.getItem(visitedKey);
     console.log('NV.check — saved='+saved+' current='+videos.length);
     console.log('NV.check — nv_visited_'+fbId+'='+visited+' (1=a visité MES PRESTAS avant fermeture, 0/null=non)');
 
+    var currentIds = videos.map(function(v){ return extractYtId(v.youtube); }).filter(Boolean);
+
     // Cas 1 : première utilisation ever
     if (saved === null) {
       localStorage.setItem(countKey, String(videos.length));
-      NV.hasNew = false; NV.diff = 0;
+      localStorage.setItem(idsKey, JSON.stringify(currentIds));
+      NV.hasNew = false; NV.diff = 0; NV.newYtIds = [];
       return;
     }
 
     // Cas 2 : l'utilisateur avait visité MES PRESTAS → recaler sans rien afficher
     if (visited === '1') {
       localStorage.setItem(countKey, String(videos.length));
+      localStorage.setItem(idsKey, JSON.stringify(currentIds));
       localStorage.setItem(visitedKey, '0');
-      NV.hasNew = false; NV.diff = 0;
+      NV.hasNew = false; NV.diff = 0; NV.newYtIds = [];
       console.log('NV.check — visite précédente détectée, saved recalé silencieusement');
       return;
     }
 
+    // Cas 3 : comparaison
     NV.diff = videos.length - parseInt(saved, 10);
-    // Cas 3 : diff négative (vidéo(s) supprimée(s)) → recaler sans rien afficher
     if (NV.diff < 0) {
       localStorage.setItem(countKey, String(videos.length));
+      localStorage.setItem(idsKey, JSON.stringify(currentIds));
       NV.diff = 0;
     }
     NV.hasNew = (NV.diff > 0);
 
-    // Calcul des ytId vraiment nouveaux (indépendant du compteur, pour le clignotement ciblé)
+    // Calcul des ytId vraiment nouveaux pour le clignotement ciblé
     if (NV.hasNew) {
-      var idsKey   = 'nv_ids_' + fbId;
       var savedIds = [];
       try { savedIds = JSON.parse(localStorage.getItem(idsKey) || '[]'); } catch(e) { savedIds = []; }
       var savedSet = {};
       savedIds.forEach(function(id){ savedSet[id] = true; });
-      NV.newYtIds = videos.map(function(v){ return extractYtId(v.youtube); })
-                          .filter(function(id){ return id && !savedSet[id]; });
+      NV.newYtIds = currentIds.filter(function(id){ return !savedSet[id]; });
       console.log('NV.check — newYtIds='+JSON.stringify(NV.newYtIds));
     }
 
@@ -995,52 +995,33 @@ var NV = {
     closeM('nv-banner');
   },
 
-  // Pose le flag "visité" dès que l'utilisateur arrive sur MES PRESTAS.
-  // Sauvegarde aussi nv_ids_ pour le prochain clignotement ciblé.
-  // nv_count_ et nv_visited_ : inchangés.
   markVisited: function(videos) {
     if (!NV.fbId) return;
     localStorage.setItem('nv_visited_' + NV.fbId, '1');
     if (videos && videos.length) {
       var currentIds = videos.map(function(v){ return extractYtId(v.youtube); }).filter(Boolean);
       localStorage.setItem('nv_ids_' + NV.fbId, JSON.stringify(currentIds));
-      console.log('NV.markVisited — flag posé + '+currentIds.length+' ids sauvegardés dans nv_ids_');
+      console.log('NV.markVisited — flag posé + '+currentIds.length+' ids sauvegardés');
     } else {
       console.log('NV.markVisited — flag posé');
     }
   },
 
-  // Clignoter uniquement les cartes dont le ytId est dans NV.newYtIds
-  // Si NV.newYtIds est vide (nv_ids_ pas encore initialisé), fallback sur les N premières
   startBlink: function(cards, videos) {
     NV.stopBlink();
-    if (!NV.hasNew || !NV.fbId) return;
-    if (NV.newYtIds && NV.newYtIds.length) {
-      // Ciblage précis par ytId
-      var newSet = {};
-      NV.newYtIds.forEach(function(id){ newSet[id] = true; });
-      cards.forEach(function(card, i) {
-        var ytId = extractYtId(videos[i] ? videos[i].youtube : null);
-        if (ytId && newSet[ytId]) {
-          var info = card.querySelector('.presta-info');
-          if (info) {
-            info.style.cssText = 'padding:10px 14px 10px;animation:newVidCardBlink 2s ease-in-out infinite';
-            NV.blinkEls.push(info);
-          }
-        }
-      });
-    } else {
-      // Fallback : N premières cartes (comportement original)
-      var saved = parseInt(localStorage.getItem('nv_count_' + NV.fbId)||'0', 10);
-      var newCount = videos.length - saved;
-      for (var i = 0; i < newCount && i < cards.length; i++) {
-        var info = cards[i].querySelector('.presta-info');
+    if (!NV.hasNew || !NV.fbId || !NV.newYtIds.length) return;
+    var newSet = {};
+    NV.newYtIds.forEach(function(id){ newSet[id] = true; });
+    cards.forEach(function(card, i) {
+      var ytId = extractYtId(videos[i] ? videos[i].youtube : null);
+      if (ytId && newSet[ytId]) {
+        var info = card.querySelector('.presta-info');
         if (info) {
           info.style.cssText = 'padding:10px 14px 10px;animation:newVidCardBlink 2s ease-in-out infinite';
           NV.blinkEls.push(info);
         }
       }
-    }
+    });
     console.log('NV.startBlink — '+NV.blinkEls.length+' carte(s) en clignotement');
   },
 
@@ -1049,7 +1030,6 @@ var NV = {
     NV.blinkEls = [];
   },
 
-  // Garde saveCount pour compatibilité (ne fait rien)
   saveCount: function() {}
 };
 
@@ -3822,8 +3802,6 @@ function loadPrestas(me) {
         if (NV.hasNew) {
           NV.startBlink(cards, videos);
         }
-        // Poser le flag "visité" dans tous les cas : le recalage de saved
-        // se fera au prochain lancement via NV.check
         NV.markVisited(videos);
       });
 
