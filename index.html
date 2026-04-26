@@ -42,7 +42,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 @keyframes pIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes prcColFadeIn{from{opacity:0}to{opacity:1}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-@keyframes newVidCardBlink{0%,100%{background:#101828;box-shadow:none}50%{background:rgba(24,119,242,.7);box-shadow:0 0 18px rgba(24,119,242,.9)}}
+@keyframes newVidCardBlink{0%,100%{background:#101828}50%{background:rgba(24,119,242,.55);box-shadow:inset 0 0 20px rgba(24,119,242,.8)}}
 @keyframes newVidBannerIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes titlepulse{0%,100%{opacity:.1}50%{opacity:1}}
 @keyframes hintpulse{0%,100%{color:var(--gold);opacity:.1}50%{color:var(--gold);opacity:1}}
@@ -325,8 +325,8 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 </style>
 </head>
 <body>
-<div id="nv-banner" style="display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:100%;z-index:9998;background:rgba(8,8,16,.92);pointer-events:none;align-items:center;justify-content:center">
-  <div style="text-align:center;pointer-events:none;animation:newVidBannerIn .5s ease forwards">
+<div class="moverlay" id="nv-banner" onclick="NV.dismissBanner()" style="z-index:9998;background:rgba(8,8,16,.92)">
+  <div style="text-align:center;animation:newVidBannerIn .5s ease forwards">
     <div id="nv-banner-l1" style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--white);letter-spacing:2px;line-height:1.35"></div>
     <div id="nv-banner-l2" style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--white);letter-spacing:2px;line-height:1.35"></div>
   </div>
@@ -954,21 +954,12 @@ var NV = {
         l2.textContent = 'VIDÉOS À DÉCOUVRIR';
       }
     }
-    var el = document.getElementById('nv-banner');
-    if (!el) return;
-    el.style.display = 'flex';
-    el.style.pointerEvents = 'auto';
-    setTimeout(function(){
-      document.addEventListener('touchstart', NV.dismissBanner, {passive:true, capture:true});
-      document.addEventListener('click', NV.dismissBanner, {capture:true});
-    }, 300);
+    // openM gère le positionnement desktop automatiquement (comme tous les overlays)
+    openM('nv-banner');
   },
 
   dismissBanner: function() {
-    var el = document.getElementById('nv-banner');
-    if (el) { el.style.display='none'; el.style.pointerEvents='none'; }
-    document.removeEventListener('touchstart', NV.dismissBanner, {capture:true});
-    document.removeEventListener('click', NV.dismissBanner, {capture:true});
+    closeM('nv-banner');
   },
 
   // Clignoter les N premières cartes (nouvelles vidéos = en haut, triées par date desc)
@@ -980,35 +971,34 @@ var NV = {
     var newCount = videos.length - saved;
     if (newCount <= 0) return;
     for (var i = 0; i < newCount && i < cards.length; i++) {
-      // Cibler la card entière (pas .presta-info dont cssText inline bloquerait l'animation)
-      cards[i].style.animation = 'newVidCardBlink 2s ease-in-out infinite';
-      NV.blinkEls.push(cards[i]);
+      var info = cards[i].querySelector('.presta-info');
+      if (info) {
+        info.style.cssText = 'padding:10px 14px 10px;animation:newVidCardBlink 2s ease-in-out infinite';
+        NV.blinkEls.push(info);
+      }
     }
   },
 
   stopBlink: function() {
-    NV.blinkEls.forEach(function(el){ el.style.animation=''; });
+    NV.blinkEls.forEach(function(el){ el.style.cssText='padding:10px 14px 10px'; });
     NV.blinkEls = [];
   },
 
   // Appelé quand l'utilisateur arrive sur MES PRESTAS
-  // Marque la visite — la sauvegarde du compteur se fait à la fermeture
+  // Sauvegarde IMMEDIATEMENT le compteur - seule solution fiable Android/iPhone
   updateCount: function(videos) {
     if (!NV.fbId) return;
-    NV.visitedThisSession = true;
-    NV.currentVideos = videos;
+    var key = 'nv_count_' + NV.fbId;
+    localStorage.setItem(key, String(videos.length));
+    console.log('NV.updateCount — compteur sauvé:'+videos.length);
     NV.hasNew = false;
+    NV.diff = 0;
     NV.stopBlink();
     NV.dismissBanner();
   },
 
-  // Appelé UNIQUEMENT à la fermeture si visitedThisSession
-  saveCount: function() {
-    if (!NV.fbId || !NV.visitedThisSession || !NV.currentVideos) return;
-    var key = 'nv_count_' + NV.fbId;
-    localStorage.setItem(key, String(NV.currentVideos.length));
-    console.log('NV.saveCount — compteur sauvé:'+NV.currentVideos.length);
-  }
+  // Garde saveCount pour compatibilité (ne fait rien de plus)
+  saveCount: function() {}
 };
 
 function nvCheckAtLaunch() {
