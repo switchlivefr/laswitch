@@ -1030,10 +1030,10 @@ var allSongs = [];
     localStorage.setItem('sw_newvid_seen_'+fbId, JSON.stringify(ids));
   };
 
-  // Appelé par nav('p-home') : affiche le banner si en attente
+  // Appelé par nav('p-home') ou par le fetch de fond : affiche le banner si en attente
   window._showNewVideosBannerIfNeeded = function() {
     if (_bannerDismissed || !_newVideosToHighlight.length) return;
-    if (_bannerPending || !_bannerShownThisLaunch) {
+    if (_bannerPending || _bannerShownThisLaunch) {
       _showBanner();
     }
   };
@@ -3613,11 +3613,12 @@ document.querySelector('.bnav').classList.add('nav-disabled');
           .then(function(data){
             var videos = data.videos || [];
             if (!videos.length) return;
-            // Stocker pour réutilisation dans MES PRESTAS (évite un double fetch)
-            var fakeMe = { id: swFbId, name: swName, first_name: swName.split(' ')[0] };
             window._pendingPrestas = { fbId: swFbId, videos: videos, cards: [] };
-            // Comparer avec les vidéos mémorisées → affiche banner si nouvelles
+            // Comparer avec les vidéos mémorisées
             checkNewVideos(swFbId, videos);
+            // Afficher le banner immédiatement si on est encore sur l'accueil
+            // (checkNewVideos a posé _bannerPending mais on est déjà sur p-home)
+            window._showNewVideosBannerIfNeeded && window._showNewVideosBannerIfNeeded();
           })
           .catch(function(){});
       })();
