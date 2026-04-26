@@ -3600,9 +3600,18 @@ function openResa(){window.open('https://www.proracecafe.com/reservation-pro-rac
 
 document.addEventListener('visibilitychange',function(){
   if(document.hidden){
+    // Page masquée (bascule vers autre app/onglet) : on stoppe l'animation CSS pour économiser
     NV.stopBlink();
-    // Sauver le compteur UNIQUEMENT si la personne a visité MES PRESTAS cette session
     NV.saveCount();
+  } else {
+    // Retour sur la page : relancer le clignotement si hasNew encore actif
+    if(NV.hasNew && NV.newYtIds.length){
+      var list = document.getElementById('prestas-list');
+      if(list){
+        var cards = Array.from(list.querySelectorAll('[data-ytid]'));
+        if(cards.length) NV.startBlink(cards);
+      }
+    }
   }
 });
 // Android : pagehide plus fiable que visibilitychange à la fermeture
