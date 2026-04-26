@@ -42,6 +42,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 @keyframes pIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes prcColFadeIn{from{opacity:0}to{opacity:1}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes newVideoCardBlink{0%,100%{background:#101828}50%{background:rgba(24,119,242,.32)}}
+@keyframes newVideoBannerFadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes titlepulse{0%,100%{opacity:.1}50%{opacity:1}}
 @keyframes hintpulse{0%,100%{color:var(--gold);opacity:.1}50%{color:var(--gold);opacity:1}}
 @keyframes copyMsgPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
@@ -323,6 +325,14 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 </style>
 </head>
 <body>
+<!-- BANNER NOUVELLES VIDÉOS — surimpression accueil -->
+<div id="new-videos-banner" onclick="dismissNewVideosBanner()" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0);pointer-events:none;align-items:center;justify-content:center">
+  <div id="new-videos-banner-msg" style="text-align:center;pointer-events:none">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;line-height:1.35">Tu as de nouvelles</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px;line-height:1.35">vidéos à découvrir</div>
+  </div>
+</div>
+
 <div id="fb-browser-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(30,20,0,.92);color:#f2c94c;font-family:'DM Sans',sans-serif;font-size:11px;padding:6px 14px;text-align:center;letter-spacing:0.3px">
   Pour une meilleure expérience → <b>trois points en haut</b> → <b>Ouvrir dans le navigateur</b>
   <span onclick="document.getElementById('fb-browser-banner').style.display='none'" style="margin-left:10px;opacity:0.6;cursor:pointer;font-size:14px">✕</span>
@@ -899,6 +909,135 @@ var _resaOff = false;
 var searchQuery = '';
 var allSongs = [];
 
+// ============================================================
+// SYSTÈME NOTIFICATION NOUVELLES VIDÉOS MES PRESTAS
+// ============================================================
+(function(){
+  var _newVidFbId = null;
+  var _newVideosToHighlight = [];
+  var _blinkTargets = null;
+  var _bannerDismissed = false;
+  var _bannerShownThisLaunch = false;
+
+  // Appelé depuis loadPrestas() après réception des vidéos
+  window.checkNewVideos = function(fbId, videos) {
+    if (!fbId || !videos || !videos.length) return;
+    _newVidFbId = fbId;
+    var seenKey    = 'sw_newvid_seen_'    + fbId;
+    var visitedKey = 'sw_newvid_visited_' + fbId;
+    var sessionKey = 'sw_newvid_session_' + fbId;
+    var currentIds = videos.map(function(v){ return v.youtube||''; }).filter(Boolean);
+    var seenRaw = localStorage.getItem(seenKey);
+    var seenIds = seenRaw ? (function(){ try{return JSON.parse(seenRaw);}catch(e){return null;} })() : null;
+    if (!seenIds) {
+      localStorage.setItem(seenKey, JSON.stringify(currentIds));
+      return;
+    }
+    var seenMap = {};
+    seenIds.forEach(function(id){ seenMap[id]=1; });
+    var newIds = currentIds.filter(function(id){ return !seenMap[id]; });
+    if (!newIds.length) { _newVideosToHighlight = []; return; }
+    _newVideosToHighlight = newIds;
+    var alreadyVisited = localStorage.getItem(visitedKey) === '1';
+    var sessionVisited = sessionStorage.getItem(sessionKey) === '1';
+    if (alreadyVisited && sessionVisited) { _newVideosToHighlight = []; return; }
+    if (!_bannerShownThisLaunch) {
+      _bannerShownThisLaunch = true;
+      if (currentPage === 'p-home') _showBanner();
+    }
+  };
+
+  function _showBanner() {
+    if (_bannerDismissed) return;
+    if (!_newVideosToHighlight.length) return;
+    var el = document.getElementById('new-videos-banner');
+    if (!el) return;
+    el.style.display = 'flex';
+    el.style.pointerEvents = 'auto';
+    var msg = document.getElementById('new-videos-banner-msg');
+    if (msg) { msg.style.animation='none'; void msg.offsetWidth; msg.style.animation='newVideoBannerFadeIn .5s ease forwards'; }
+    setTimeout(function(){
+      document.addEventListener('touchstart', _dismissOnTouch, {passive:true, capture:true});
+      document.addEventListener('click',      _dismissOnTouch, {capture:true});
+    }, 400);
+  }
+
+  function _dismissOnTouch() { window.dismissNewVideosBanner(); }
+
+  window.dismissNewVideosBanner = function() {
+    _bannerDismissed = true;
+    var el = document.getElementById('new-videos-banner');
+    if (el) { el.style.display='none'; el.style.pointerEvents='none'; }
+    document.removeEventListener('touchstart', _dismissOnTouch, {capture:true});
+    document.removeEventListener('click',      _dismissOnTouch, {capture:true});
+  };
+
+  window.startNewVideoBlink = function(cards, videos) {
+    window.stopNewVideoBlink();
+    if (!_newVideosToHighlight.length) return;
+    var newMap = {};
+    _newVideosToHighlight.forEach(function(id){ newMap[id]=1; });
+    var targets = [];
+    videos.forEach(function(v, i) {
+      if (newMap[v.youtube]) {
+        var card = cards[i];
+        if (card) { var info=card.querySelector('.presta-info'); if(info) targets.push(info); }
+      }
+    });
+    if (!targets.length) return;
+    targets.forEach(function(el){ el.style.animation='newVideoCardBlink 2s ease-in-out infinite'; });
+    _blinkTargets = targets;
+  };
+
+  window.stopNewVideoBlink = function() {
+    if (_blinkTargets && _blinkTargets.length) {
+      _blinkTargets.forEach(function(el){ el.style.animation=''; });
+    }
+    _blinkTargets = null;
+  };
+
+  window.markPrestasVisited = function() {
+    if (!_newVidFbId || !_newVideosToHighlight.length) return;
+    localStorage.setItem('sw_newvid_visited_'+_newVidFbId, '1');
+    sessionStorage.setItem('sw_newvid_session_'+_newVidFbId, '1');
+    window.stopNewVideoBlink();
+    _newVideosToHighlight = [];
+    _bannerDismissed = true;
+    window.dismissNewVideosBanner();
+  };
+
+  window.saveCurrentVideosAsSeen = function(fbId, videos) {
+    if (!fbId || !videos) return;
+    var ids = videos.map(function(v){ return v.youtube||''; }).filter(Boolean);
+    localStorage.setItem('sw_newvid_seen_'+fbId, JSON.stringify(ids));
+  };
+
+  window._showNewVideosBannerIfNeeded = function() {
+    if (!_newVideosToHighlight.length || _bannerDismissed) return;
+    _showBanner();
+  };
+
+  window._restartBlinkIfNeeded = function(cards, videos) {
+    if (!_newVideosToHighlight.length) return;
+    if (_newVidFbId && localStorage.getItem('sw_newvid_visited_'+_newVidFbId)==='1') return;
+    window.startNewVideoBlink(cards, videos);
+  };
+
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+      window.stopNewVideoBlink();
+    } else {
+      if (!_newVidFbId || !_newVideosToHighlight.length) return;
+      var alreadyVisited = localStorage.getItem('sw_newvid_visited_'+_newVidFbId)==='1';
+      var sessionVisited = sessionStorage.getItem('sw_newvid_session_'+_newVidFbId)==='1';
+      if (alreadyVisited && sessionVisited) return;
+      if (!_bannerDismissed && currentPage==='p-home') _showBanner();
+    }
+  });
+})();
+// ── FIN SYSTÈME NOUVELLES VIDÉOS ─────────────────────────────
+
+
 (function(){
   var ua = navigator.userAgent||'';
   if(ua.indexOf('FBAN')>-1||ua.indexOf('FBAV')>-1||ua.indexOf('FB_IAB')>-1||ua.indexOf('MessengerForiOS')>-1||ua.indexOf('Instagram')>-1){
@@ -948,7 +1087,21 @@ function nav(id,direction){
       setTimeout(function(){ne.style.transition='';ne.style.transform='';ne.classList.remove('sliding');ne.classList.add('active');},330);
     }else{ne.classList.add('active');}
   }
-  if(id==='p-prestas'){checkFbSession();hideHint();}
+  if(id==='p-prestas'){
+    checkFbSession();
+    hideHint();
+    // Reprendre le clignotement si vidéos pendantes et pas encore visité
+    if(window._pendingPrestas){
+      var _pp=window._pendingPrestas;
+      var _vk='sw_newvid_visited_'+_pp.fbId;
+      if(localStorage.getItem(_vk)!=='1'){
+        window._restartBlinkIfNeeded(_pp.cards,_pp.videos);
+        // Marquer visité et sauvegarder la liste vue
+        markPrestasVisited();
+        saveCurrentVideosAsSeen(_pp.fbId,_pp.videos);
+      }
+    }
+  }
   if(oldId==='p-prestas'&&id!=='p-prestas'){stopPrestasVideo();if(typeof _swPendingPollTimer!=='undefined'&&_swPendingPollTimer){clearInterval(_swPendingPollTimer);_swPendingPollTimer=null;}}
   if(id==='p-switch'){renderSwitch();showHint();
     var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
@@ -987,7 +1140,12 @@ function nav(id,direction){
     setTimeout(initScrollHints,400);
   }
   if(id==='p-resa'){renderInfo();hideHint();var shdI=document.getElementById('scroll-hint-down');if(shdI){shdI.classList.remove('visible');shdI.style.bottom='calc(var(--nh) + 112px)';}setTimeout(initScrollHints,400);}
-  if(id==='p-home'){hideHint();hideScrollHints();}
+  if(id==='p-home'){
+    hideHint();
+    hideScrollHints();
+    // Afficher banner nouvelles vidéos si pertinent (et pas encore dismissé)
+    window._showNewVideosBannerIfNeeded && window._showNewVideosBannerIfNeeded();
+  }
   if(id!=='p-rules'){var moreBtn=document.getElementById('rules-more-btn');if(moreBtn)moreBtn.style.display='none';}
   // Bandeau répertoire : visible seulement sur p-switch si pas encore dismissed
   (function(){
@@ -3499,6 +3657,8 @@ function fbLogout() {
   localStorage.removeItem('sw_name');
   localStorage.removeItem('sw_fbId');
   localStorage.removeItem('sw_loggedIn');
+  window._pendingPrestas = null;
+  window.stopNewVideoBlink && window.stopNewVideoBlink();
   _swAccHasPinCache = {};
   _prestasUnlocked = false;
   window._swLoaded = false;
@@ -3628,7 +3788,14 @@ function loadPrestas(me) {
         loadIdsFbk();
       }
 
-      renderVideoList(videos);
+      renderVideoList(videos, function(cards){
+        // Vérifier nouvelles vidéos (compare avec les ytIds mémorisés)
+        checkNewVideos(me.id, videos);
+        // Démarrer le clignotement si nouvelles vidéos et pas encore visitées
+        window._restartBlinkIfNeeded(cards, videos);
+        // Mémoriser pour reprise au retour sur MES PRESTAS
+        window._pendingPrestas = { fbId: me.id, videos: videos, cards: cards };
+      });
 
       document.getElementById('prestas-loggedin').style.display = 'flex';
       document.getElementById('prestas-loggedin').style.flexDirection = 'column';
@@ -3666,7 +3833,7 @@ function stopPrestasVideo() {
   }
 }
 
-function renderVideoList(videos) {
+function renderVideoList(videos, onDone) {
   var list = document.getElementById('prestas-list');
   list.innerHTML = '';
   var cards = [];
@@ -3746,6 +3913,7 @@ function renderVideoList(videos) {
   // Titres manquants (mode admin) : chargement progressif côté client
   var needTitles = videos.some(function(v) { return !v.titre; });
   if (needTitles) { loadTitlesProgressively(videos, cards); }
+  if (typeof onDone === 'function') onDone(cards);
 }
 
 // Chargement progressif des titres YouTube côté client (mode admin)
