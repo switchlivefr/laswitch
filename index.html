@@ -325,10 +325,10 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
 </style>
 </head>
 <body>
-<div id="nv-banner" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(8,8,16,.92);pointer-events:none;align-items:center;justify-content:center">
+<div id="nv-banner" style="display:none;position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:100%;z-index:9998;background:rgba(8,8,16,.92);pointer-events:none;align-items:center;justify-content:center">
   <div style="text-align:center;pointer-events:none;animation:newVidBannerIn .5s ease forwards">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--white);letter-spacing:2px;line-height:1.35">Tu as de nouvelles</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--white);letter-spacing:2px;line-height:1.35">vidéos à découvrir</div>
+    <div id="nv-banner-l1" style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--white);letter-spacing:2px;line-height:1.35"></div>
+    <div id="nv-banner-l2" style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--white);letter-spacing:2px;line-height:1.35"></div>
   </div>
 </div>
 <div id="fb-browser-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(30,20,0,.92);color:#f2c94c;font-family:'DM Sans',sans-serif;font-size:11px;padding:6px 14px;text-align:center;letter-spacing:0.3px">
@@ -921,6 +921,8 @@ var NV = {
   visitedThisSession: false,  // true si l'utilisateur est allé sur MES PRESTAS
   currentVideos: null,        // vidéos actuelles, pour sauvegarde à la fermeture
 
+  diff: 0,  // différentiel current - saved
+
   // Appelé au lancement : compare nombre actuel vs nombre mémorisé
   check: function(fbId, videos) {
     NV.fbId = fbId;
@@ -931,13 +933,27 @@ var NV = {
       // Première fois : mémoriser et ne rien afficher
       localStorage.setItem(key, String(videos.length));
       NV.hasNew = false;
+      NV.diff = 0;
       return;
     }
-    NV.hasNew = (videos.length > parseInt(saved, 10));
-    console.log('NV.check — hasNew='+NV.hasNew);
+    NV.diff = videos.length - parseInt(saved, 10);
+    NV.hasNew = (NV.diff > 0);
+    console.log('NV.check — hasNew='+NV.hasNew+' diff='+NV.diff);
   },
 
-  showBanner: function() {
+  showBanner: function(diff) {
+    if (diff <= 0) return;
+    var l1 = document.getElementById('nv-banner-l1');
+    var l2 = document.getElementById('nv-banner-l2');
+    if (l1 && l2) {
+      if (diff === 1) {
+        l1.textContent = 'TU AS 1 NOUVELLE';
+        l2.textContent = 'VIDÉO À DÉCOUVRIR';
+      } else {
+        l1.textContent = 'TU AS ' + diff + ' NOUVELLES';
+        l2.textContent = 'VIDÉOS À DÉCOUVRIR';
+      }
+    }
     var el = document.getElementById('nv-banner');
     if (!el) return;
     el.style.display = 'flex';
@@ -964,11 +980,9 @@ var NV = {
     var newCount = videos.length - saved;
     if (newCount <= 0) return;
     for (var i = 0; i < newCount && i < cards.length; i++) {
-      var info = cards[i].querySelector('.presta-info');
-      if (info) {
-        info.style.animation = 'newVidCardBlink 2s ease-in-out infinite';
-        NV.blinkEls.push(info);
-      }
+      // Cibler la card entière (pas .presta-info dont cssText inline bloquerait l'animation)
+      cards[i].style.animation = 'newVidCardBlink 2s ease-in-out infinite';
+      NV.blinkEls.push(cards[i]);
     }
   },
 
@@ -1012,7 +1026,7 @@ function nvCheckAtLaunch() {
       window._nvVideos = videos;
       NV.check(fbId, videos);
       if (NV.hasNew && currentPage === 'p-home') {
-        NV.showBanner();
+        NV.showBanner(NV.diff);
       }
     })
     .catch(function(e){ console.log('nvCheckAtLaunch erreur:'+e); });
@@ -3463,6 +3477,11 @@ document.addEventListener('visibilitychange',function(){
     // Sauver le compteur UNIQUEMENT si la personne a visité MES PRESTAS cette session
     NV.saveCount();
   }
+});
+// Android : pagehide plus fiable que visibilitychange à la fermeture
+window.addEventListener('pagehide',function(){
+  NV.stopBlink();
+  NV.saveCount();
 });
 
 
