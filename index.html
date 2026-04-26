@@ -3770,18 +3770,13 @@ function loadPrestas(me) {
       }
 
       renderVideoList(videos, function(cards){
-        // Nouvelles vidéos détectées au lancement → clignoter puis marquer vu
+        // Clignoter uniquement si nouvelles vidéos détectées au lancement
         if (NV.newIds.length && NV.fbId === me.id) {
           NV.startBlink(cards, videos);
+          // Mettre à jour nv_seen seulement APRES que l'utilisateur a vu le clignotement
           setTimeout(function(){ NV.markVisited(videos); }, 4000);
-        } else {
-          // Pas de nouvelles → initialiser la clé seulement si elle n'existe pas encore
-          var seenKey = 'nv_seen_' + me.id;
-          if (!localStorage.getItem(seenKey)) {
-            var urls = videos.map(function(v){ return v.youtube||''; }).filter(Boolean);
-            localStorage.setItem(seenKey, JSON.stringify(urls));
-          }
         }
+        // Dans tous les autres cas : ne rien toucher à nv_seen
       });
 
       document.getElementById('prestas-loggedin').style.display = 'flex';
