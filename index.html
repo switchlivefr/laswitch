@@ -921,42 +921,66 @@ var NV = {
   visitedThisSession: false,  // true si l'utilisateur est allé sur MES PRESTAS
   currentVideos: null,        // vidéos actuelles, pour sauvegarde à la fermeture
   diff: 0,                    // différentiel current - saved
-  newYtIds: [],               // ytIds des vidéos nouvelles (inconnues au dernier enregistrement)
+  newYtIds: [],               // ytIds des vidéos nouvelles (inconnues au dernier snapshot)
 
-  // Appelé au lancement : compare nombre actuel vs nombre mémorisé
-  // ET calcule les ytIds exacts des nouvelles vidéos pour le clignotement précis
+  // Snapshot atomique : {count, ids} toujours ensemble dans une seule clé
+  // → impossible d'avoir count et ids désynchronisés
+  _snapKey: function(fbId) { return 'nv_snap_' + fbId; },
+
+  _saveSnapshot: function(fbId, videos) {
+    var ytIds = videos.map(function(v) { return extractYtId(v.youtube); }).filter(Boolean);
+    var snap = { count: videos.length, ids: ytIds };
+    localStorage.setItem(NV._snapKey(fbId), JSON.stringify(snap));
+    // Maintenir nv_count_ en parallèle pour compatibilité avec l'affichage du message d'accueil
+    localStorage.setItem('nv_count_' + fbId, String(videos.length));
+    console.log('NV._saveSnapshot — count='+videos.length+' ids='+ytIds.length);
+    return ytIds;
+  },
+
+  // Appelé au lancement : compare snapshot sauvegardé vs état actuel
   check: function(fbId, videos) {
     NV.fbId = fbId;
-    var keyCount = 'nv_count_' + fbId;
-    var keyIds   = 'nv_ids_'   + fbId;
-    var saved      = localStorage.getItem(keyCount);
-    var savedIds   = localStorage.getItem(keyIds);
-
-    // Extraire les ytIds de la liste actuelle
+    var snapRaw = localStorage.getItem(NV._snapKey(fbId));
     var currentYtIds = videos.map(function(v) { return extractYtId(v.youtube); }).filter(Boolean);
 
-    console.log('NV.check — saved='+saved+' current='+videos.length+' savedIds='+(savedIds ? JSON.parse(savedIds).length+'ids' : 'null'));
+    console.log('NV.check — snapRaw='+(snapRaw ? 'présent' : 'null')+' current='+videos.length);
 
-    if (saved === null) {
-      // Première fois : mémoriser le compteur ET les ytIds → ne rien afficher
-      localStorage.setItem(keyCount, String(videos.length));
-      localStorage.setItem(keyIds,   JSON.stringify(currentYtIds));
+    if (!snapRaw) {
+      // Première fois ou snapshot corrompu : initialiser et ne rien afficher
+      NV._saveSnapshot(fbId, videos);
       NV.hasNew   = false;
       NV.diff     = 0;
       NV.newYtIds = [];
-      console.log('NV.check — 1ère utilisation, '+currentYtIds.length+' ytIds sauvegardés');
+      console.log('NV.check — 1ère utilisation, snapshot initialisé avec '+videos.length+' vidéos');
       return;
     }
 
-    NV.diff   = videos.length - parseInt(saved, 10);
+    var snap;
+    try { snap = JSON.parse(snapRaw); } catch(e) {
+      // JSON corrompu → réinitialiser
+      NV._saveSnapshot(fbId, videos);
+      NV.hasNew = false; NV.diff = 0; NV.newYtIds = [];
+      console.log('NV.check — snapshot corrompu, réinitialisé');
+      return;
+    }
+
+    var savedCount = snap.count || 0;
+    var savedIds   = snap.ids   || [];
+
+    NV.diff   = videos.length - savedCount;
     NV.hasNew = (NV.diff > 0);
 
-    // Calculer les ytIds réellement nouveaux (absents des ids sauvegardés)
-    var knownIds = savedIds ? JSON.parse(savedIds) : [];
-    NV.newYtIds = currentYtIds.filter(function(id) { return knownIds.indexOf(id) === -1; });
+    // Nouvelles vidéos = ytIds actuels absents du snapshot (fonctionne même si insertion à date ancienne)
+    NV.newYtIds = currentYtIds.filter(function(id) { return savedIds.indexOf(id) === -1; });
+
+    // Cohérence : si diff > 0 mais newYtIds vide (désync ancienne clé), fallback sur les N premières inconnues
+    if (NV.hasNew && NV.newYtIds.length === 0) {
+      NV.newYtIds = currentYtIds.slice(0, NV.diff);
+      console.log('NV.check — FALLBACK ytIds: '+NV.newYtIds.join(','));
+    }
 
     console.log('NV.check — hasNew='+NV.hasNew+' diff='+NV.diff+' newYtIds=['+NV.newYtIds.join(',')+']');
-    console.log('NV.check — knownIds count='+knownIds.length+' currentYtIds count='+currentYtIds.length);
+    console.log('NV.check — savedCount='+savedCount+' savedIds='+savedIds.length+' currentIds='+currentYtIds.length);
   },
 
   showBanner: function(diff) {
@@ -1004,15 +1028,11 @@ var NV = {
   },
 
   // Appelé quand l'utilisateur arrive sur MES PRESTAS
-  // Sauvegarde IMMEDIATEMENT le compteur ET les ytIds — seule solution fiable Android/iPhone
+  // Sauvegarde IMMEDIATEMENT le snapshot atomique — seule solution fiable Android/iPhone
   updateCount: function(videos) {
     if (!NV.fbId) return;
-    var keyCount = 'nv_count_' + NV.fbId;
-    var keyIds   = 'nv_ids_'   + NV.fbId;
-    var currentYtIds = videos.map(function(v) { return extractYtId(v.youtube); }).filter(Boolean);
-    localStorage.setItem(keyCount, String(videos.length));
-    localStorage.setItem(keyIds,   JSON.stringify(currentYtIds));
-    console.log('NV.updateCount — compteur sauvé:'+videos.length+' ytIds sauvés:'+currentYtIds.length);
+    NV._saveSnapshot(NV.fbId, videos);
+    console.log('NV.updateCount — snapshot sauvé: '+videos.length+' vidéos');
     NV.hasNew   = false;
     NV.diff     = 0;
     NV.newYtIds = [];
@@ -3792,15 +3812,11 @@ function loadPrestas(me) {
       renderVideoList(videos, function(cards){
         if (NV.hasNew) {
           NV.startBlink(cards);
-          // Sauver le compteur ET les ytIds sans stopper le clignotement
+          // Sauver le snapshot atomique sans stopper le clignotement
           if (NV.fbId) {
-            var keyCount = 'nv_count_' + NV.fbId;
-            var keyIds   = 'nv_ids_'   + NV.fbId;
-            var currentYtIds = videos.map(function(v) { return extractYtId(v.youtube); }).filter(Boolean);
-            localStorage.setItem(keyCount, String(videos.length));
-            localStorage.setItem(keyIds,   JSON.stringify(currentYtIds));
-            console.log('loadPrestas — compteur+ytIds sauvés après startBlink ('+videos.length+' vidéos, '+currentYtIds.length+' ytIds)');
+            NV._saveSnapshot(NV.fbId, videos);
             NV.diff = 0;
+            console.log('loadPrestas — snapshot sauvé après startBlink ('+videos.length+' vidéos)');
           }
         } else {
           NV.updateCount(videos);
