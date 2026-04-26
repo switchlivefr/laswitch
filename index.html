@@ -918,6 +918,7 @@ var allSongs = [];
   var _blinkTargets = null;
   var _bannerDismissed = false;
   var _bannerShownThisLaunch = false;
+  var _bannerPending = false; // true = nouvelles vidéos détectées, banner en attente du retour sur accueil
 
   // Appelé depuis loadPrestas() après réception des vidéos
   window.checkNewVideos = function(fbId, videos) {
@@ -929,6 +930,7 @@ var allSongs = [];
     var currentIds = videos.map(function(v){ return v.youtube||''; }).filter(Boolean);
     var seenRaw = localStorage.getItem(seenKey);
     var seenIds = seenRaw ? (function(){ try{return JSON.parse(seenRaw);}catch(e){return null;} })() : null;
+    // Première connexion ever → initialiser silencieusement
     if (!seenIds) {
       localStorage.setItem(seenKey, JSON.stringify(currentIds));
       return;
@@ -936,20 +938,33 @@ var allSongs = [];
     var seenMap = {};
     seenIds.forEach(function(id){ seenMap[id]=1; });
     var newIds = currentIds.filter(function(id){ return !seenMap[id]; });
+    // Pas de nouvelles vidéos
     if (!newIds.length) { _newVideosToHighlight = []; return; }
+
     _newVideosToHighlight = newIds;
+
+    // Déjà vu pendant cette session → silence
     var alreadyVisited = localStorage.getItem(visitedKey) === '1';
     var sessionVisited = sessionStorage.getItem(sessionKey) === '1';
     if (alreadyVisited && sessionVisited) { _newVideosToHighlight = []; return; }
+
+    // Nouvelles vidéos détectées !
+    // Si on est sur l'accueil → afficher immédiatement
+    // Sinon → mettre en attente, le banner s'affichera au retour sur l'accueil
     if (!_bannerShownThisLaunch) {
       _bannerShownThisLaunch = true;
-      if (currentPage === 'p-home') _showBanner();
+      if (currentPage === 'p-home') {
+        _showBanner();
+      } else {
+        _bannerPending = true; // sera déclenché par nav('p-home')
+      }
     }
   };
 
   function _showBanner() {
     if (_bannerDismissed) return;
     if (!_newVideosToHighlight.length) return;
+    _bannerPending = false;
     var el = document.getElementById('new-videos-banner');
     if (!el) return;
     el.style.display = 'flex';
@@ -966,6 +981,7 @@ var allSongs = [];
 
   window.dismissNewVideosBanner = function() {
     _bannerDismissed = true;
+    _bannerPending = false;
     var el = document.getElementById('new-videos-banner');
     if (el) { el.style.display='none'; el.style.pointerEvents='none'; }
     document.removeEventListener('touchstart', _dismissOnTouch, {capture:true});
@@ -996,13 +1012,15 @@ var allSongs = [];
     _blinkTargets = null;
   };
 
+  // Appelé quand l'utilisateur arrive sur MES PRESTAS ET a vu les nouvelles vidéos
   window.markPrestasVisited = function() {
-    if (!_newVidFbId || !_newVideosToHighlight.length) return;
+    if (!_newVidFbId) return;
     localStorage.setItem('sw_newvid_visited_'+_newVidFbId, '1');
     sessionStorage.setItem('sw_newvid_session_'+_newVidFbId, '1');
     window.stopNewVideoBlink();
     _newVideosToHighlight = [];
     _bannerDismissed = true;
+    _bannerPending = false;
     window.dismissNewVideosBanner();
   };
 
@@ -1012,15 +1030,24 @@ var allSongs = [];
     localStorage.setItem('sw_newvid_seen_'+fbId, JSON.stringify(ids));
   };
 
+  // Appelé par nav('p-home') : affiche le banner si en attente
   window._showNewVideosBannerIfNeeded = function() {
-    if (!_newVideosToHighlight.length || _bannerDismissed) return;
-    _showBanner();
+    if (_bannerDismissed || !_newVideosToHighlight.length) return;
+    if (_bannerPending || !_bannerShownThisLaunch) {
+      _showBanner();
+    }
   };
 
-  window._restartBlinkIfNeeded = function(cards, videos) {
+  // Appelé par nav('p-prestas') : démarre le clignotement SANS marquer visité
+  // Le marquage se fait seulement après (dans un setTimeout) pour laisser le clignotement démarrer
+  window._startBlinkAndScheduleMark = function(cards, videos) {
     if (!_newVideosToHighlight.length) return;
-    if (_newVidFbId && localStorage.getItem('sw_newvid_visited_'+_newVidFbId)==='1') return;
     window.startNewVideoBlink(cards, videos);
+    // Marquer visité après 800ms (le clignotement est bien visible avant d'être stoppé)
+    setTimeout(function(){
+      markPrestasVisited();
+      saveCurrentVideosAsSeen(videos[0] ? _newVidFbId : null, videos);
+    }, 800);
   };
 
   document.addEventListener('visibilitychange', function() {
@@ -1036,6 +1063,7 @@ var allSongs = [];
   });
 })();
 // ── FIN SYSTÈME NOUVELLES VIDÉOS ─────────────────────────────
+
 
 
 (function(){
@@ -1090,15 +1118,12 @@ function nav(id,direction){
   if(id==='p-prestas'){
     checkFbSession();
     hideHint();
-    // Reprendre le clignotement si vidéos pendantes et pas encore visité
+    // Démarrer le clignotement si nouvelles vidéos détectées, puis marquer visité
     if(window._pendingPrestas){
       var _pp=window._pendingPrestas;
       var _vk='sw_newvid_visited_'+_pp.fbId;
       if(localStorage.getItem(_vk)!=='1'){
-        window._restartBlinkIfNeeded(_pp.cards,_pp.videos);
-        // Marquer visité et sauvegarder la liste vue
-        markPrestasVisited();
-        saveCurrentVideosAsSeen(_pp.fbId,_pp.videos);
+        window._startBlinkAndScheduleMark(_pp.cards,_pp.videos);
       }
     }
   }
@@ -3570,6 +3595,32 @@ document.querySelector('.bnav').classList.add('nav-disabled');
         },500);
       },1500);
       hideLoader();
+      // ── Vérification silencieuse nouvelles vidéos au lancement ──
+      // Si l'utilisateur est déjà connecté (sw_loggedIn=1), on fetch ses vidéos
+      // en arrière-plan pour détecter d'éventuelles nouvelles vidéos et afficher
+      // le banner sur l'accueil sans attendre qu'il aille sur MES PRESTAS.
+      (function(){
+        if (_adminMode) return;
+        var swLoggedIn = localStorage.getItem('sw_loggedIn');
+        var swName     = localStorage.getItem('sw_name');
+        var swFbId     = localStorage.getItem('sw_fbId');
+        if (swLoggedIn !== '1' || !swName || !swFbId) return;
+        // Ne pas refaire si les vidéos sont déjà chargées (navigation intra-session)
+        if (window._pendingPrestas) return;
+        var prenom = swName.toLowerCase();
+        fetch('/api?action=getVideos&fbid=' + encodeURIComponent(swFbId) + '&nom=' + encodeURIComponent(prenom) + '&fullname=' + encodeURIComponent(swName.toLowerCase()))
+          .then(function(r){ return r.json(); })
+          .then(function(data){
+            var videos = data.videos || [];
+            if (!videos.length) return;
+            // Stocker pour réutilisation dans MES PRESTAS (évite un double fetch)
+            var fakeMe = { id: swFbId, name: swName, first_name: swName.split(' ')[0] };
+            window._pendingPrestas = { fbId: swFbId, videos: videos, cards: [] };
+            // Comparer avec les vidéos mémorisées → affiche banner si nouvelles
+            checkNewVideos(swFbId, videos);
+          })
+          .catch(function(){});
+      })();
     })
     .catch(function(){
       startWeakConnectionUI();
@@ -3790,11 +3841,17 @@ function loadPrestas(me) {
 
       renderVideoList(videos, function(cards){
         // Vérifier nouvelles vidéos (compare avec les ytIds mémorisés)
+        // (si déjà fait par le fetch de fond au lancement, checkNewVideos ne re-déclenche pas le banner)
         checkNewVideos(me.id, videos);
-        // Démarrer le clignotement si nouvelles vidéos et pas encore visitées
-        window._restartBlinkIfNeeded(cards, videos);
-        // Mémoriser pour reprise au retour sur MES PRESTAS
+        // Mémoriser / mettre à jour avec les vraies cards DOM
         window._pendingPrestas = { fbId: me.id, videos: videos, cards: cards };
+        // Si on est déjà sur MES PRESTAS au moment du chargement → démarrer le clignotement
+        if (currentPage === 'p-prestas') {
+          var vk = 'sw_newvid_visited_' + me.id;
+          if (localStorage.getItem(vk) !== '1') {
+            window._startBlinkAndScheduleMark(cards, videos);
+          }
+        }
       });
 
       document.getElementById('prestas-loggedin').style.display = 'flex';
