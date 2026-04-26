@@ -3892,12 +3892,12 @@ function loadPrestas(me) {
 
       renderVideoList(videos, function(cards){
         if (NV.fbId) NV.checkBlink(NV.fbId, videos);
-        if (NV.hasNew) {
+        // Clignotement indépendant de hasNew — basé uniquement sur newYtIds
+        if (NV.newYtIds.length > 0) {
           NV.startBlink(cards);
           NV.saveBlink(NV.fbId, videos);
-          // Mettre à jour nv_count_ sans appeler stopBlink
           localStorage.setItem('nv_count_' + NV.fbId, String(videos.length));
-          console.log('loadPrestas — nv_count_ sauvé:'+videos.length+' (clignotement maintenu)');
+          console.log('loadPrestas — blink actif, nv_count_ sauvé:'+videos.length);
         } else {
           NV.updateCount(videos);
         }
