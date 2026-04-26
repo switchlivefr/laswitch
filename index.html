@@ -983,10 +983,22 @@ var NV = {
 
     NV.hasNew = (NV.diff > 0);
 
-    // Nouvelles vidéos = ytIds actuels absents du snapshot (fonctionne même si insertion à date ancienne)
-    NV.newYtIds = currentYtIds.filter(function(id) { return savedIds.indexOf(id) === -1; });
+    // Nouvelles vidéos : comparaison par occurrences pour gérer les doublons de ytId
+    // Ex: si savedIds a 2x "abc" et current a 3x "abc" → 1 nouvelle occurrence de "abc"
+    var savedCounts = {};
+    savedIds.forEach(function(id) { savedCounts[id] = (savedCounts[id] || 0) + 1; });
+    var remaining = {};
+    for (var k in savedCounts) remaining[k] = savedCounts[k];
+    NV.newYtIds = [];
+    currentYtIds.forEach(function(id) {
+      if (remaining[id] && remaining[id] > 0) {
+        remaining[id]--;  // consommer une occurrence connue
+      } else {
+        NV.newYtIds.push(id);  // occurrence en excès = nouvelle
+      }
+    });
 
-    // Cohérence : si diff > 0 mais newYtIds vide (désync ancienne clé), fallback sur les N premières inconnues
+    // Cohérence : si diff > 0 mais newYtIds vide (désync snapshot), fallback sur les N premières
     if (NV.hasNew && NV.newYtIds.length === 0) {
       NV.newYtIds = currentYtIds.slice(0, NV.diff);
       console.log('NV.check — FALLBACK ytIds: '+NV.newYtIds.join(','));
