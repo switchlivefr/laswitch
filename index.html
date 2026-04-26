@@ -969,6 +969,18 @@ var NV = {
     var savedIds   = snap.ids   || [];
 
     NV.diff   = videos.length - savedCount;
+
+    // Diff négatif : recalage silencieux (vidéo supprimée côté admin, etc.)
+    // On met le snapshot à jour sans rien afficher ni clignoter
+    if (NV.diff < 0) {
+      NV._saveSnapshot(fbId, videos);
+      NV.hasNew   = false;
+      NV.diff     = 0;
+      NV.newYtIds = [];
+      console.log('NV.check — diff négatif, recalage silencieux → snapshot mis à jour avec '+videos.length+' vidéos');
+      return;
+    }
+
     NV.hasNew = (NV.diff > 0);
 
     // Nouvelles vidéos = ytIds actuels absents du snapshot (fonctionne même si insertion à date ancienne)
