@@ -950,12 +950,10 @@ var NV = {
 
     console.log('NV.check — snapRaw='+(snapRaw ? 'présent' : 'null')+' current='+videos.length+' seenDate='+seenDate+' today='+today);
 
+    // Pas de snapshot : première utilisation
     if (!snapRaw) {
-      // Première fois ou snapshot corrompu : initialiser et ne rien afficher
       NV._saveSnapshot(fbId, videos);
-      NV.hasNew   = false;
-      NV.diff     = 0;
-      NV.newYtIds = [];
+      NV.hasNew = false; NV.diff = 0; NV.newYtIds = [];
       console.log('NV.check — 1ère utilisation, snapshot initialisé avec '+videos.length+' vidéos');
       return;
     }
@@ -968,71 +966,50 @@ var NV = {
       return;
     }
 
-    // Cas : consulté aujourd'hui → restaurer le clignotement depuis les newYtIds sauvegardés
+    var savedCount = snap.count || 0;
+    var savedIds   = snap.ids   || [];
+
+    // Fonction utilitaire : calcule les ytIds en excès dans current vs une liste de référence
+    function calcNewIds(refIds, currIds) {
+      var counts = {};
+      refIds.forEach(function(id){ counts[id] = (counts[id]||0)+1; });
+      var news = [];
+      currIds.forEach(function(id){
+        if(counts[id] && counts[id] > 0){ counts[id]--; }
+        else { news.push(id); }
+      });
+      return news;
+    }
+
+    // Cas : consulté aujourd'hui → restaurer les newYtIds sauvegardés + détecter d'éventuelles nouvelles vidéos ajoutées depuis
     if (seenDate === today && snap.newYtIds && snap.newYtIds.length) {
+      var restoredIds = snap.newYtIds.slice();
+      // Chercher des vidéos supplémentaires ajoutées depuis le dernier snapshot
+      var extraNew = calcNewIds(savedIds, currentYtIds);
+      // Fusionner sans doublons
+      extraNew.forEach(function(id){ if(restoredIds.indexOf(id)===-1) restoredIds.push(id); });
       NV.hasNew   = true;
-      NV.diff     = 0;  // diff est 0 (snapshot déjà à jour) mais on clignote quand même
-      NV.newYtIds = snap.newYtIds;
-      console.log('NV.check — consulté aujourd\'hui, clignotement restauré newYtIds=['+NV.newYtIds.join(',')+']');
+      NV.diff     = extraNew.length;  // pour le banner : nb vraiment nouveaux ce lancement
+      NV.newYtIds = restoredIds;
+      console.log('NV.check — consulté aujourd\'hui, newYtIds=['+restoredIds.join(',')+'] extraNew=['+extraNew.join(',')+']');
       return;
     }
 
-    var savedCount = snap.count || 0;
-    var savedIds   = snap.ids   || [];
+    // Cas normal : calculer diff et newYtIds
+    NV.diff = videos.length - savedCount;
 
-    if (!snapRaw) {
-      // Première fois ou snapshot corrompu : initialiser et ne rien afficher
-      NV._saveSnapshot(fbId, videos);
-      NV.hasNew   = false;
-      NV.diff     = 0;
-      NV.newYtIds = [];
-      console.log('NV.check — 1ère utilisation, snapshot initialisé avec '+videos.length+' vidéos');
-      return;
-    }
-
-    var snap;
-    try { snap = JSON.parse(snapRaw); } catch(e) {
-      // JSON corrompu → réinitialiser
-      NV._saveSnapshot(fbId, videos);
-      NV.hasNew = false; NV.diff = 0; NV.newYtIds = [];
-      console.log('NV.check — snapshot corrompu, réinitialisé');
-      return;
-    }
-
-    var savedCount = snap.count || 0;
-    var savedIds   = snap.ids   || [];
-
-    NV.diff   = videos.length - savedCount;
-
-    // Diff négatif : recalage silencieux (vidéo supprimée côté admin, etc.)
-    // On met le snapshot à jour sans rien afficher ni clignoter
+    // Diff négatif : recalage silencieux
     if (NV.diff < 0) {
       NV._saveSnapshot(fbId, videos);
-      NV.hasNew   = false;
-      NV.diff     = 0;
-      NV.newYtIds = [];
-      console.log('NV.check — diff négatif, recalage silencieux → snapshot mis à jour avec '+videos.length+' vidéos');
+      NV.hasNew = false; NV.diff = 0; NV.newYtIds = [];
+      console.log('NV.check — diff négatif, recalage silencieux → '+videos.length+' vidéos');
       return;
     }
 
-    NV.hasNew = (NV.diff > 0);
+    NV.hasNew   = (NV.diff > 0);
+    NV.newYtIds = calcNewIds(savedIds, currentYtIds);
 
-    // Nouvelles vidéos : comparaison par occurrences pour gérer les doublons de ytId
-    // Ex: si savedIds a 2x "abc" et current a 3x "abc" → 1 nouvelle occurrence de "abc"
-    var savedCounts = {};
-    savedIds.forEach(function(id) { savedCounts[id] = (savedCounts[id] || 0) + 1; });
-    var remaining = {};
-    for (var k in savedCounts) remaining[k] = savedCounts[k];
-    NV.newYtIds = [];
-    currentYtIds.forEach(function(id) {
-      if (remaining[id] && remaining[id] > 0) {
-        remaining[id]--;  // consommer une occurrence connue
-      } else {
-        NV.newYtIds.push(id);  // occurrence en excès = nouvelle
-      }
-    });
-
-    // Cohérence : si diff > 0 mais newYtIds vide (désync snapshot), fallback sur les N premières
+    // Fallback si désync : diff > 0 mais newYtIds vide
     if (NV.hasNew && NV.newYtIds.length === 0) {
       NV.newYtIds = currentYtIds.slice(0, NV.diff);
       console.log('NV.check — FALLBACK ytIds: '+NV.newYtIds.join(','));
