@@ -4023,9 +4023,11 @@ function renderVideoList(videos, onDone) {
       info.appendChild(titreTopEl);
     }
 
-    // ── Miniature YouTube cliquable ──
+    card.appendChild(info);
+
+    // ── Miniature YouTube cliquable — bord à bord, coins carrés ──
     var thumb = document.createElement('div');
-    thumb.style.cssText = 'position:relative;aspect-ratio:16/9;background:#000;cursor:pointer';
+    thumb.style.cssText = 'position:relative;aspect-ratio:16/9;background:#000;cursor:pointer;width:100%';
     if (ytId) {
       var img = document.createElement('img');
       img.src = 'https://img.youtube.com/vi/' + ytId + '/mqdefault.jpg';
@@ -4111,20 +4113,24 @@ function renderVideoList(videos, onDone) {
         }
       };
     })(ytId, thumb);
-    info.appendChild(thumb);
+    card.appendChild(thumb);
 
-    // ── Phrase (col H) sous la vidéo — +30% si moins de 30 caractères ──
+    // ── Bloc infos sous la vidéo (phrase + lieu/date) ──
+    var info2 = document.createElement('div');
+    info2.style.cssText = 'padding:8px 14px 10px';
+
+    // ── Phrase (col H) sous la vidéo — plus gros si moins de 45 caractères ──
     if (v.phrase2) {
       var phraseEl = document.createElement('div');
       var phraseFontSize = v.phrase2.length < 45 ? '15.6px' : '12px';
-      phraseEl.style.cssText = 'font-size:' + phraseFontSize + ';font-weight:600;color:var(--white);line-height:1.4;margin-top:8px;text-align:center';
+      phraseEl.style.cssText = 'font-size:' + phraseFontSize + ';font-weight:600;color:var(--white);line-height:1.4;margin-bottom:6px;text-align:center';
       phraseEl.textContent = v.phrase2;
-      info.appendChild(phraseEl);
+      info2.appendChild(phraseEl);
     }
 
     // ── Ligne lieu (gauche) + date (droite) ──
     var bottomRow = document.createElement('div');
-    bottomRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-top:6px;margin-bottom:2px';
+    bottomRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between';
     if (v.lieu) {
       var lieuEl = document.createElement('div');
       lieuEl.style.cssText = 'font-size:12px;font-weight:600;color:#f2e68a;letter-spacing:0.2px';
@@ -4139,9 +4145,9 @@ function renderVideoList(videos, onDone) {
       dateEl.textContent = v.date;
       bottomRow.appendChild(dateEl);
     }
-    info.appendChild(bottomRow);
+    info2.appendChild(bottomRow);
+    card.appendChild(info2);
 
-    card.appendChild(info);
     list.appendChild(card);
     cards.push(card);
   });
