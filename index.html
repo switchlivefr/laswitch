@@ -982,6 +982,11 @@ var NV = {
         if (info) {
           info.style.cssText = 'padding:10px 14px 10px;animation:newVidCardBlink 2s ease-in-out infinite';
           NV.blinkEls.push(info);
+          var info2 = card.querySelector('.presta-info2');
+          if (info2) {
+            info2.style.cssText = 'padding:8px 14px 10px;animation:newVidCardBlink 2s ease-in-out infinite';
+            NV.blinkEls.push(info2);
+          }
           console.log('NV.startBlink — clignotement sur ytId='+ytId);
         }
       }
@@ -990,7 +995,10 @@ var NV = {
   },
 
   stopBlink: function() {
-    NV.blinkEls.forEach(function(el){ el.style.cssText='padding:10px 14px 10px'; });
+    NV.blinkEls.forEach(function(el){
+      if (el.classList.contains('presta-info')) el.style.cssText='padding:10px 14px 10px';
+      else if (el.classList.contains('presta-info2')) el.style.cssText='padding:8px 14px 10px';
+    });
     NV.blinkEls = [];
   },
 
@@ -1431,13 +1439,14 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
     }
   }
 
+// Portrait lock — défini globalement pour être accessible depuis nav() et partout
+window._lockPortrait = function() {
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('portrait-primary').catch(function(){});
+  }
+};
+
   window.addEventListener('load',function(){
-  // Bloquer portrait — lock natif, défini en global pour être accessible partout
-  window._lockPortrait = function() {
-    if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('portrait-primary').catch(function(){});
-    }
-  };
   window._lockPortrait();
   // Réappliquer à chaque retour au premier plan
   document.addEventListener('visibilitychange', function() {
@@ -4117,6 +4126,7 @@ function renderVideoList(videos, onDone) {
 
     // ── Bloc infos sous la vidéo (phrase + lieu/date) ──
     var info2 = document.createElement('div');
+    info2.className = 'presta-info2';
     info2.style.cssText = 'padding:8px 14px 10px';
 
     // ── Phrase (col H) sous la vidéo — plus gros si moins de 45 caractères ──
