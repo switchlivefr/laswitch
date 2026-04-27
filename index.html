@@ -1151,6 +1151,7 @@ function g(rows,r,col){return(rows&&rows[r]&&rows[r][col]!=null)?String(rows[r][
 var BNM={'p-home':'bn-home','p-prestas':'bn-prestas','p-switch':'bn-switch','p-osl':'bn-osl','p-rules':'bn-rules','p-resa':'bn-resa'};
 function nav(id,direction){
   var oldId=currentPage;
+  if(typeof _lockPortrait==='function') _lockPortrait();
   if(oldId&&oldId!==id){var o=document.getElementById(oldId);if(o){o.style.display='none';o.classList.remove('active');}}
   if(id!=='p-home'){muteVideo();_videoMuted=true;}
   if(id==='p-home')applyVideoSound();
