@@ -3922,6 +3922,17 @@ function extractYtId(url) {
 
 
 
+// Quand l'appli passe en arrière-plan (ouverture appli YouTube via le logo),
+// remettre le player à 0 — YouTube ouvrira alors la vidéo depuis le début
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden && window._prestasActivePlayer) {
+    try {
+      window._prestasActivePlayer.seekTo(0, true);
+      window._prestasActivePlayer.pauseVideo();
+    } catch(e) {}
+  }
+});
+
 // Callback global appelé automatiquement par l'API IFrame YouTube quand elle est prête
 window.onYouTubeIframeAPIReady = function() {
   if (typeof window._ytPendingCreate === 'function') {
@@ -4014,17 +4025,20 @@ function renderVideoList(videos, onDone) {
             events: {
               onReady: function(e) {
                 window._prestasActivePlayer = e.target;
-                // loadVideoById avec startSeconds:0 override le resume point du compte YouTube
                 e.target.loadVideoById({ videoId: capturedYtId, startSeconds: 0 });
-                // Patcher le src de l'iframe pour que le logo YT ouvre l'appli à t=0
                 var iframe = capturedThumb.querySelector('iframe');
                 if (iframe) {
                   iframe.id = 'prestas-active-iframe';
-                  // Ajouter &t=0 dans le src : le logo YT en bas à droite utilise cette URL
-                  var src = iframe.src || '';
-                  if (src && src.indexOf('&t=0') === -1) {
-                    iframe.src = src.replace(/[?&]start=\d+/g,'') + '&start=0&t=0';
-                  }
+                  // Superposer un div sur le coin bas-droit pour bloquer le logo YouTube
+                  // et le remplacer par un lien qui ouvre l'appli à t=0
+                  var overlay = document.createElement('a');
+                  overlay.href = 'https://www.youtube.com/watch?v=' + capturedYtId + '&t=0';
+                  overlay.target = '_blank';
+                  overlay.rel = 'noopener';
+                  overlay.style.cssText = 'position:absolute;bottom:0;right:0;width:90px;height:36px;z-index:10;display:block;cursor:pointer;background:transparent';
+                  overlay.title = 'Ouvrir dans YouTube';
+                  capturedThumb.style.position = 'relative';
+                  capturedThumb.appendChild(overlay);
                 }
               },
               onStateChange: function(e) {
