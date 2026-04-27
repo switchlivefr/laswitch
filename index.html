@@ -1438,11 +1438,12 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
     }
   }
   _lockPortrait();
-  // Rappel au premier touch (certains navigateurs exigent une interaction)
-  document.addEventListener('touchstart', function _firstTouch() {
-    _lockPortrait();
-    document.removeEventListener('touchstart', _firstTouch);
-  }, { once: true });
+  // Réappliquer à chaque retour au premier plan
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden && !document.fullscreenElement && !document.webkitFullscreenElement) {
+      _lockPortrait();
+    }
+  });
   // Plein écran vidéo : déverrouiller pour permettre la rotation
   document.addEventListener('fullscreenchange', function() {
     if (document.fullscreenElement) {
