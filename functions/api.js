@@ -768,7 +768,7 @@ document.addEventListener('keydown', function(e) {
         const phrase2 = (row[7] || '').trim();
         const lieu    = (row[8] || '').trim();
         if (!youtube) continue;
-        if (!phrase.toLowerCase().includes(query) && !personnes.toLowerCase().includes(query)) continue;
+        if (!phrase.toLowerCase().includes(query) && !personnes.toLowerCase().includes(query) && !titre.toLowerCase().includes(query) && !phrase2.toLowerCase().includes(query)) continue;
         videos.push({ youtube, phrase, personnes, date, fb_ids, titre, phrase2, lieu });
       }
       videos.sort((a, b) => {
