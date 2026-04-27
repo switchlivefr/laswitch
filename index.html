@@ -1151,7 +1151,7 @@ function g(rows,r,col){return(rows&&rows[r]&&rows[r][col]!=null)?String(rows[r][
 var BNM={'p-home':'bn-home','p-prestas':'bn-prestas','p-switch':'bn-switch','p-osl':'bn-osl','p-rules':'bn-rules','p-resa':'bn-resa'};
 function nav(id,direction){
   var oldId=currentPage;
-  if(typeof _lockPortrait==='function') _lockPortrait();
+  if(typeof window._lockPortrait==='function') window._lockPortrait();
   if(oldId&&oldId!==id){var o=document.getElementById(oldId);if(o){o.style.display='none';o.classList.remove('active');}}
   if(id!=='p-home'){muteVideo();_videoMuted=true;}
   if(id==='p-home')applyVideoSound();
@@ -1432,19 +1432,19 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
   }
 
   window.addEventListener('load',function(){
-  // Bloquer portrait — lock natif uniquement, pas de CSS
-  function _lockPortrait() {
+  // Bloquer portrait — lock natif, défini en global pour être accessible partout
+  window._lockPortrait = function() {
     if (screen.orientation && screen.orientation.lock) {
       screen.orientation.lock('portrait-primary').catch(function(){});
     }
-  }
-  _lockPortrait();
+  };
+  window._lockPortrait();
   // Réappliquer à chaque retour au premier plan
   document.addEventListener('visibilitychange', function() {
     if (!document.hidden && !document.fullscreenElement && !document.webkitFullscreenElement) {
-      _lockPortrait();
-      setTimeout(_lockPortrait, 300);
-      setTimeout(_lockPortrait, 800);
+      window._lockPortrait();
+      setTimeout(window._lockPortrait, 300);
+      setTimeout(window._lockPortrait, 800);
     }
   });
   // Plein écran vidéo : déverrouiller pour permettre la rotation
@@ -1452,14 +1452,14 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
     if (document.fullscreenElement) {
       if (screen.orientation && screen.orientation.unlock) try { screen.orientation.unlock(); } catch(e) {}
     } else {
-      setTimeout(_lockPortrait, 300);
+      setTimeout(window._lockPortrait, 300);
     }
   });
   document.addEventListener('webkitfullscreenchange', function() {
     if (document.webkitFullscreenElement) {
       if (screen.orientation && screen.orientation.unlock) try { screen.orientation.unlock(); } catch(e) {}
     } else {
-      setTimeout(_lockPortrait, 300);
+      setTimeout(window._lockPortrait, 300);
     }
   });
   init();
@@ -4025,7 +4025,7 @@ function renderVideoList(videos, onDone) {
 
     // ── Miniature YouTube cliquable ──
     var thumb = document.createElement('div');
-    thumb.style.cssText = 'position:relative;aspect-ratio:16/9;background:#000;cursor:pointer;border-radius:10px;overflow:hidden';
+    thumb.style.cssText = 'position:relative;aspect-ratio:16/9;background:#000;cursor:pointer';
     if (ytId) {
       var img = document.createElement('img');
       img.src = 'https://img.youtube.com/vi/' + ytId + '/mqdefault.jpg';
@@ -4116,7 +4116,7 @@ function renderVideoList(videos, onDone) {
     // ── Phrase (col H) sous la vidéo — +30% si moins de 30 caractères ──
     if (v.phrase2) {
       var phraseEl = document.createElement('div');
-      var phraseFontSize = v.phrase2.length < 40 ? '15.6px' : '12px';
+      var phraseFontSize = v.phrase2.length < 45 ? '15.6px' : '12px';
       phraseEl.style.cssText = 'font-size:' + phraseFontSize + ';font-weight:600;color:var(--white);line-height:1.4;margin-top:8px;text-align:center';
       phraseEl.textContent = v.phrase2;
       info.appendChild(phraseEl);
