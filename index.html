@@ -4006,6 +4006,7 @@ function renderVideoList(videos, onDone) {
         window._prestasActiveThumb = capturedThumb;
 
         function createPlayer() {
+          var _seekDone = false;
           var player = new YT.Player(playerId, {
             videoId: capturedYtId,
             playerVars: { autoplay: 1, start: 0, rel: 0, playsinline: 1 },
@@ -4013,18 +4014,21 @@ function renderVideoList(videos, onDone) {
             height: '100%',
             events: {
               onReady: function(e) {
-                e.target.seekTo(0, true);
-                e.target.playVideo();
-                // Stocker ref pour stopPrestasVideo
                 window._prestasActivePlayer = e.target;
+                // Marquer l'iframe pour stopPrestasVideo
+                var iframe = capturedThumb.querySelector('iframe');
+                if (iframe) iframe.id = 'prestas-active-iframe';
+              },
+              onStateChange: function(e) {
+                // YT.PlayerState.PLAYING = 1
+                // Au tout premier PLAYING, forcer la position à 0
+                if (!_seekDone && e.data === 1) {
+                  _seekDone = true;
+                  e.target.seekTo(0, true);
+                }
               }
             }
           });
-          // Marquer l'iframe créée par l'API pour stopPrestasVideo
-          setTimeout(function() {
-            var iframe = capturedThumb.querySelector('iframe');
-            if (iframe) iframe.id = 'prestas-active-iframe';
-          }, 500);
         }
 
         // Charger l'API IFrame si pas encore disponible
@@ -4046,7 +4050,7 @@ function renderVideoList(videos, onDone) {
     // ── Phrase (col H) sous la vidéo — +30% si moins de 30 caractères ──
     if (v.phrase2) {
       var phraseEl = document.createElement('div');
-      var phraseFontSize = v.phrase2.length < 30 ? '15.6px' : '12px';
+      var phraseFontSize = v.phrase2.length < 40 ? '15.6px' : '12px';
       phraseEl.style.cssText = 'font-size:' + phraseFontSize + ';font-weight:600;color:var(--white);line-height:1.4;margin-top:8px;text-align:center';
       phraseEl.textContent = v.phrase2;
       info.appendChild(phraseEl);
