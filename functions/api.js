@@ -635,6 +635,9 @@ document.addEventListener('keydown', function(e) {
         const personnes = (row[2] || '').trim();
         const date    = (row[3] || '').trim();
         const fb_ids  = (row[4] || '').trim();
+        const titre   = (row[6] || '').trim();
+        const phrase2 = (row[7] || '').trim();
+        const lieu    = (row[8] || '').trim();
         if (!youtube) continue;
 
         if (!isAdmin) {
@@ -643,7 +646,7 @@ document.addEventListener('keydown', function(e) {
           if (!ids.includes(fbId)) continue;
         }
 
-        videos.push({ youtube, titre: '', phrase, personnes, date, fb_ids });
+        videos.push({ youtube, phrase, personnes, date, fb_ids, titre, phrase2, lieu });
       }
 
       // Tri du plus récent au plus ancien
@@ -656,23 +659,6 @@ document.addEventListener('keydown', function(e) {
         };
         return parseDate(b.date) - parseDate(a.date);
       });
-
-      // Titres YouTube : côté Worker uniquement pour les vidéos personnelles (< 40)
-      // En mode admin (nombreuses vidéos), le client charge les titres lui-même via oEmbed
-      if (!isAdmin && videos.length <= 40) {
-        const fetchTitle = async (ytUrl) => {
-          try {
-            const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(ytUrl)}&format=json`;
-            const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 5000));
-            const res = await Promise.race([fetch(oembedUrl), timeout]);
-            if (!res.ok) return '';
-            const d = await res.json();
-            return d.title || '';
-          } catch(e) { return ''; }
-        };
-        const titles = await Promise.all(videos.map(v => fetchTitle(v.youtube)));
-        titles.forEach((t, i) => { if (t) videos[i].titre = t; });
-      }
 
       return new Response(JSON.stringify({ videos }), {
         headers: {
@@ -778,30 +764,17 @@ document.addEventListener('keydown', function(e) {
         const personnes = (row[2] || '').trim();
         const date    = (row[3] || '').trim();
         const fb_ids  = (row[4] || '').trim();
+        const titre   = (row[6] || '').trim();
+        const phrase2 = (row[7] || '').trim();
+        const lieu    = (row[8] || '').trim();
         if (!youtube) continue;
         if (!phrase.toLowerCase().includes(query) && !personnes.toLowerCase().includes(query)) continue;
-        videos.push({ youtube, titre: '', phrase, personnes, date, fb_ids });
+        videos.push({ youtube, phrase, personnes, date, fb_ids, titre, phrase2, lieu });
       }
       videos.sort((a, b) => {
         const parseDate = d => { if (!d) return 0; const p = d.split('/'); if (p.length === 3) return new Date(p[2], p[1]-1, p[0]).getTime(); return 0; };
         return parseDate(b.date) - parseDate(a.date);
       });
-      // Titres YouTube — lots de 50 en parallèle avec timeout
-      const fetchTitle = async (ytUrl) => {
-        try {
-          const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(ytUrl)}&format=json`;
-          const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000));
-          const res = await Promise.race([fetch(oembedUrl), timeout]);
-          if (!res.ok) return '';
-          const d = await res.json();
-          return d.title || '';
-        } catch(e) { return ''; }
-      };
-      for (let i = 0; i < videos.length; i += 50) {
-        const batch = videos.slice(i, i + 50);
-        const titles = await Promise.all(batch.map(v => fetchTitle(v.youtube)));
-        titles.forEach((t, j) => { if (t) videos[i + j].titre = t; });
-      }
       return new Response(JSON.stringify({ videos }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-cache' }
       });
