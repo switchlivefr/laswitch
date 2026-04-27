@@ -1448,15 +1448,11 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
     if (_portraitLockEl) _portraitLockEl.textContent = '';
   }
 
+  // Activer le CSS portrait lock sur toutes les plateformes
+  _enablePortraitLock();
+  // Renfort natif sur Android/Chrome
   if (screen.orientation && screen.orientation.lock) {
-    // Android/Chrome : lock natif, pas besoin du CSS
-    screen.orientation.lock('portrait-primary').catch(function() {
-      // Si le lock échoue (ex: pas en PWA), activer le CSS fallback
-      _enablePortraitLock();
-    });
-  } else {
-    // iOS Safari : pas de lock natif, CSS counter-rotation
-    _enablePortraitLock();
+    screen.orientation.lock('portrait-primary').catch(function(){});
   }
 
   // Plein écran : désactiver le lock pour permettre la rotation de la vidéo
