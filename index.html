@@ -323,6 +323,9 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
   /* #film-viewer-credit défini globalement */
 }
 </style>
+<style id="portrait-lock-css">
+/* Activé dynamiquement par JS — bloque portrait sur iOS hors plein écran */
+</style>
 </head>
 <body>
 <div class="moverlay" id="nv-banner" onclick="NV.dismissBanner()" style="z-index:9998;background:rgba(8,8,16,.92)">
@@ -1431,20 +1434,54 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
   }
 
   window.addEventListener('load',function(){
-  // Bloquer l'orientation en portrait (fonctionne en mode PWA installée)
-  if (screen.orientation && screen.orientation.lock) {
-    screen.orientation.lock('portrait-primary').catch(function(){});
+  // Bloquer l'orientation en portrait
+  // Android/Chrome PWA : screen.orientation.lock natif
+  // iOS : fallback CSS counter-rotation si lock non supporté
+  var _portraitLockEl = document.getElementById('portrait-lock-css');
+  var _isFullscreen = false;
+  var _portraitLockCSS = '@media screen and (orientation:landscape){body{transform:rotate(-90deg);transform-origin:left top;width:100vh;height:100vw;overflow:hidden;position:fixed;top:100%;left:0}}';
+
+  function _enablePortraitLock() {
+    if (_portraitLockEl) _portraitLockEl.textContent = _portraitLockCSS;
   }
-  // Réappliquer le lock portrait à la sortie du plein écran
-  document.addEventListener('fullscreenchange', function() {
-    if (!document.fullscreenElement && screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('portrait-primary').catch(function(){});
+  function _disablePortraitLock() {
+    if (_portraitLockEl) _portraitLockEl.textContent = '';
+  }
+
+  if (screen.orientation && screen.orientation.lock) {
+    // Android/Chrome : lock natif, pas besoin du CSS
+    screen.orientation.lock('portrait-primary').catch(function() {
+      // Si le lock échoue (ex: pas en PWA), activer le CSS fallback
+      _enablePortraitLock();
+    });
+  } else {
+    // iOS Safari : pas de lock natif, CSS counter-rotation
+    _enablePortraitLock();
+  }
+
+  // Plein écran : désactiver le lock pour permettre la rotation de la vidéo
+  function _onEnterFullscreen() {
+    _isFullscreen = true;
+    _disablePortraitLock();
+    if (screen.orientation && screen.orientation.unlock) {
+      try { screen.orientation.unlock(); } catch(e) {}
     }
+  }
+  function _onExitFullscreen() {
+    _isFullscreen = false;
+    setTimeout(function() {
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('portrait-primary').catch(function() { _enablePortraitLock(); });
+      } else {
+        _enablePortraitLock();
+      }
+    }, 300);
+  }
+  document.addEventListener('fullscreenchange', function() {
+    document.fullscreenElement ? _onEnterFullscreen() : _onExitFullscreen();
   });
   document.addEventListener('webkitfullscreenchange', function() {
-    if (!document.webkitFullscreenElement && screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('portrait-primary').catch(function(){});
-    }
+    document.webkitFullscreenElement ? _onEnterFullscreen() : _onExitFullscreen();
   });
   init();
   var fc=document.querySelector('.fb-card');
