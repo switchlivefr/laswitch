@@ -1442,6 +1442,8 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
   document.addEventListener('visibilitychange', function() {
     if (!document.hidden && !document.fullscreenElement && !document.webkitFullscreenElement) {
       _lockPortrait();
+      setTimeout(_lockPortrait, 300);
+      setTimeout(_lockPortrait, 800);
     }
   });
   // Plein écran vidéo : déverrouiller pour permettre la rotation
