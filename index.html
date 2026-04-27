@@ -3922,16 +3922,27 @@ function extractYtId(url) {
 
 
 
+// Callback global appelé automatiquement par l'API IFrame YouTube quand elle est prête
+window.onYouTubeIframeAPIReady = function() {
+  if (typeof window._ytPendingCreate === 'function') {
+    var fn = window._ytPendingCreate;
+    window._ytPendingCreate = null;
+    fn();
+  }
+};
+
 function stopPrestasVideo() {
+  // Stopper le player IFrame API si actif
+  if (window._prestasActivePlayer) {
+    try { window._prestasActivePlayer.stopVideo(); } catch(e) {}
+    window._prestasActivePlayer = null;
+  }
   // Supprimer l'iframe active et remettre la miniature
   var iframe = document.getElementById('prestas-active-iframe');
   if (iframe) {
-    // Stopper la lecture en vidant le src
     iframe.src = '';
-    // Remettre le thumb original si possible
     var thumb = window._prestasActiveThumb;
     if (thumb) {
-      // Recréer miniature vide (la carte reste visible, juste sans lecture)
       thumb.innerHTML = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:48px;height:48px;background:rgba(255,0,0,.85);border-radius:50%;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 10 10" fill="white"><polygon points="3,1 9,5 3,9"/></svg></div>';
       window._prestasActiveThumb = null;
     }
@@ -3979,19 +3990,55 @@ function renderVideoList(videos, onDone) {
     play.innerHTML = '<svg width="18" height="18" viewBox="0 0 10 10" fill="white"><polygon points="3,1 9,5 3,9"/></svg>';
     thumb.appendChild(play);
 
-    // Lecture inline au clic — cache-bust pour forcer redémarrage depuis 0
+    // Lecture inline au clic — YouTube IFrame API pour forcer seekTo(0) au chargement
     (function(capturedYtId, capturedThumb) {
       capturedThumb.onclick = function() {
         if (!capturedYtId) return;
         stopPrestasVideo();
-        var iframe = document.createElement('iframe');
-        iframe.src = 'https://www.youtube.com/embed/' + capturedYtId + '?autoplay=1&start=0&rel=0&_t=' + Date.now();
-        iframe.style.cssText = 'width:100%;aspect-ratio:16/9;border:none;display:block';
-        iframe.allow = 'autoplay; fullscreen';
-        iframe.id = 'prestas-active-iframe';
+
+        // Conteneur pour le player
+        var container = document.createElement('div');
+        container.style.cssText = 'width:100%;aspect-ratio:16/9;display:block';
+        var playerId = 'yt-player-' + capturedYtId + '-' + Date.now();
+        container.id = playerId;
         capturedThumb.innerHTML = '';
-        capturedThumb.appendChild(iframe);
+        capturedThumb.appendChild(container);
         window._prestasActiveThumb = capturedThumb;
+
+        function createPlayer() {
+          var player = new YT.Player(playerId, {
+            videoId: capturedYtId,
+            playerVars: { autoplay: 1, start: 0, rel: 0, playsinline: 1 },
+            width: '100%',
+            height: '100%',
+            events: {
+              onReady: function(e) {
+                e.target.seekTo(0, true);
+                e.target.playVideo();
+                // Stocker ref pour stopPrestasVideo
+                window._prestasActivePlayer = e.target;
+              }
+            }
+          });
+          // Marquer l'iframe créée par l'API pour stopPrestasVideo
+          setTimeout(function() {
+            var iframe = capturedThumb.querySelector('iframe');
+            if (iframe) iframe.id = 'prestas-active-iframe';
+          }, 500);
+        }
+
+        // Charger l'API IFrame si pas encore disponible
+        if (window.YT && window.YT.Player) {
+          createPlayer();
+        } else {
+          window._ytPendingCreate = createPlayer;
+          if (!document.getElementById('yt-iframe-api-script')) {
+            var tag = document.createElement('script');
+            tag.id = 'yt-iframe-api-script';
+            tag.src = 'https://www.youtube.com/iframe_api';
+            document.head.appendChild(tag);
+          }
+        }
       };
     })(ytId, thumb);
     info.appendChild(thumb);
@@ -4018,7 +4065,7 @@ function renderVideoList(videos, onDone) {
     }
     if (v.date) {
       var dateEl = document.createElement('div');
-      dateEl.style.cssText = 'font-size:11px;color:#6aadff;font-family:"DM Mono",monospace;letter-spacing:1px';
+      dateEl.style.cssText = 'font-size:11px;color:#f2e68a;font-family:"DM Mono",monospace;letter-spacing:1px';
       dateEl.textContent = v.date;
       bottomRow.appendChild(dateEl);
     }
