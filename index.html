@@ -1435,6 +1435,17 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
   if (screen.orientation && screen.orientation.lock) {
     screen.orientation.lock('portrait-primary').catch(function(){});
   }
+  // Réappliquer le lock portrait à la sortie du plein écran
+  document.addEventListener('fullscreenchange', function() {
+    if (!document.fullscreenElement && screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('portrait-primary').catch(function(){});
+    }
+  });
+  document.addEventListener('webkitfullscreenchange', function() {
+    if (!document.webkitFullscreenElement && screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('portrait-primary').catch(function(){});
+    }
+  });
   init();
   var fc=document.querySelector('.fb-card');
   if(fc)_fbCardHeight=fc.offsetHeight;
