@@ -1431,6 +1431,10 @@ document.addEventListener('contextmenu',function(e){e.preventDefault();return fa
   }
 
   window.addEventListener('load',function(){
+  // Bloquer l'orientation en portrait (fonctionne en mode PWA installée)
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('portrait-primary').catch(function(){});
+  }
   init();
   var fc=document.querySelector('.fb-card');
   if(fc)_fbCardHeight=fc.offsetHeight;
@@ -3923,13 +3927,20 @@ function extractYtId(url) {
 
 
 // Quand l'appli passe en arrière-plan (ouverture appli YouTube via le logo),
-// remettre le player à 0 — YouTube ouvrira alors la vidéo depuis le début
+// remettre le player à 0 — YouTube ouvrira alors la vidéo depuis le début.
+// Quand on revient sur l'appli, relancer la lecture.
 document.addEventListener('visibilitychange', function() {
-  if (document.hidden && window._prestasActivePlayer) {
-    try {
-      window._prestasActivePlayer.seekTo(0, true);
-      window._prestasActivePlayer.pauseVideo();
-    } catch(e) {}
+  if (document.hidden) {
+    if (window._prestasActivePlayer) {
+      try {
+        window._prestasActivePlayer.seekTo(0, true);
+        window._prestasActivePlayer.pauseVideo();
+      } catch(e) {}
+    }
+  } else {
+    if (window._prestasActivePlayer) {
+      try { window._prestasActivePlayer.playVideo(); } catch(e) {}
+    }
   }
 });
 
