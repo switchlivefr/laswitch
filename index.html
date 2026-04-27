@@ -1448,14 +1448,24 @@ window._lockPortrait = function() {
 
   window.addEventListener('load',function(){
   window._lockPortrait();
-  // Réappliquer à chaque retour au premier plan
+  // Réappliquer au premier touch après retour au premier plan
+  var _needsRelock = false;
   document.addEventListener('visibilitychange', function() {
-    if (!document.hidden && !document.fullscreenElement && !document.webkitFullscreenElement) {
-      window._lockPortrait();
-      setTimeout(window._lockPortrait, 300);
-      setTimeout(window._lockPortrait, 800);
+    if (document.hidden) {
+      _needsRelock = true;
+    } else if (_needsRelock) {
+      _needsRelock = false;
+      // Petit délai pour laisser Android restaurer le contexte
+      setTimeout(window._lockPortrait, 100);
+      setTimeout(window._lockPortrait, 500);
+      setTimeout(window._lockPortrait, 1000);
     }
   });
+  document.addEventListener('touchstart', function() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      window._lockPortrait();
+    }
+  }, { passive: true });
   // Plein écran vidéo : déverrouiller pour permettre la rotation
   document.addEventListener('fullscreenchange', function() {
     if (document.fullscreenElement) {
