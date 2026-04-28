@@ -111,7 +111,7 @@ body::before{
   line-height:1.2;
   padding:13px 15px;
 }
-.btn.pin-mode:not(:disabled):active{transform:scale(0.98);opacity:.85}
+.btn.pin-mode.no-pin:disabled{opacity:1;cursor:default}
 .btn.autre-nom-mode{
   background:transparent;
   color:var(--green);
@@ -287,17 +287,6 @@ window.addEventListener('load', function(){
     if (state.resultShown) return;
     hideFeedback();
     updateBtn();
-    var val = prenomInput.value;
-    if (!val) { hideDropdown(ddPrenom); return; }
-    var filtered = prenoms_col_g.filter(function(p){ return matches(val,p); }).slice(0,8);
-    showDropdown(ddPrenom, filtered, val, function(selected){
-      prenomInput.value = selected;
-      hideDropdown(ddPrenom);
-      updateBtn();
-    });
-  });
-  prenomInput.addEventListener('blur', function(){
-    setTimeout(function(){ hideDropdown(ddPrenom); }, 150);
   });
 
   submitBtn.addEventListener('click', function(){
@@ -343,6 +332,7 @@ function selectNom(nom) {
   prenomInput.placeholder = state.prenomExistant || 'Prénom';
   submitBtn.disabled = true;
   btnLabel.textContent = 'AJOUTER';
+  setTimeout(function(){ prenomInput.focus(); }, 50);
 }
 
 function updateBtn() {
@@ -362,10 +352,11 @@ function updateBtn() {
         // Colonne F vide → pas de code PIN à réinitialiser
         btnLabel.textContent = 'PAS DE CODE PIN À RÉINITIALISER';
         submitBtn.disabled = true;
+        submitBtn.classList.add('no-pin');
         setTimeout(function() {
           doFullReset();
           setTimeout(function(){ nomInput.focus(); }, 50);
-        }, 3000);
+        }, 4000);
       } else {
         btnLabel.textContent = 'RÉINITIALISER LE CODE PIN ' + state.codePin;
       }
