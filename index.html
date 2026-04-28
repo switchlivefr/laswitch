@@ -4591,18 +4591,93 @@ function swLoadAdminRequests() {
 
 function swAdminValidate(name, btn) {
   btn.textContent = '...'; btn.disabled = true;
+  // Vérifier d'abord si la colonne G (prénom) est renseignée dans IDS_APPLI
+  fetch('/api?action=getPrenom&name=' + encodeURIComponent(name))
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      var prenom = (data.prenom || '').trim();
+      if (!prenom) {
+        // Colonne G vide : demander le prénom avant de valider
+        btn.textContent = 'VALIDER'; btn.disabled = false;
+        swAdminAskPrenom(name, btn);
+      } else {
+        // Prénom déjà présent : valider directement
+        swAdminDoValidate(name, btn);
+      }
+    })
+    .catch(function(){
+      // En cas d'erreur réseau sur getPrenom, valider quand même
+      swAdminDoValidate(name, btn);
+    });
+}
+
+function swAdminDoValidate(name, btn) {
+  if (btn) { btn.textContent = '...'; btn.disabled = true; }
   fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=validateRequest&name=' + encodeURIComponent(name))
     .then(function(r){ return r.json(); })
     .then(function(data) {
       if (data.ok) {
-        // Remplacer le bouton par le tag "VALIDÉ" sans recharger toute la liste
         var tag = document.createElement('div');
         tag.textContent = 'VALIDE';
         tag.style.cssText = 'color:#34d1c0;font-size:12px;font-weight:700;font-family:Bebas Neue,sans-serif;letter-spacing:1px;flex-shrink:0';
-        btn.parentNode.replaceChild(tag, btn);
-      } else { btn.textContent = 'ERREUR'; btn.disabled = false; }
+        if (btn && btn.parentNode) btn.parentNode.replaceChild(tag, btn);
+      } else {
+        if (btn) { btn.textContent = 'ERREUR'; btn.disabled = false; }
+      }
     })
-    .catch(function(){ btn.textContent = 'ERREUR'; btn.disabled = false; });
+    .catch(function(){
+      if (btn) { btn.textContent = 'ERREUR'; btn.disabled = false; }
+    });
+}
+
+function swAdminAskPrenom(name, btn) {
+  var overlay = document.getElementById('m-sw-admin-prenom');
+  if (!overlay) return;
+  // Stocker le contexte pour le bouton Ajouter
+  overlay._targetName = name;
+  overlay._targetBtn  = btn;
+  // Réinitialiser le champ
+  var input = document.getElementById('sw-admin-prenom-input');
+  if (input) { input.value = ''; }
+  var errEl = document.getElementById('sw-admin-prenom-err');
+  if (errEl) errEl.style.display = 'none';
+  overlay.style.display = 'flex';
+  setTimeout(function(){ if (input) input.focus(); }, 120);
+}
+
+function swAdminPrenomAjouter() {
+  var overlay = document.getElementById('m-sw-admin-prenom');
+  if (!overlay) return;
+  var name   = overlay._targetName;
+  var btn    = overlay._targetBtn;
+  var input  = document.getElementById('sw-admin-prenom-input');
+  var errEl  = document.getElementById('sw-admin-prenom-err');
+  var addBtn = document.getElementById('sw-admin-prenom-addbtn');
+  var prenom = (input ? input.value.trim() : '');
+  if (!prenom) {
+    if (errEl) { errEl.textContent = 'Saisis un prénom'; errEl.style.display = 'block'; }
+    return;
+  }
+  if (addBtn) { addBtn.textContent = '...'; addBtn.disabled = true; }
+  // Écrire le prénom en colonne G via le worker
+  fetch('/api?action=setPrenom', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: name, prenom: prenom })
+  })
+    .then(function(r){ return r.json(); })
+    .then(function(){
+      // Fermer la modale puis valider la demande
+      overlay.style.display = 'none';
+      if (addBtn) { addBtn.textContent = 'AJOUTER'; addBtn.disabled = false; }
+      swAdminDoValidate(name, btn);
+    })
+    .catch(function(){
+      // Même en cas d'erreur sur setPrenom, fermer et valider quand même
+      overlay.style.display = 'none';
+      if (addBtn) { addBtn.textContent = 'AJOUTER'; addBtn.disabled = false; }
+      swAdminDoValidate(name, btn);
+    });
 }
 
 function swShowPending(token, name) {
@@ -5377,6 +5452,30 @@ function checkFbSession() {
       <button onclick="swLoadAdminRequests()" style="flex:1;background:var(--border2);border:none;border-radius:8px;padding:10px;color:var(--white);font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">ACTUALISER</button>
       <button onclick="swAdminVoirVideos()" style="flex:1;background:#1877f2;border:none;border-radius:8px;padding:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">VOIR MES VIDEOS</button>
     </div>
+  </div>
+</div>
+
+<!-- MODALE : Saisie du prénom (colonne G IDS_APPLI) avant validation -->
+<div id="m-sw-admin-prenom" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--card);border:1px solid var(--border2);border-radius:var(--r);width:100%;max-width:340px;padding:28px 24px 24px;display:flex;flex-direction:column;gap:16px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);letter-spacing:2px;text-align:center">Prénom</div>
+    <input
+      id="sw-admin-prenom-input"
+      type="text"
+      placeholder="Prénom…"
+      autocomplete="off"
+      autocorrect="off"
+      spellcheck="false"
+      style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:var(--rs);padding:14px 16px;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:600;color:var(--white);outline:none;caret-color:var(--gold);-webkit-appearance:none"
+      onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border2)'"
+      onkeydown="if(event.key==='Enter')swAdminPrenomAjouter()"
+    >
+    <div id="sw-admin-prenom-err" style="display:none;font-size:12px;color:#e53935;text-align:center;margin-top:-8px"></div>
+    <button
+      id="sw-admin-prenom-addbtn"
+      onclick="swAdminPrenomAjouter()"
+      style="width:100%;background:var(--gold);color:#000;border:none;border-radius:var(--rs);padding:14px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer"
+    >AJOUTER</button>
   </div>
 </div>
 
