@@ -4419,6 +4419,7 @@ function swChangeAccount() {
   swAccReset();
   swLoadNames();
   openM('m-sw-access');
+  setTimeout(function(){ var inp = document.getElementById('sw-acc-input'); if (inp) inp.focus(); }, 200);
 }
 
 
@@ -4716,6 +4717,16 @@ function swVerifyToken(token, name) {
 }
 
 var _swAccReturnPage = null;
+
+function swAccCapitalize(inp) {
+  var val = inp.value;
+  var pos = inp.selectionStart;
+  var newVal = val.replace(/(^|\s)(\S)/g, function(m, sp, ch) { return sp + ch.toUpperCase(); });
+  if (newVal !== val) {
+    inp.value = newVal;
+    inp.setSelectionRange(pos, pos);
+  }
+}
 
 function swOpenAccess() {
   // CAS 1 : déjà authentifié (sw_loggedIn=1) → aller directement sur p-prestas
@@ -5452,24 +5463,26 @@ function checkFbSession() {
 
 <!-- MODALE : Saisie du prénom (colonne G IDS_APPLI) avant validation -->
 <div id="m-sw-admin-prenom" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:24px">
-  <div style="background:var(--card);border:1px solid var(--border2);border-radius:var(--r);width:100%;max-width:340px;padding:28px 24px 24px;display:flex;flex-direction:column;gap:16px">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);letter-spacing:2px;text-align:center">Prénom</div>
+  <div style="background:var(--card);border:1px solid #1877f2;border-radius:var(--r);width:100%;max-width:340px;padding:28px 24px 24px;display:flex;flex-direction:column;gap:16px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#1877f2;letter-spacing:2px;text-align:center">Prénom</div>
     <input
       id="sw-admin-prenom-input"
       type="text"
       placeholder="Prénom…"
       autocomplete="off"
       autocorrect="off"
+      autocapitalize="words"
       spellcheck="false"
-      style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:var(--rs);padding:14px 16px;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:600;color:var(--white);outline:none;caret-color:var(--gold);-webkit-appearance:none"
-      onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border2)'"
+      style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:var(--rs);padding:14px 16px;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:600;color:var(--white);outline:none;caret-color:#1877f2;-webkit-appearance:none"
+      onfocus="this.style.borderColor='#1877f2'" onblur="this.style.borderColor='var(--border2)'"
+      oninput="swAccCapitalize(this)"
       onkeydown="if(event.key==='Enter')swAdminPrenomAjouter()"
     >
     <div id="sw-admin-prenom-err" style="display:none;font-size:12px;color:#e53935;text-align:center;margin-top:-8px"></div>
     <button
       id="sw-admin-prenom-addbtn"
       onclick="swAdminPrenomAjouter()"
-      style="width:100%;background:var(--gold);color:#000;border:none;border-radius:var(--rs);padding:14px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer"
+      style="width:100%;background:#1877f2;color:#fff;border:none;border-radius:var(--rs);padding:14px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer"
     >AJOUTER</button>
   </div>
 </div>
@@ -5490,8 +5503,8 @@ function checkFbSession() {
         <div style="margin-bottom:4px">
           <div style="display:flex;gap:8px;align-items:center">
             <input type="text" id="sw-acc-input" placeholder="Ton nom Facebook..."
-              oninput="swAccFilter(this.value)" onfocus="swAccFilterFocus(this.value)"
-              autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+              oninput="swAccCapitalize(this);swAccFilter(this.value)" onfocus="swAccFilterFocus(this.value)"
+              autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false"
               style="flex:1;padding:10px 14px;border-radius:8px;border:none;background:#fff;color:#000;font-size:15px;font-family:'DM Sans',sans-serif;outline:none">
           </div>
           <div id="sw-acc-dropdown" style="display:none;position:fixed;background:#fff;border-radius:8px;max-height:200px;overflow-y:auto;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.5);text-align:left"></div>
