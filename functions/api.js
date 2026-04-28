@@ -240,19 +240,6 @@ body::before{
 
     <div class="preview" id="preview"></div>
 
-    <input
-      class="field"
-      id="fbid-input"
-      type="text"
-      placeholder="URL ou ID Facebook (optionnel)"
-      autocomplete="off"
-      autocorrect="off"
-      spellcheck="false"
-      oninput="onFbidInput(this.value)"
-      style="font-size:14px;padding:12px 16px;margin-bottom:6px"
-    >
-    <div id="fbid-preview" style="min-height:18px;font-size:12px;color:#5a5a78;margin-bottom:14px;padding-left:4px;text-align:left;display:none"></div>
-
     <button class="btn" id="submit-btn" disabled onclick="submit()">
       <span class="btn-label">AJOUTER</span>
       <div class="spinner"></div>
@@ -272,35 +259,6 @@ body::before{
 
 <script>
 var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec';
-
-function extractFbId(raw) {
-  var s = (raw || '').trim();
-  if (!s) return '';
-  var m = s.match(/[?&]id=(\\d+)/);
-  if (m) return m[1];
-  var m2 = s.match(/facebook\\.com\\/(?:people\\/[^/]+\\/)?([A-Za-z0-9._-]+)/);
-  if (m2 && m2[1] !== 'profile.php') return m2[1];
-  if (/^\\d{5,}$/.test(s)) return s;
-  if (/^[A-Za-z0-9._-]{3,}$/.test(s)) return s;
-  return '';
-}
-
-function onFbidInput(val) {
-  var preview = document.getElementById('fbid-preview');
-  var extracted = extractFbId(val);
-  if (val.trim() && extracted) {
-    preview.style.display = 'block';
-    preview.textContent = '→ ID détecté : ' + extracted;
-    preview.style.color = '#f2c94c';
-  } else if (val.trim() && !extracted) {
-    preview.style.display = 'block';
-    preview.textContent = '⚠ Format non reconnu';
-    preview.style.color = '#e8407a';
-  } else {
-    preview.style.display = 'none';
-    preview.textContent = '';
-  }
-}
 
 function onInput(val) {
   var preview = document.getElementById('preview');
@@ -322,15 +280,11 @@ function submit() {
   var nom = input.value.trim();
   if (!nom) return;
 
-  var fbidRaw = (document.getElementById('fbid-input') || {}).value || '';
-  var fbid = extractFbId(fbidRaw);
-
   var btn = document.getElementById('submit-btn');
   btn.classList.add('loading');
   btn.disabled = true;
 
-  var url = APPS_SCRIPT_URL + '?action=addAppliName&name=' + encodeURIComponent(nom)
-    + (fbid ? '&fbid=' + encodeURIComponent(fbid) : '');
+  var url = APPS_SCRIPT_URL + '?action=addAppliName&name=' + encodeURIComponent(nom);
 
   fetch(url)
     .then(function(r) { return r.json(); })
@@ -369,10 +323,6 @@ function reset() {
   input.value = '';
   document.getElementById('preview').classList.remove('visible');
   document.getElementById('preview').textContent = '';
-  var fbidIn = document.getElementById('fbid-input');
-  if (fbidIn) fbidIn.value = '';
-  var fbidPv = document.getElementById('fbid-preview');
-  if (fbidPv) { fbidPv.style.display = 'none'; fbidPv.textContent = ''; }
   var btn = document.getElementById('submit-btn');
   btn.disabled = true;
   btn.classList.remove('loading');
