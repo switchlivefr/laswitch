@@ -4659,21 +4659,16 @@ function swAdminPrenomAjouter() {
     return;
   }
   if (addBtn) { addBtn.textContent = '...'; addBtn.disabled = true; }
-  // Écrire le prénom en colonne G via le worker
-  fetch('/api?action=setPrenom', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: name, prenom: prenom })
-  })
+  // Écrire le prénom en colonne G — appel direct Apps Script (même pattern que validateRequest)
+  var scriptUrl = 'https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=setPrenom&name=' + encodeURIComponent(name) + '&prenom=' + encodeURIComponent(prenom);
+  fetch(scriptUrl)
     .then(function(r){ return r.json(); })
     .then(function(){
-      // Fermer la modale puis valider la demande
       overlay.style.display = 'none';
       if (addBtn) { addBtn.textContent = 'AJOUTER'; addBtn.disabled = false; }
       swAdminDoValidate(name, btn);
     })
     .catch(function(){
-      // Même en cas d'erreur sur setPrenom, fermer et valider quand même
       overlay.style.display = 'none';
       if (addBtn) { addBtn.textContent = 'AJOUTER'; addBtn.disabled = false; }
       swAdminDoValidate(name, btn);
