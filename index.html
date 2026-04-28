@@ -3603,7 +3603,7 @@ function applyResaMode(mode){
   var bnIco=document.getElementById('bn-resa-ico');
   var bnLbl=document.getElementById('bn-resa-lbl');
   if(bnIco)bnIco.textContent=_resaOff?'ℹ️':'🍽️';
-  if(bnLbl)bnLbl.textContent=_resaOff?'Information':'Réservation';
+  if(bnLbl)bnLbl.innerHTML='<span style="visibility:hidden">SWiTCH </span>'+(_resaOff?'Information':'Réservation');
   var prc=document.getElementById('home-prc-link');
   if(prc)prc.style.display=_resaOff?'none':'block';
   var lieu=document.getElementById('home-lieu-link');
