@@ -785,6 +785,22 @@ document.addEventListener('keydown', function(e) {
     }
   }
 
+  // POST setPrenom — écrit le prénom en colonne G de IDS_APPLI via Apps Script
+  if (request.method === 'POST' && action === 'setPrenom') {
+    try {
+      const body = await request.json();
+      const name   = (body.name   || '').trim();
+      const prenom = (body.prenom || '').trim();
+      if (!name || !prenom) return new Response(JSON.stringify({ error: 'Paramètres manquants' }), { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+      const scriptUrl = APPS_SCRIPT_URL + '?action=setPrenom&name=' + encodeURIComponent(name) + '&prenom=' + encodeURIComponent(prenom);
+      const r = await fetch(scriptUrl);
+      const data = await r.json();
+      return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+    } catch(e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+    }
+  }
+
   // GET : lecture des sheets
   try {
     const result = {};
