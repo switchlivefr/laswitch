@@ -171,14 +171,6 @@ document.head.appendChild(__link);
     <div class="dropdown" id="dd-prenom"></div>
   </div>
 
-  <div class="ac-wrap" id="ac-fbid" style="margin-top:10px;margin-bottom:0">
-    <input class="field" id="fbid-input" type="text"
-      placeholder="URL ou ID Facebook (optionnel)"
-      autocomplete="off" autocorrect="off" spellcheck="false"
-      style="font-size:14px;padding:12px 16px">
-    <div id="fbid-preview" style="min-height:20px;font-size:12px;color:var(--muted);margin-top:4px;padding-left:4px;text-align:left;display:none"></div>
-  </div>
-
   <div class="feedback" id="feedback"></div>
 
   <button class="btn" id="submit-btn" disabled>
@@ -195,22 +187,6 @@ var API_KEY  = 'AIzaSyCTADjNIhq3jXSJiI_WO_jPsp63pTklT_A';
 var DATA = [];
 var prenoms_col_g = [];
 var state = { nomSelectionne: false, prenomExistant: '', codePin: '', resultShown: false };
-
-function extractFbId(raw) {
-  var s = (raw || '').trim();
-  if (!s) return '';
-  // URL avec ?id=XXXXXXX (profil numérique)
-  var m = s.match(/[?&]id=(\d+)/);
-  if (m) return m[1];
-  // URL type facebook.com/pseudo
-  var m2 = s.match(/facebook\.com\/(?:people\/[^/]+\/)?([A-Za-z0-9._-]+)/);
-  if (m2 && m2[1] !== 'profile.php') return m2[1];
-  // Déjà un ID numérique pur
-  if (/^\d{5,}$/.test(s)) return s;
-  // Slug texte pur sans espace
-  if (/^[A-Za-z0-9._-]{3,}$/.test(s)) return s;
-  return '';
-}
 
 function norm(s) {
   return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
@@ -265,13 +241,11 @@ function showDropdown(ddEl, items, inputVal, onSelect) {
 }
 function hideDropdown(ddEl){ ddEl.classList.remove('open'); }
 
-var nomInput, prenomInput, fbidInput, fbidPreview, ddNom, ddPrenom, feedbackEl, submitBtn, btnLabel;
+var nomInput, prenomInput, ddNom, ddPrenom, feedbackEl, submitBtn, btnLabel;
 
 window.addEventListener('load', function(){
   nomInput    = document.getElementById('nom-input');
   prenomInput = document.getElementById('prenom-input');
-  fbidInput   = document.getElementById('fbid-input');
-  fbidPreview = document.getElementById('fbid-preview');
   ddNom       = document.getElementById('dd-nom');
   ddPrenom    = document.getElementById('dd-prenom');
   feedbackEl  = document.getElementById('feedback');
@@ -324,23 +298,6 @@ window.addEventListener('load', function(){
   });
   prenomInput.addEventListener('blur', function(){
     setTimeout(function(){ hideDropdown(ddPrenom); }, 150);
-  });
-
-  fbidInput.addEventListener('input', function(){
-    var raw = fbidInput.value;
-    var extracted = extractFbId(raw);
-    if (raw.trim() && extracted) {
-      fbidPreview.style.display = 'block';
-      fbidPreview.textContent = '→ ID détecté : ' + extracted;
-      fbidPreview.style.color = 'var(--gold)';
-    } else if (raw.trim() && !extracted) {
-      fbidPreview.style.display = 'block';
-      fbidPreview.textContent = '⚠ Format non reconnu';
-      fbidPreview.style.color = '#e8407a';
-    } else {
-      fbidPreview.style.display = 'none';
-      fbidPreview.textContent = '';
-    }
   });
 
   submitBtn.addEventListener('click', function(){
@@ -397,13 +354,21 @@ function updateBtn() {
     return;
   }
   if (state.nomSelectionne) {
-    // Prénom identique → mode réinitialisation PIN (rouge)
+    // Prénom identique → mode réinitialisation PIN (rouge) ou pas de PIN
     if (state.prenomExistant && norm(prenomSaisi) === norm(state.prenomExistant)) {
       submitBtn.disabled = false;
       submitBtn.className = 'btn pin-mode';
-      btnLabel.textContent = state.codePin
-        ? 'RÉINITIALISER LE CODE PIN ' + state.codePin
-        : 'RÉINITIALISER LE CODE PIN';
+      if (!state.codePin) {
+        // Colonne F vide → pas de code PIN à réinitialiser
+        btnLabel.textContent = 'PAS DE CODE PIN À RÉINITIALISER';
+        submitBtn.disabled = true;
+        setTimeout(function() {
+          doFullReset();
+          setTimeout(function(){ nomInput.focus(); }, 50);
+        }, 3000);
+      } else {
+        btnLabel.textContent = 'RÉINITIALISER LE CODE PIN ' + state.codePin;
+      }
     } else {
       submitBtn.disabled = false;
       submitBtn.className = 'btn';
@@ -422,14 +387,12 @@ function doSubmit() {
   var prenom = prenomInput.value.trim();
   if (!nom || !prenom || submitBtn.disabled) return;
 
-  // Prénom identique → réinitialisation code PIN
+  // Prénom identique → réinitialisation code PIN (seulement si PIN non vide)
   if (state.nomSelectionne && state.prenomExistant && norm(prenom) === norm(state.prenomExistant)) {
+    if (!state.codePin) return; // pas de PIN → bouton désactivé, on ne fait rien
     doResetPin(nom);
     return;
   }
-
-  var fbidRaw = fbidInput ? fbidInput.value : '';
-  var fbid = extractFbId(fbidRaw);
 
   submitBtn.classList.add('loading');
   submitBtn.disabled = true;
@@ -440,8 +403,7 @@ function doSubmit() {
   var url = APPS_SCRIPT_URL
     + '?action=' + action
     + '&name='   + encodeURIComponent(nom)
-    + '&prenom=' + encodeURIComponent(prenom)
-    + (fbid ? '&fbid=' + encodeURIComponent(fbid) : '');
+    + '&prenom=' + encodeURIComponent(prenom);
 
   fetch(url)
     .then(function(r){ return r.json(); })
@@ -518,8 +480,6 @@ function doFullReset() {
   nomInput.value       = '';
   prenomInput.value    = '';
   prenomInput.placeholder = 'Prénom';
-  if (fbidInput) { fbidInput.value = ''; }
-  if (fbidPreview) { fbidPreview.style.display = 'none'; fbidPreview.textContent = ''; }
   hideDropdown(ddNom);
   hideDropdown(ddPrenom);
   hideFeedback();
