@@ -4261,17 +4261,15 @@ function adminVideoEditorMakeBar(selectedName, idx, isNew) {
     if (dd && _avmeDdActiveInp === inp) { dd.style.display = 'none'; _avmeDdActiveInp = null; }
     inp.readOnly = true;
     inp.style.caretColor = 'transparent';
-    var sel = inp.dataset.selectedName || '';
+    var sel = (inp.dataset.selectedName || '').trim();
     var known = (_swAccNames || []).indexOf(sel) !== -1;
     if (known) {
-      // Un nom valide a été choisi → l'afficher
+      // Nom valide choisi → afficher
       inp.value = sel;
-    } else if (isNewRef.val) {
-      // Barre nouvelle : pas de choix → remettre vide (pas de suppression à faire)
-      inp.value = '';
-      inp.dataset.selectedName = '';
     } else {
-      // Barre existante : pas de choix → laisser vide = suppression voulue
+      // Pas de sélection valide :
+      // - barre nouvelle → remettre vide (pas de changement)
+      // - barre existante → laisser vide = suppression (selectedName reste '')
       inp.value = '';
       inp.dataset.selectedName = '';
     }
@@ -4309,9 +4307,8 @@ function adminVideoEditorCheckChanged2() {
   var inputs = container.querySelectorAll('input');
   var changed = false;
   inputs.forEach(function(inp) {
-    // La valeur effective = selectedName si connu, sinon valeur affichée (peut être vide = suppression)
-    var sel = inp.dataset.selectedName || inp.value.trim();
-    var orig = inp.dataset.originalName || '';
+    var sel = (inp.dataset.selectedName || '').trim();
+    var orig = (inp.dataset.originalName || '').trim();
     if (sel !== orig) changed = true;
   });
   btn2.disabled = !changed;
@@ -4366,7 +4363,7 @@ function adminVideoEditorSaveIds() {
   var inputs = container.querySelectorAll('input');
   var selectedNames = [];
   inputs.forEach(function(inp) {
-    var v = (inp.dataset.selectedName || inp.value).trim();
+    var v = (inp.dataset.selectedName || '').trim();
     if (v && (_swAccNames || []).indexOf(v) !== -1) selectedNames.push(v);
   });
 
