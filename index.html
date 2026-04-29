@@ -4226,7 +4226,6 @@ function adminVideoEditorMakeBar(selectedName, idx, isNew) {
   wrap.style.cssText = 'position:relative;margin-bottom:' + (isNew ? '0' : '6px');
   wrap.dataset.idx = idx;
 
-  // Objet ref pour que la closure partage la valeur isNew mutable
   var isNewRef = { val: isNew };
 
   var inp = document.createElement('input');
@@ -4237,28 +4236,46 @@ function adminVideoEditorMakeBar(selectedName, idx, isNew) {
   inp.value = selectedName;
   inp.dataset.originalName = selectedName;
   inp.dataset.selectedName  = selectedName;
-  inp.style.cssText = 'width:100%;background:var(--bg);border:' + (isNew ? '2px solid var(--gold)' : '1px solid var(--border2)') + ';border-radius:var(--rs);padding:10px 12px;font-family:"DM Sans",sans-serif;font-size:14px;color:' + (selectedName ? 'var(--white)' : 'var(--muted2)') + ';outline:none;caret-color:var(--gold);-webkit-appearance:none;box-sizing:border-box';
+  // READONLY par défaut : empêche toute saisie clavier directe et toute mémorisation
+  // La valeur ne peut être changée QUE via le dropdown
+  inp.readOnly = true;
+  inp.style.cssText = 'width:100%;background:var(--bg);border:' + (isNew ? '2px solid var(--gold)' : '1px solid var(--border2)') + ';border-radius:var(--rs);padding:10px 12px;font-family:"DM Sans",sans-serif;font-size:14px;color:' + (selectedName ? 'var(--white)' : 'var(--muted2)') + ';outline:none;caret-color:transparent;-webkit-appearance:none;box-sizing:border-box;cursor:pointer';
 
-  inp.onfocus = function(){
-    this.style.borderColor = 'var(--gold)';
-    if (this.value) avmeShowDropdown(this, isNewRef);
-  };
+  // Au tap/click : vider la valeur affichée et ouvrir le dropdown
+  function openDd(e) {
+    inp.readOnly = false;
+    inp.style.caretColor = 'var(--gold)';
+    inp.value = '';
+    inp.dataset.selectedName = '';
+    inp.style.color = 'var(--muted2)';
+    inp.style.borderColor = 'var(--gold)';
+    avmeShowDropdown(inp, isNewRef);
+  }
+  inp.addEventListener('touchstart', function(e){ e.stopPropagation(); }, { passive: true });
+  inp.addEventListener('click', openDd);
+
   inp.onblur = function(){
     var dd = document.getElementById('avme-dropdown');
     if (dd && _avmeDdActiveInp === inp) { dd.style.display = 'none'; _avmeDdActiveInp = null; }
-    // Réinitialisation IMMÉDIATE : si aucun nom valide sélectionné → remettre l'original
+    // Remettre readonly et restaurer la valeur selectedName courante
+    inp.readOnly = true;
+    inp.style.caretColor = 'transparent';
     var sel = inp.dataset.selectedName || '';
     var known = (_swAccNames || []).indexOf(sel) !== -1;
     if (!known) {
+      // Rien de valide sélectionné → remettre l'original affiché
       inp.value = inp.dataset.originalName || '';
       inp.dataset.selectedName = inp.dataset.originalName || '';
     } else {
       inp.value = sel;
     }
+    inp.style.color = inp.value ? 'var(--white)' : 'var(--muted2)';
     inp.style.borderColor = isNewRef.val ? 'var(--gold)' : 'var(--border2)';
     adminVideoEditorCheckChanged2();
   };
+
   inp.oninput = function(){
+    if (inp.readOnly) return;
     this.style.color = 'var(--muted2)';
     this.dataset.selectedName = '';
     avmeShowDropdown(this, isNewRef);
