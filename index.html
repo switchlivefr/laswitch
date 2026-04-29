@@ -4180,25 +4180,6 @@ function avmeShowDropdown(inp, isNewRef) {
     item.style.cssText = 'padding:10px 14px;cursor:pointer;font-size:14px;color:#000;border-bottom:1px solid #eee';
     item.textContent = name;
     item.onmousedown = function(e){ e.preventDefault(); }; // empêche blur avant click
-    item.ontouchstart = function(e){
-      e.preventDefault();
-      // Sélectionner immédiatement avant que le blur de l'input ne se déclenche
-      inp.value = name;
-      inp.dataset.selectedName = name;
-      inp.style.color = 'var(--white)';
-      inp.style.borderColor = 'var(--border2)';
-      dd.style.display = 'none';
-      _avmeDdActiveInp = null;
-      if (isNewRef.val) {
-        inp.style.border = '1px solid var(--border2)';
-        inp.dataset.originalName = '';
-        isNewRef.val = false;
-        var container = document.getElementById('avme-ids-container');
-        var newIdx = container.children.length;
-        container.appendChild(adminVideoEditorMakeBar('', newIdx, true));
-      }
-      adminVideoEditorCheckChanged2();
-    };
     item.onclick = function() {
       inp.value = name;
       inp.dataset.selectedName = name;
@@ -4226,6 +4207,7 @@ function adminVideoEditorMakeBar(selectedName, idx, isNew) {
   wrap.style.cssText = 'position:relative;margin-bottom:' + (isNew ? '0' : '6px');
   wrap.dataset.idx = idx;
 
+  // Objet ref pour que la closure partage la valeur isNew mutable
   var isNewRef = { val: isNew };
 
   var inp = document.createElement('input');
@@ -4236,50 +4218,34 @@ function adminVideoEditorMakeBar(selectedName, idx, isNew) {
   inp.value = selectedName;
   inp.dataset.originalName = selectedName;
   inp.dataset.selectedName  = selectedName;
-  // READONLY par défaut : empêche toute saisie clavier directe et toute mémorisation
-  // La valeur ne peut être changée QUE via le dropdown
-  inp.readOnly = true;
-  inp.style.cssText = 'width:100%;background:var(--bg);border:' + (isNew ? '2px solid var(--gold)' : '1px solid var(--border2)') + ';border-radius:var(--rs);padding:10px 12px;font-family:"DM Sans",sans-serif;font-size:14px;color:' + (selectedName ? 'var(--white)' : 'var(--muted2)') + ';outline:none;caret-color:transparent;-webkit-appearance:none;box-sizing:border-box;cursor:pointer';
+  inp.style.cssText = 'width:100%;background:var(--bg);border:' + (isNew ? '2px solid var(--gold)' : '1px solid var(--border2)') + ';border-radius:var(--rs);padding:10px 12px;font-family:"DM Sans",sans-serif;font-size:14px;color:' + (selectedName ? 'var(--white)' : 'var(--muted2)') + ';outline:none;caret-color:var(--gold);-webkit-appearance:none;box-sizing:border-box';
 
-  // Au tap/click : vider la valeur affichée et ouvrir le dropdown
-  function openDd(e) {
-    if (!inp.readOnly) return; // déjà ouvert
-    inp.readOnly = false;
-    inp.style.caretColor = 'var(--gold)';
-    inp.value = '';
-    inp.dataset.selectedName = '';
-    inp.style.color = 'var(--muted2)';
-    inp.style.borderColor = 'var(--gold)';
-    avmeShowDropdown(inp, isNewRef);
-    adminVideoEditorCheckChanged2(); // activer le bouton dès l'ouverture
-  }
-  inp.addEventListener('touchstart', function(e){ e.stopPropagation(); }, { passive: true });
-  inp.addEventListener('click', openDd);
-
+  inp.onfocus = function(){
+    this.style.borderColor = 'var(--gold)';
+    if (this.value) avmeShowDropdown(this, isNewRef);
+  };
   inp.onblur = function(){
     var dd = document.getElementById('avme-dropdown');
-    if (dd && _avmeDdActiveInp === inp) { dd.style.display = 'none'; _avmeDdActiveInp = null; }
-    inp.readOnly = true;
-    inp.style.caretColor = 'transparent';
-    var sel = (inp.dataset.selectedName || '').trim();
-    var known = (_swAccNames || []).indexOf(sel) !== -1;
-    if (known) {
-      // Nom valide choisi → afficher
-      inp.value = sel;
-    } else {
-      // Pas de sélection valide :
-      // - barre nouvelle → remettre vide (pas de changement)
-      // - barre existante → laisser vide = suppression (selectedName reste '')
-      inp.value = '';
-      inp.dataset.selectedName = '';
-    }
-    inp.style.color = inp.value ? 'var(--white)' : 'var(--muted2)';
-    inp.style.borderColor = isNewRef.val ? 'var(--gold)' : 'var(--border2)';
-    adminVideoEditorCheckChanged2();
+    // Capturer la valeur ET mettre readonly IMMÉDIATEMENT pour bloquer les frappes mobiles
+    var snapVal = inp.value.trim();
+    var snapSelected = inp.dataset.selectedName || '';
+    inp.setAttribute('readonly', 'readonly');
+    setTimeout(function(){
+      inp.removeAttribute('readonly');
+      if (dd && _avmeDdActiveInp === inp) { dd.style.display = 'none'; _avmeDdActiveInp = null; }
+      var known = (_swAccNames || []).indexOf(snapSelected) !== -1 || (_swAccNames || []).indexOf(snapVal) !== -1;
+      if (!known) {
+        inp.value = inp.dataset.originalName || '';
+        inp.dataset.selectedName = inp.dataset.originalName || '';
+      } else {
+        inp.value = snapSelected || snapVal;
+        inp.dataset.selectedName = snapSelected || snapVal;
+      }
+      inp.style.borderColor = isNewRef.val ? 'var(--gold)' : 'var(--border2)';
+      adminVideoEditorCheckChanged2();
+    }, 200);
   };
-
   inp.oninput = function(){
-    if (inp.readOnly) return;
     this.style.color = 'var(--muted2)';
     this.dataset.selectedName = '';
     avmeShowDropdown(this, isNewRef);
@@ -4307,9 +4273,8 @@ function adminVideoEditorCheckChanged2() {
   var inputs = container.querySelectorAll('input');
   var changed = false;
   inputs.forEach(function(inp) {
-    var sel = (inp.dataset.selectedName || '').trim();
-    var orig = (inp.dataset.originalName || '').trim();
-    if (sel !== orig) changed = true;
+    var sel = inp.dataset.selectedName || inp.value.trim();
+    if (sel !== (inp.dataset.originalName || '')) changed = true;
   });
   btn2.disabled = !changed;
   btn2.style.opacity = changed ? '1' : '0.4';
@@ -4363,7 +4328,7 @@ function adminVideoEditorSaveIds() {
   var inputs = container.querySelectorAll('input');
   var selectedNames = [];
   inputs.forEach(function(inp) {
-    var v = (inp.dataset.selectedName || '').trim();
+    var v = (inp.dataset.selectedName || inp.value).trim();
     if (v && (_swAccNames || []).indexOf(v) !== -1) selectedNames.push(v);
   });
 
