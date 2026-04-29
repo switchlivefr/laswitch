@@ -882,7 +882,7 @@ document.addEventListener('keydown', function(e) {
         '&phrase2=' + encodeURIComponent(phrase2) +
         '&fb_ids=' + encodeURIComponent(fb_ids) +
         '&ids_facebook=' + encodeURIComponent(ids_facebook);
-      const r = await fetch(scriptUrl);
+      const r = await fetch(scriptUrl, { redirect: 'follow' });
       const data = await r.json();
       return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
     } catch(e) {
