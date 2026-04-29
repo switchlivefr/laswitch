@@ -4235,8 +4235,11 @@ function adminVideoEditorSavePhrase2() {
   btn1.disabled = true; btn1.style.opacity = '0.4'; btn1.textContent = '...';
   if (errEl) errEl.style.display = 'none';
 
-  var _url1 = 'https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=setVideoMeta&rowIndex=' + vid.rowIndex + '&phrase2=' + encodeURIComponent(ta.value) + '&fb_ids=' + encodeURIComponent(vid.fb_ids || '') + '&ids_facebook=' + encodeURIComponent(vid.ids_facebook || '');
-  fetch(_url1)
+  fetch('/api?action=setVideoMeta', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rowIndex: vid.rowIndex, phrase2: ta.value, fb_ids: vid.fb_ids || '', ids_facebook: vid.ids_facebook || '' })
+  })
   .then(function(r){ return r.json(); })
   .then(function(data) {
     if (data.ok) {
@@ -4292,8 +4295,11 @@ function adminVideoEditorSaveIds() {
   var newFbIds      = fbIdsArr.join(' | ');
   var newIdsFacebook = idsFbArr.join(' | ');
 
-  var _url2 = 'https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=setVideoMeta&rowIndex=' + vid.rowIndex + '&phrase2=' + encodeURIComponent(vid.phrase2 || '') + '&fb_ids=' + encodeURIComponent(newFbIds) + '&ids_facebook=' + encodeURIComponent(newIdsFacebook);
-  fetch(_url2, { redirect: 'follow' })
+  fetch('/api?action=setVideoMeta', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rowIndex: vid.rowIndex, phrase2: vid.phrase2 || '', fb_ids: newFbIds, ids_facebook: newIdsFacebook })
+  })
   .then(function(r){ return r.json(); })
   .then(function(data) {
     if (data.ok) {
