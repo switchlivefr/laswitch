@@ -76,9 +76,9 @@ body::before{
   border-radius:var(--r);padding:14px 18px;
   font-family:'DM Sans',sans-serif;font-size:17px;font-weight:600;
   color:var(--white);outline:none;-webkit-appearance:none;
-  transition:border-color .2s,box-shadow .2s;caret-color:var(--gold);
+  transition:border-color .2s,box-shadow .2s;caret-color:#1877f2;
 }
-.field:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(242,201,76,.12)}
+.field:focus{border-color:#1877f2;box-shadow:0 0 0 3px rgba(24,119,242,.18)}
 .field::placeholder{color:var(--muted);font-weight:400}
 .ac-wrap{position:relative;width:100%;margin-bottom:12px}
 .ac-wrap.narrow{max-width:380px;margin-left:auto;margin-right:auto;margin-top:16px}
@@ -103,7 +103,7 @@ body::before{
 .feedback.visible{opacity:1}
 .feedback.abandon{color:#e8407a}
 .btn{
-  width:100%;background:var(--gold);color:#000;border:none;border-radius:var(--r);
+  width:100%;background:#1877f2;color:#fff;border:none;border-radius:var(--r);
   padding:15px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;
   cursor:pointer;transition:opacity .15s,transform .1s,background .2s,color .2s;-webkit-appearance:none;
 }
@@ -191,6 +191,11 @@ document.head.appendChild(__link);
   <button class="btn" id="submit-btn" disabled>
     <span class="btn-label" id="btn-label">AJOUTER</span>
     <div class="spinner"></div>
+  </button>
+
+  <button id="btn-demande-acces" onclick="openAdminM();swLoadAdminRequests()"
+    style="width:100%;margin-top:12px;background:transparent;color:var(--white);border:1px solid var(--border2);border-radius:var(--r);padding:14px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;-webkit-appearance:none">
+    DEMANDES D'ACCÈS EN ATTENTE
   </button>
 </div>
 
