@@ -4226,15 +4226,13 @@ function adminVideoEditorMakeBar(selectedName, idx, isNew) {
   };
   inp.onblur = function(){
     var dd = document.getElementById('avme-dropdown');
-    // Capturer la valeur AU MOMENT du blur (avant tout event ultérieur)
+    // Capturer la valeur ET mettre readonly IMMÉDIATEMENT pour bloquer les frappes mobiles
     var snapVal = inp.value.trim();
     var snapSelected = inp.dataset.selectedName || '';
-    // Désactiver oninput temporairement
-    inp._blurring = true;
+    inp.setAttribute('readonly', 'readonly');
     setTimeout(function(){
-      inp._blurring = false;
+      inp.removeAttribute('readonly');
       if (dd && _avmeDdActiveInp === inp) { dd.style.display = 'none'; _avmeDdActiveInp = null; }
-      // Restaurer la valeur snapshot (annule tout ce qui a pu être tapé pendant le délai)
       var known = (_swAccNames || []).indexOf(snapSelected) !== -1 || (_swAccNames || []).indexOf(snapVal) !== -1;
       if (!known) {
         inp.value = inp.dataset.originalName || '';
@@ -4245,10 +4243,9 @@ function adminVideoEditorMakeBar(selectedName, idx, isNew) {
       }
       inp.style.borderColor = isNewRef.val ? 'var(--gold)' : 'var(--border2)';
       adminVideoEditorCheckChanged2();
-    }, 150);
+    }, 200);
   };
   inp.oninput = function(){
-    if (this._blurring) return; // ignorer les events pendant le blur
     this.style.color = 'var(--muted2)';
     this.dataset.selectedName = '';
     avmeShowDropdown(this, isNewRef);
@@ -4300,6 +4297,7 @@ function adminVideoEditorSavePhrase2() {
     if (data.ok) {
       ta.dataset.original = ta.value;
       vid.phrase2 = ta.value;
+      adminVideoEditorUpdateCard();
       btn1.textContent = 'MODIFIER';
     } else {
       if (errEl) { errEl.textContent = data.error || 'Erreur'; errEl.style.display = 'block'; }
@@ -4310,6 +4308,7 @@ function adminVideoEditorSavePhrase2() {
     // Apps Script redirige → la sauvegarde a probablement réussi
     ta.dataset.original = ta.value;
     vid.phrase2 = ta.value;
+    adminVideoEditorUpdateCard();
     btn1.textContent = 'MODIFIER';
     if (errEl) errEl.style.display = 'none';
   });
@@ -4355,10 +4354,10 @@ function adminVideoEditorSaveIds() {
     if (data.ok) {
       vid.fb_ids       = newFbIds;
       vid.ids_facebook = newIdsFacebook;
-      // Mettre à jour les originalName sur toutes les barres et griser le bouton
-      inputs.forEach(function(inp2) { inp2.dataset.originalName = inp2.dataset.selectedName || inp2.value; });
+      // Reconstruire les barres (supprime les vides/effacés) + griser bouton + màj card
+      adminVideoEditorBuildPart2();
+      adminVideoEditorUpdateCard();
       btn2.textContent = 'MODIFIER';
-      adminVideoEditorCheckChanged2();
     } else {
       if (errEl) { errEl.textContent = data.error || 'Erreur'; errEl.style.display = 'block'; }
       btn2.disabled = false; btn2.style.opacity = '1'; btn2.textContent = 'MODIFIER';
@@ -4368,11 +4367,23 @@ function adminVideoEditorSaveIds() {
     // Apps Script redirige → la sauvegarde a probablement réussi
     vid.fb_ids       = newFbIds;
     vid.ids_facebook = newIdsFacebook;
-    inputs.forEach(function(inp2) { inp2.dataset.originalName = inp2.dataset.selectedName || inp2.value; });
+    adminVideoEditorBuildPart2();
+    adminVideoEditorUpdateCard();
     btn2.textContent = 'MODIFIER';
     if (errEl) errEl.style.display = 'none';
-    adminVideoEditorCheckChanged2();
   });
+}
+
+function adminVideoEditorUpdateCard() {
+  var vid = _adminVideoEditorData;
+  if (!vid) return;
+  // Mettre à jour phrase2 dans le DOM de la card (l'élément stocké dans vid._domPhrase2El)
+  if (vid._domPhrase2El) {
+    vid._domPhrase2El.textContent = vid.phrase2 || '';
+    var fs = (vid.phrase2 || '').length < 45 ? '15.6px' : '12px';
+    vid._domPhrase2El.style.fontSize = fs;
+  }
+  // Mettre à jour ids_facebook affiché s'il y en a un (rien de visible dans la card par défaut)
 }
 
 // Charge IDS_APPLI col A (noms) + col H (fb_id numérique) dans un cache local
@@ -4515,6 +4526,8 @@ function renderVideoList(videos, onDone) {
       phraseEl.style.cssText = 'font-size:' + phraseFontSize + ';font-weight:600;color:var(--white);line-height:1.4;margin-bottom:6px;text-align:center';
       phraseEl.textContent = v.phrase2;
       info2.appendChild(phraseEl);
+      // Stocker la ref DOM pour mise à jour depuis l'éditeur admin
+      v._domPhrase2El = phraseEl;
     }
 
     // ── Ligne lieu (gauche) + date (droite) ──
@@ -4541,7 +4554,7 @@ function renderVideoList(videos, onDone) {
     if (_adminMode) {
       (function(vid, el) {
         var _timer;
-        el.addEventListener('touchstart', function(){ _timer = setTimeout(function(){ adminOpenVideoEditor(vid); }, 1000); }, { passive: true });
+        el.addEventListener('touchstart', function(e){ e.preventDefault(); _timer = setTimeout(function(){ adminOpenVideoEditor(vid); }, 1000); }, { passive: false });
         el.addEventListener('touchend',   function(){ clearTimeout(_timer); }, { passive: true });
         el.addEventListener('touchmove',  function(){ clearTimeout(_timer); }, { passive: true });
         el.addEventListener('mousedown',  function(){ _timer = setTimeout(function(){ adminOpenVideoEditor(vid); }, 1000); });
