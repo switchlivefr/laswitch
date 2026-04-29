@@ -4243,6 +4243,7 @@ function adminVideoEditorMakeBar(selectedName, idx, isNew) {
 
   // Au tap/click : vider la valeur affichée et ouvrir le dropdown
   function openDd(e) {
+    if (!inp.readOnly) return; // déjà ouvert
     inp.readOnly = false;
     inp.style.caretColor = 'var(--gold)';
     inp.value = '';
@@ -4250,6 +4251,7 @@ function adminVideoEditorMakeBar(selectedName, idx, isNew) {
     inp.style.color = 'var(--muted2)';
     inp.style.borderColor = 'var(--gold)';
     avmeShowDropdown(inp, isNewRef);
+    adminVideoEditorCheckChanged2(); // activer le bouton dès l'ouverture
   }
   inp.addEventListener('touchstart', function(e){ e.stopPropagation(); }, { passive: true });
   inp.addEventListener('click', openDd);
@@ -4257,17 +4259,21 @@ function adminVideoEditorMakeBar(selectedName, idx, isNew) {
   inp.onblur = function(){
     var dd = document.getElementById('avme-dropdown');
     if (dd && _avmeDdActiveInp === inp) { dd.style.display = 'none'; _avmeDdActiveInp = null; }
-    // Remettre readonly et restaurer la valeur selectedName courante
     inp.readOnly = true;
     inp.style.caretColor = 'transparent';
     var sel = inp.dataset.selectedName || '';
     var known = (_swAccNames || []).indexOf(sel) !== -1;
-    if (!known) {
-      // Rien de valide sélectionné → remettre l'original affiché
-      inp.value = inp.dataset.originalName || '';
-      inp.dataset.selectedName = inp.dataset.originalName || '';
-    } else {
+    if (known) {
+      // Un nom valide a été choisi → l'afficher
       inp.value = sel;
+    } else if (isNewRef.val) {
+      // Barre nouvelle : pas de choix → remettre vide (pas de suppression à faire)
+      inp.value = '';
+      inp.dataset.selectedName = '';
+    } else {
+      // Barre existante : pas de choix → laisser vide = suppression voulue
+      inp.value = '';
+      inp.dataset.selectedName = '';
     }
     inp.style.color = inp.value ? 'var(--white)' : 'var(--muted2)';
     inp.style.borderColor = isNewRef.val ? 'var(--gold)' : 'var(--border2)';
@@ -4303,8 +4309,10 @@ function adminVideoEditorCheckChanged2() {
   var inputs = container.querySelectorAll('input');
   var changed = false;
   inputs.forEach(function(inp) {
+    // La valeur effective = selectedName si connu, sinon valeur affichée (peut être vide = suppression)
     var sel = inp.dataset.selectedName || inp.value.trim();
-    if (sel !== (inp.dataset.originalName || '')) changed = true;
+    var orig = inp.dataset.originalName || '';
+    if (sel !== orig) changed = true;
   });
   btn2.disabled = !changed;
   btn2.style.opacity = changed ? '1' : '0.4';
