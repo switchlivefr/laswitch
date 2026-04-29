@@ -4111,6 +4111,233 @@ function stopPrestasVideo() {
   }
 }
 
+
+// ============================================================
+// ADMIN : éditeur métadonnées vidéo (VIDEOS col E, F, H)
+// ============================================================
+var _adminVideoEditorData = null; // vidéo en cours d'édition
+
+function adminOpenVideoEditor(vid) {
+  _adminVideoEditorData = vid;
+  var overlay = document.getElementById('m-admin-video-editor');
+  if (!overlay) return;
+
+  // -- Partie 1 : phrase2 (col H) --
+  var ta = document.getElementById('avme-phrase2');
+  if (ta) {
+    ta.value = vid.phrase2 || '';
+    ta.dataset.original = vid.phrase2 || '';
+  }
+  var btn1 = document.getElementById('avme-btn-phrase2');
+  if (btn1) { btn1.disabled = true; btn1.style.opacity = '0.4'; }
+
+  // -- Partie 2 : ids_facebook (col F) et fb_ids associés (col E) via IDS_APPLI --
+  adminVideoEditorBuildPart2();
+
+  overlay.style.display = 'flex';
+}
+
+function adminVideoEditorBuildPart2() {
+  var vid = _adminVideoEditorData;
+  var container = document.getElementById('avme-ids-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  // Parser les noms existants (col F, séparés par |)
+  var existingNames = vid.ids_facebook ? vid.ids_facebook.split('|').map(function(s){ return s.trim(); }).filter(Boolean) : [];
+
+  // Construire une barre pour chaque nom existant
+  existingNames.forEach(function(name, idx) {
+    container.appendChild(adminVideoEditorMakeBar(name, idx, false));
+  });
+
+  // Barre supplémentaire vide (contours distincts)
+  container.appendChild(adminVideoEditorMakeBar('', existingNames.length, true));
+
+  var btn2 = document.getElementById('avme-btn-ids');
+  if (btn2) { btn2.disabled = true; btn2.style.opacity = '0.4'; }
+}
+
+function adminVideoEditorMakeBar(selectedName, idx, isNew) {
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'position:relative;margin-bottom:' + (isNew ? '0' : '6px');
+  wrap.dataset.idx = idx;
+  wrap.dataset.isNew = isNew ? '1' : '0';
+
+  var sel = document.createElement('select');
+  sel.style.cssText = 'width:100%;background:var(--bg);border:' + (isNew ? '2px dashed var(--gold)' : '1px solid var(--border2)') + ';border-radius:var(--rs);padding:10px 12px;font-family:"DM Sans",sans-serif;font-size:14px;color:' + (selectedName ? 'var(--white)' : 'var(--muted2)') + ';outline:none;-webkit-appearance:none;appearance:none;cursor:pointer';
+  sel.dataset.originalName = selectedName;
+
+  // Option vide (placeholder)
+  var optEmpty = document.createElement('option');
+  optEmpty.value = '';
+  optEmpty.textContent = '— Choisir un nom —';
+  sel.appendChild(optEmpty);
+
+  // Options depuis _swAccNames (liste IDS_APPLI col A)
+  var names = window._swAccNames || [];
+  names.forEach(function(n) {
+    var opt = document.createElement('option');
+    opt.value = n;
+    opt.textContent = n;
+    if (n === selectedName) opt.selected = true;
+    sel.appendChild(opt);
+  });
+
+  sel.onchange = function() {
+    var chosen = sel.value;
+    if (isNew && chosen) {
+      // Convertir cette barre en barre normale
+      sel.style.border = '1px solid var(--border2)';
+      sel.style.color = 'var(--white)';
+      wrap.dataset.isNew = '0';
+      sel.dataset.originalName = '';
+      // Ajouter une nouvelle barre vide en dessous
+      var container = document.getElementById('avme-ids-container');
+      var newIdx = container.children.length;
+      container.appendChild(adminVideoEditorMakeBar('', newIdx, true));
+    }
+    adminVideoEditorCheckChanged2();
+  };
+
+  wrap.appendChild(sel);
+  return wrap;
+}
+
+function adminVideoEditorPhrase2Input() {
+  var ta = document.getElementById('avme-phrase2');
+  var btn1 = document.getElementById('avme-btn-phrase2');
+  if (!ta || !btn1) return;
+  var changed = ta.value !== ta.dataset.original;
+  btn1.disabled = !changed;
+  btn1.style.opacity = changed ? '1' : '0.4';
+}
+
+function adminVideoEditorCheckChanged2() {
+  var btn2 = document.getElementById('avme-btn-ids');
+  if (!btn2) return;
+  var container = document.getElementById('avme-ids-container');
+  if (!container) return;
+  var bars = container.querySelectorAll('select');
+  var changed = false;
+  bars.forEach(function(sel) {
+    if (sel.value !== sel.dataset.originalName) changed = true;
+  });
+  btn2.disabled = !changed;
+  btn2.style.opacity = changed ? '1' : '0.4';
+}
+
+function adminVideoEditorSavePhrase2() {
+  var vid = _adminVideoEditorData;
+  var ta = document.getElementById('avme-phrase2');
+  var btn1 = document.getElementById('avme-btn-phrase2');
+  var errEl = document.getElementById('avme-err');
+  if (!vid || !ta || !btn1) return;
+
+  btn1.disabled = true; btn1.style.opacity = '0.4'; btn1.textContent = '...';
+  if (errEl) errEl.style.display = 'none';
+
+  fetch('/api?action=setVideoMeta', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      rowIndex:     vid.rowIndex,
+      phrase2:      ta.value,
+      fb_ids:       vid.fb_ids       || '',
+      ids_facebook: vid.ids_facebook || ''
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    if (data.ok) {
+      ta.dataset.original = ta.value;
+      vid.phrase2 = ta.value;
+      btn1.textContent = 'MODIFIER';
+    } else {
+      if (errEl) { errEl.textContent = data.error || 'Erreur'; errEl.style.display = 'block'; }
+      btn1.disabled = false; btn1.style.opacity = '1'; btn1.textContent = 'MODIFIER';
+    }
+  })
+  .catch(function() {
+    if (errEl) { errEl.textContent = 'Erreur réseau'; errEl.style.display = 'block'; }
+    btn1.disabled = false; btn1.style.opacity = '1'; btn1.textContent = 'MODIFIER';
+  });
+}
+
+function adminVideoEditorSaveIds() {
+  var vid = _adminVideoEditorData;
+  var btn2 = document.getElementById('avme-btn-ids');
+  var errEl = document.getElementById('avme-err');
+  if (!vid || !btn2) return;
+
+  btn2.disabled = true; btn2.style.opacity = '0.4'; btn2.textContent = '...';
+  if (errEl) errEl.style.display = 'none';
+
+  // Collecter tous les noms sélectionnés (barres non-vides et non-nouvelles)
+  var container = document.getElementById('avme-ids-container');
+  var bars = container.querySelectorAll('select');
+  var selectedNames = [];
+  bars.forEach(function(sel) {
+    var v = sel.value.trim();
+    if (v) selectedNames.push(v);
+  });
+
+  // Chercher les fb_ids correspondants dans _swAccNames et IDS_APPLI
+  // On utilise l'endpoint getPrenom qui a accès à IDS_APPLI — mais on a besoin du col H (fb_id)
+  // On va construire les tableaux en cherchant dans _adminIdsAppliCache
+  var fbIdsArr = [];
+  var idsFbArr = selectedNames.slice(); // les noms = ids_facebook (col F)
+
+  // Chercher les fb_ids (col H de IDS_APPLI) dans le cache
+  var cache = window._adminIdsAppliCache || {};
+  selectedNames.forEach(function(name) {
+    fbIdsArr.push(cache[name] || '');
+  });
+
+  var newFbIds      = fbIdsArr.join(' | ');
+  var newIdsFacebook = idsFbArr.join(' | ');
+
+  fetch('/api?action=setVideoMeta', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      rowIndex:     vid.rowIndex,
+      phrase2:      vid.phrase2       || '',
+      fb_ids:       newFbIds,
+      ids_facebook: newIdsFacebook
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data) {
+    if (data.ok) {
+      vid.fb_ids       = newFbIds;
+      vid.ids_facebook = newIdsFacebook;
+      // Mettre à jour les originalName sur toutes les barres
+      bars.forEach(function(sel) { sel.dataset.originalName = sel.value; });
+      btn2.textContent = 'MODIFIER';
+    } else {
+      if (errEl) { errEl.textContent = data.error || 'Erreur'; errEl.style.display = 'block'; }
+      btn2.disabled = false; btn2.style.opacity = '1'; btn2.textContent = 'MODIFIER';
+    }
+  })
+  .catch(function() {
+    if (errEl) { errEl.textContent = 'Erreur réseau'; errEl.style.display = 'block'; }
+    btn2.disabled = false; btn2.style.opacity = '1'; btn2.textContent = 'MODIFIER';
+  });
+}
+
+// Charge IDS_APPLI col A (noms) + col H (fb_id numérique) dans un cache local
+function adminLoadIdsAppliCache() {
+  if (window._adminIdsAppliCacheLoaded) return;
+  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=getIdsAppliMap')
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      window._adminIdsAppliCache = data.map || {};
+      window._adminIdsAppliCacheLoaded = true;
+    })
+    .catch(function(){});
+}
+
 function renderVideoList(videos, onDone) {
   var list = document.getElementById('prestas-list');
   list.innerHTML = '';
@@ -4260,6 +4487,17 @@ function renderVideoList(videos, onDone) {
     }
     info2.appendChild(bottomRow);
     card.appendChild(info2);
+
+    // ── Bouton ADMIN : modifier les métadonnées de la vidéo ──
+    if (_adminMode) {
+      (function(vid) {
+        var editBtn = document.createElement('button');
+        editBtn.textContent = '✏️ Modifier';
+        editBtn.style.cssText = 'width:100%;background:var(--card);border:none;border-top:1px solid var(--border);padding:10px 14px;color:var(--gold);font-family:"Bebas Neue",sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer;text-align:left';
+        editBtn.onclick = function(e) { e.stopPropagation(); adminOpenVideoEditor(vid); };
+        card.appendChild(editBtn);
+      })(v);
+    }
 
     list.appendChild(card);
     cards.push(card);
@@ -4432,6 +4670,7 @@ function adminTap() {
   if (_adminTapCount >= 5) {
     _adminTapCount = 0;
     _adminMode = !_adminMode;
+    if (_adminMode) { adminLoadIdsAppliCache(); }
     _prestasUnlocked = false;
     _prestasClicks = 0;
     // Quand on repasse en mode utilisateur : nettoyer p-prestas (vider les vidéos admin)
@@ -5584,6 +5823,36 @@ function checkFbSession() {
       onclick="swAdminPrenomAjouter()"
       style="width:100%;background:#1877f2;color:#fff;border:none;border-radius:var(--rs);padding:14px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer"
     >AJOUTER</button>
+  </div>
+</div>
+
+<!-- MODALE ADMIN : Éditeur métadonnées vidéo -->
+<div id="m-admin-video-editor" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:1100;background:rgba(0,0,0,.82);align-items:flex-start;justify-content:center;padding:16px;padding-top:12vh;overflow-y:auto" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--card);border:1px solid var(--gold);border-radius:var(--r);width:100%;max-width:440px;padding:20px 16px 16px;display:flex;flex-direction:column;gap:0" onclick="event.stopPropagation()">
+
+    <!-- PARTIE 1 : phrase2 (col H) -->
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--gold);letter-spacing:1.5px;margin-bottom:8px">NOMS (texte affiché)</div>
+    <textarea
+      id="avme-phrase2"
+      rows="2"
+      spellcheck="false"
+      oninput="adminVideoEditorPhrase2Input()"
+      style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:var(--rs);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;color:var(--white);outline:none;caret-color:var(--gold);resize:none;-webkit-appearance:none;box-sizing:border-box"
+      onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border2)'"
+    ></textarea>
+    <button id="avme-btn-phrase2" onclick="adminVideoEditorSavePhrase2()" disabled
+      style="width:100%;background:var(--gold);color:#000;border:none;border-radius:var(--rs);padding:11px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;opacity:0.4;transition:opacity .2s;margin-top:8px;margin-bottom:18px">MODIFIER</button>
+
+    <!-- Séparateur -->
+    <div style="border-top:1px solid var(--border);margin-bottom:14px"></div>
+
+    <!-- PARTIE 2 : ids_facebook (col F) -->
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--gold);letter-spacing:1.5px;margin-bottom:8px">PARTICIPANTS (ID Facebook)</div>
+    <div id="avme-ids-container" style="display:flex;flex-direction:column;gap:0;margin-bottom:8px"></div>
+    <button id="avme-btn-ids" onclick="adminVideoEditorSaveIds()" disabled
+      style="width:100%;background:var(--gold);color:#000;border:none;border-radius:var(--rs);padding:11px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;opacity:0.4;transition:opacity .2s;margin-top:4px">MODIFIER</button>
+
+    <div id="avme-err" style="display:none;font-size:12px;color:#e53935;text-align:center;margin-top:8px"></div>
   </div>
 </div>
 
