@@ -4164,43 +4164,56 @@ function adminVideoEditorMakeBar(selectedName, idx, isNew) {
   wrap.dataset.idx = idx;
   wrap.dataset.isNew = isNew ? '1' : '0';
 
-  var sel = document.createElement('select');
-  sel.style.cssText = 'width:100%;background:var(--bg);border:' + (isNew ? '2px dashed var(--gold)' : '1px solid var(--border2)') + ';border-radius:var(--rs);padding:10px 12px;font-family:"DM Sans",sans-serif;font-size:14px;color:' + (selectedName ? 'var(--white)' : 'var(--muted2)') + ';outline:none;-webkit-appearance:none;appearance:none;cursor:pointer';
-  sel.dataset.originalName = selectedName;
-
-  // Option vide (placeholder)
-  var optEmpty = document.createElement('option');
-  optEmpty.value = '';
-  optEmpty.textContent = '— Choisir un nom —';
-  sel.appendChild(optEmpty);
-
-  // Options depuis _swAccNames (liste IDS_APPLI col A)
+  // Datalist unique pour cette barre
+  var dlId = 'avme-dl-' + idx + '-' + Date.now();
+  var dl = document.createElement('datalist');
+  dl.id = dlId;
   var names = window._swAccNames || [];
   names.forEach(function(n) {
     var opt = document.createElement('option');
     opt.value = n;
-    opt.textContent = n;
-    if (n === selectedName) opt.selected = true;
-    sel.appendChild(opt);
+    dl.appendChild(opt);
   });
 
-  sel.onchange = function() {
-    var chosen = sel.value;
-    if (isNew && chosen) {
-      // Convertir cette barre en barre normale
-      sel.style.border = '1px solid var(--border2)';
-      sel.style.color = 'var(--white)';
-      wrap.dataset.isNew = '0';
-      sel.dataset.originalName = '';
-      // Ajouter une nouvelle barre vide en dessous
-      var container = document.getElementById('avme-ids-container');
-      var newIdx = container.children.length;
-      container.appendChild(adminVideoEditorMakeBar('', newIdx, true));
+  var inp = document.createElement('input');
+  inp.type = 'text';
+  inp.setAttribute('list', dlId);
+  inp.autocomplete = 'off';
+  inp.placeholder = isNew ? '+ Ajouter un participant…' : '';
+  inp.value = selectedName;
+  inp.dataset.originalName = selectedName;
+  inp.style.cssText = 'width:100%;background:var(--bg);border:' + (isNew ? '2px dashed var(--gold)' : '1px solid var(--border2)') + ';border-radius:var(--rs);padding:10px 12px;font-family:"DM Sans",sans-serif;font-size:14px;color:' + (selectedName ? 'var(--white)' : 'var(--muted2)') + ';outline:none;caret-color:var(--gold);-webkit-appearance:none;box-sizing:border-box';
+  inp.onfocus = function(){ this.style.borderColor='var(--gold)'; };
+  inp.onblur  = function(){
+    // Au blur : si la valeur ne correspond pas à un nom connu → remettre l'original
+    var val = this.value.trim();
+    var known = (window._swAccNames || []).indexOf(val) !== -1;
+    if (!known && val !== '') { this.value = inp.dataset.originalName; }
+    if (!known) { this.style.borderColor = isNew ? 'var(--gold)' : 'var(--border2)'; }
+    else { this.style.borderColor = 'var(--border2)'; }
+  };
+  inp.oninput = function() {
+    var val = this.value.trim();
+    var known = (window._swAccNames || []).indexOf(val) !== -1;
+    if (known) {
+      this.style.color = 'var(--white)';
+      if (isNew) {
+        // Convertir cette barre en barre normale
+        inp.style.border = '1px solid var(--border2)';
+        inp.dataset.originalName = '';
+        wrap.dataset.isNew = '0';
+        isNew = false;
+        // Ajouter une nouvelle barre vide en dessous
+        var container = document.getElementById('avme-ids-container');
+        var newIdx = container.children.length;
+        container.appendChild(adminVideoEditorMakeBar('', newIdx, true));
+      }
     }
     adminVideoEditorCheckChanged2();
   };
 
-  wrap.appendChild(sel);
+  wrap.appendChild(dl);
+  wrap.appendChild(inp);
   return wrap;
 }
 
@@ -4237,16 +4250,8 @@ function adminVideoEditorSavePhrase2() {
   btn1.disabled = true; btn1.style.opacity = '0.4'; btn1.textContent = '...';
   if (errEl) errEl.style.display = 'none';
 
-  fetch('/api?action=setVideoMeta', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      rowIndex:     vid.rowIndex,
-      phrase2:      ta.value,
-      fb_ids:       vid.fb_ids       || '',
-      ids_facebook: vid.ids_facebook || ''
-    })
-  })
+  var _url1 = 'https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=setVideoMeta&rowIndex=' + vid.rowIndex + '&phrase2=' + encodeURIComponent(ta.value) + '&fb_ids=' + encodeURIComponent(vid.fb_ids || '') + '&ids_facebook=' + encodeURIComponent(vid.ids_facebook || '');
+  fetch(_url1)
   .then(function(r){ return r.json(); })
   .then(function(data) {
     if (data.ok) {
@@ -4297,16 +4302,8 @@ function adminVideoEditorSaveIds() {
   var newFbIds      = fbIdsArr.join(' | ');
   var newIdsFacebook = idsFbArr.join(' | ');
 
-  fetch('/api?action=setVideoMeta', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      rowIndex:     vid.rowIndex,
-      phrase2:      vid.phrase2       || '',
-      fb_ids:       newFbIds,
-      ids_facebook: newIdsFacebook
-    })
-  })
+  var _url2 = 'https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=setVideoMeta&rowIndex=' + vid.rowIndex + '&phrase2=' + encodeURIComponent(vid.phrase2 || '') + '&fb_ids=' + encodeURIComponent(newFbIds) + '&ids_facebook=' + encodeURIComponent(newIdsFacebook);
+  fetch(_url2)
   .then(function(r){ return r.json(); })
   .then(function(data) {
     if (data.ok) {
@@ -5831,7 +5828,7 @@ function checkFbSession() {
   <div style="background:var(--card);border:1px solid var(--gold);border-radius:var(--r);width:100%;max-width:440px;padding:20px 16px 16px;display:flex;flex-direction:column;gap:0" onclick="event.stopPropagation()">
 
     <!-- PARTIE 1 : phrase2 (col H) -->
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--gold);letter-spacing:1.5px;margin-bottom:8px">NOMS (texte affiché)</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--gold);letter-spacing:1.5px;margin-bottom:8px;text-align:center">NOMS (texte affiché)</div>
     <textarea
       id="avme-phrase2"
       rows="2"
@@ -5847,7 +5844,7 @@ function checkFbSession() {
     <div style="border-top:1px solid var(--border);margin-bottom:14px"></div>
 
     <!-- PARTIE 2 : ids_facebook (col F) -->
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--gold);letter-spacing:1.5px;margin-bottom:8px">PARTICIPANTS (ID Facebook)</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--gold);letter-spacing:1.5px;margin-bottom:8px;text-align:center">PARTICIPANTS (ID Facebook)</div>
     <div id="avme-ids-container" style="display:flex;flex-direction:column;gap:0;margin-bottom:8px"></div>
     <button id="avme-btn-ids" onclick="adminVideoEditorSaveIds()" disabled
       style="width:100%;background:var(--gold);color:#000;border:none;border-radius:var(--rs);padding:11px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;opacity:0.4;transition:opacity .2s;margin-top:4px">MODIFIER</button>
