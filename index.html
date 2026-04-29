@@ -2952,7 +2952,7 @@ function hideHint(){var el=document.getElementById('hint-bar');if(el)el.classLis
 // ADMIN : éditeur note colonne D de SWiTCH
 // ============================================================
 function adminOpenNoteEditor(title, ctx, full) {
-  // Chercher le texte col D TOUJOURS dans RAW.switch.rows (col C=index 2, col D=index 3)
+  // Chercher le texte col Q TOUJOURS dans RAW.switch.rows (col C=index 2, col Q=index 16)
   // Même pour OSL, le texte est dans la feuille SWiTCH
   var noteText = '';
   var rows = RAW.switch && RAW.switch.rows ? RAW.switch.rows : [];
@@ -2960,7 +2960,7 @@ function adminOpenNoteEditor(title, ctx, full) {
   for (var i = 4; i < rows.length; i++) {
     var colC = (rows[i][2] || '').trim();
     if (colC === fullTitle || colC === title) {
-      noteText = (rows[i][3] || '').trim();
+      noteText = (rows[i][16] || '').trim();
       break;
     }
   }
@@ -3012,7 +3012,7 @@ function adminNoteEditorValider() {
         var rows = RAW.switch && RAW.switch.rows ? RAW.switch.rows : [];
         for (var i = 4; i < rows.length; i++) {
           var colC = (rows[i][2] || '').trim();
-          if (colC === title) { rows[i][3] = newNote; break; }
+          if (colC === title) { rows[i][16] = newNote; break; }
         }
         overlay.style.display = 'none';
         btn.textContent = 'VALIDER';
