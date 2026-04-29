@@ -666,15 +666,18 @@ document.addEventListener('keydown', function(e) {
 
       const rows = (data.values || []).slice(1);
       const videos = [];
-      for (const row of rows) {
+      for (let rowIdx = 0; rowIdx < rows.length; rowIdx++) {
+        const row = rows[rowIdx];
         const youtube = (row[0] || '').trim();
         const phrase  = (row[1] || '').trim();
         const personnes = (row[2] || '').trim();
         const date    = (row[3] || '').trim();
         const fb_ids  = (row[4] || '').trim();
+        const ids_facebook = (row[5] || '').trim();
         const titre   = (row[6] || '').trim();
         const phrase2 = (row[7] || '').trim();
         const lieu    = (row[8] || '').trim();
+        const rowIndex = rowIdx + 2; // +1 pour header, +1 pour 1-based
         if (!youtube) continue;
 
         if (!isAdmin) {
@@ -683,7 +686,7 @@ document.addEventListener('keydown', function(e) {
           if (!ids.includes(fbId)) continue;
         }
 
-        videos.push({ youtube, phrase, personnes, date, fb_ids, titre, phrase2, lieu });
+        videos.push({ youtube, phrase, personnes, date, fb_ids, ids_facebook, titre, phrase2, lieu, rowIndex });
       }
 
       // Tri du plus récent au plus ancien
@@ -795,18 +798,21 @@ document.addEventListener('keydown', function(e) {
       if (data.error) throw new Error(data.error.message);
       const rows = (data.values || []).slice(1);
       const videos = [];
-      for (const row of rows) {
+      for (let rowIdx = 0; rowIdx < rows.length; rowIdx++) {
+        const row = rows[rowIdx];
         const youtube = (row[0] || '').trim();
         const phrase  = (row[1] || '').trim();
         const personnes = (row[2] || '').trim();
         const date    = (row[3] || '').trim();
         const fb_ids  = (row[4] || '').trim();
+        const ids_facebook = (row[5] || '').trim();
         const titre   = (row[6] || '').trim();
         const phrase2 = (row[7] || '').trim();
         const lieu    = (row[8] || '').trim();
+        const rowIndex = rowIdx + 2;
         if (!youtube) continue;
         if (!phrase.toLowerCase().includes(query) && !personnes.toLowerCase().includes(query) && !titre.toLowerCase().includes(query) && !phrase2.toLowerCase().includes(query)) continue;
-        videos.push({ youtube, phrase, personnes, date, fb_ids, titre, phrase2, lieu });
+        videos.push({ youtube, phrase, personnes, date, fb_ids, ids_facebook, titre, phrase2, lieu, rowIndex });
       }
       videos.sort((a, b) => {
         const parseDate = d => { if (!d) return 0; const p = d.split('/'); if (p.length === 3) return new Date(p[2], p[1]-1, p[0]).getTime(); return 0; };
@@ -819,6 +825,27 @@ document.addEventListener('keydown', function(e) {
       return new Response(JSON.stringify({ videos: [], error: e.message }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
+    }
+  }
+
+  // POST setVideoMeta — écrit phrase2 (col H), fb_ids (col E), ids_facebook (col F) dans VIDEOS
+  if (request.method === 'POST' && action === 'setVideoMeta') {
+    try {
+      const body = await request.json();
+      const rowIndex    = parseInt(body.rowIndex || 0);
+      const phrase2     = String(body.phrase2 || '');
+      const fb_ids      = String(body.fb_ids || '');
+      const ids_facebook = String(body.ids_facebook || '');
+      if (!rowIndex) return new Response(JSON.stringify({ error: 'rowIndex manquant' }), { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+      const scriptUrl = APPS_SCRIPT_URL + '?action=setVideoMeta&rowIndex=' + rowIndex +
+        '&phrase2=' + encodeURIComponent(phrase2) +
+        '&fb_ids=' + encodeURIComponent(fb_ids) +
+        '&ids_facebook=' + encodeURIComponent(ids_facebook);
+      const r = await fetch(scriptUrl);
+      const data = await r.json();
+      return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+    } catch(e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
     }
   }
 
