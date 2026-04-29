@@ -2345,7 +2345,8 @@ function renderSwitch(){
   var isFalse=function(v){var s=(v||'').trim().toLowerCase();return s==='false'||s==='faux';};
   var isTrue=function(v){var s=(v||'').trim().toLowerCase();return s==='true'||s==='vrai';};
   for(var i=0;i<rows.length;i++){
-    var a=g(rows,i,0),t=g(rows,i,2),colB=g(rows,i,1);
+    var a=g(rows,i,0),colB=g(rows,i,1);
+    var t=_resaOff?(g(rows,i,5)||g(rows,i,2)):g(rows,i,2);
     if(t.toLowerCase()==='zzz'||a.toLowerCase()==='zzz')break;
     if(i<4||!a||!t||a==='FIN'||t==='fin')continue;
     // Mode utilisateur : seulement les titres dont col B = FALSE
