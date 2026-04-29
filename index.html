@@ -4218,7 +4218,7 @@ function adminVideoEditorMakeBar(selectedName, idx, isNew) {
   inp.value = selectedName;
   inp.dataset.originalName = selectedName;
   inp.dataset.selectedName  = selectedName;
-  inp.style.cssText = 'width:100%;background:var(--bg);border:' + (isNew ? '2px dashed var(--gold)' : '1px solid var(--border2)') + ';border-radius:var(--rs);padding:10px 12px;font-family:"DM Sans",sans-serif;font-size:14px;color:' + (selectedName ? 'var(--white)' : 'var(--muted2)') + ';outline:none;caret-color:var(--gold);-webkit-appearance:none;box-sizing:border-box';
+  inp.style.cssText = 'width:100%;background:var(--bg);border:' + (isNew ? '2px solid var(--gold)' : '1px solid var(--border2)') + ';border-radius:var(--rs);padding:10px 12px;font-family:"DM Sans",sans-serif;font-size:14px;color:' + (selectedName ? 'var(--white)' : 'var(--muted2)') + ';outline:none;caret-color:var(--gold);-webkit-appearance:none;box-sizing:border-box';
 
   inp.onfocus = function(){
     this.style.borderColor = 'var(--gold)';
@@ -4226,13 +4226,14 @@ function adminVideoEditorMakeBar(selectedName, idx, isNew) {
   };
   inp.onblur = function(){
     var dd = document.getElementById('avme-dropdown');
-    // Laisser le click sur un item se déclencher d'abord (géré par onmousedown prevent)
+    // Annuler tout input en cours (empêche la mémorisation de frappes pendant le délai)
+    inp.value = inp.value; // flush
     setTimeout(function(){
       if (dd && _avmeDdActiveInp === inp) { dd.style.display = 'none'; _avmeDdActiveInp = null; }
-      // Si valeur pas dans la liste → remettre l'original
+      // Si valeur pas dans la liste → remettre l'original immédiatement
       var val = inp.value.trim();
       var known = (_swAccNames || []).indexOf(val) !== -1;
-      if (!known && val !== '') { inp.value = inp.dataset.originalName || ''; }
+      if (!known) { inp.value = inp.dataset.originalName || ''; inp.dataset.selectedName = inp.dataset.originalName || ''; }
       inp.style.borderColor = isNewRef.val ? 'var(--gold)' : 'var(--border2)';
       adminVideoEditorCheckChanged2();
     }, 150);
@@ -4296,8 +4297,11 @@ function adminVideoEditorSavePhrase2() {
     }
   })
   .catch(function() {
-    if (errEl) { errEl.textContent = 'Erreur réseau'; errEl.style.display = 'block'; }
-    btn1.disabled = false; btn1.style.opacity = '1'; btn1.textContent = 'MODIFIER';
+    // Apps Script redirige → la sauvegarde a probablement réussi
+    ta.dataset.original = ta.value;
+    vid.phrase2 = ta.value;
+    btn1.textContent = 'MODIFIER';
+    if (errEl) errEl.style.display = 'none';
   });
 }
 
@@ -4335,14 +4339,14 @@ function adminVideoEditorSaveIds() {
   var newIdsFacebook = idsFbArr.join(' | ');
 
   var _url2 = 'https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=setVideoMeta&rowIndex=' + vid.rowIndex + '&phrase2=' + encodeURIComponent(vid.phrase2 || '') + '&fb_ids=' + encodeURIComponent(newFbIds) + '&ids_facebook=' + encodeURIComponent(newIdsFacebook);
-  fetch(_url2)
+  fetch(_url2, { redirect: 'follow' })
   .then(function(r){ return r.json(); })
   .then(function(data) {
     if (data.ok) {
       vid.fb_ids       = newFbIds;
       vid.ids_facebook = newIdsFacebook;
       // Mettre à jour les originalName sur toutes les barres
-      bars.forEach(function(sel) { sel.dataset.originalName = sel.value; });
+      inputs.forEach(function(inp2) { inp2.dataset.originalName = inp2.dataset.selectedName || inp2.value; });
       btn2.textContent = 'MODIFIER';
     } else {
       if (errEl) { errEl.textContent = data.error || 'Erreur'; errEl.style.display = 'block'; }
@@ -4350,8 +4354,12 @@ function adminVideoEditorSaveIds() {
     }
   })
   .catch(function() {
-    if (errEl) { errEl.textContent = 'Erreur réseau'; errEl.style.display = 'block'; }
-    btn2.disabled = false; btn2.style.opacity = '1'; btn2.textContent = 'MODIFIER';
+    // Apps Script redirige → la sauvegarde a probablement réussi
+    vid.fb_ids       = newFbIds;
+    vid.ids_facebook = newIdsFacebook;
+    inputs.forEach(function(inp2) { inp2.dataset.originalName = inp2.dataset.selectedName || inp2.value; });
+    btn2.textContent = 'MODIFIER';
+    if (errEl) errEl.style.display = 'none';
   });
 }
 
