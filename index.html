@@ -4577,7 +4577,7 @@ function renderVideoList(videos, onDone) {
 
 /* ---- RECHERCHE ADMIN ---- */
 var _searchMode = 'id';      // 'id' = par ID Facebook (bouton rouge actif) | 'phrase' = texte libre
-var _idsFbk = [];            // cache de la liste IDS_FBK
+var _idsFbk = [];            // alias — pointe vers _swAccFull (rétrocompat)
 var _searchValidated = false; // true quand un nom a été validé depuis le dropdown
 var _selectedFbItem = null;  // item sélectionné dans le dropdown (pour le bouton profil FB)
 
@@ -4716,10 +4716,14 @@ function runPhraseSearch(q) {
 }
 
 function loadIdsFbk() {
-  if (_idsFbk.length > 0) return; // déjà chargé
-  fetch('/api?action=getIdsFbk')
+  if (_swAccFull.length > 0) { _idsFbk = _swAccFull; return; } // déjà chargé
+  fetch('/api?action=getIdsAppli')
     .then(function(r) { return r.json(); })
-    .then(function(data) { _idsFbk = data.ids || []; });
+    .then(function(data) {
+      _swAccFull  = data.ids || [];
+      _idsFbk     = _swAccFull; // alias rétrocompat
+      _swAccNames = _swAccFull.map(function(i){ return i.name; });
+    });
 }
 
 // Fermer dropdown si clic ailleurs
@@ -4903,13 +4907,19 @@ function fallbackCopy(text, btn) {
 
 
 // SYSTEME ACCES SWITCH
-var _swAccNames = [];
-// Charger les noms IDS_APPLI au démarrage
+// Cache unifié : source unique = IDS_APPLI col A (nom) + col H (fb_id) via /api?action=getIdsAppli
+var _swAccFull  = []; // [{name, fb_id}] — source de vérité pour toutes les barres de recherche
+var _swAccNames = []; // alias noms seuls (rétrocompat swAccFilter, avmeShowDropdown)
+// Chargement au démarrage
 (function() {
-  fetch('https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=getAppliNames')
+  fetch('/api?action=getIdsAppli')
     .then(function(r){ return r.json(); })
-    .then(function(data){ _swAccNames = data.names || []; console.log('IDS_APPLI chargé:', _swAccNames.length, 'noms'); })
-    .catch(function(e){ console.warn('Erreur chargement noms:', e); });
+    .then(function(data){
+      _swAccFull  = data.ids || [];
+      _idsFbk     = _swAccFull;
+      _swAccNames = _swAccFull.map(function(i){ return i.name; });
+    })
+    .catch(function(e){ console.warn('Erreur chargement IDS_APPLI:', e); });
 })();
 var _swAccName  = '';
 var _swAccToken = '';
