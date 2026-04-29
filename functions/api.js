@@ -44,15 +44,15 @@ async function readSheet(name) {
 }
 
 // Lecture SWiTCH : garde les lignes header (i<4) + celles dont col B (index 1) = FALSE
+// Lecture SWiTCH : renvoie TOUTES les lignes sans filtrage.
+// Le front filtre selon le mode (admin = tout afficher, user = seulement col B FALSE)
 async function readSwitchSheet() {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent('SWiTCH')}?key=${API_KEY}`;
   const r = await fetch(url);
   const data = await r.json();
   if (data.error) throw new Error(data.error.message);
   const allRows = (data.values || []).map(row => row.map(cell => String(cell || '').trim().replace(/[`\u2018\u2019\u201A\u201B]/g, "'")));
-  const isFalse = v => { const s = v.trim().toLowerCase(); return s === 'false' || s === 'faux'; };
-  const filtered = allRows.filter((row, i) => i < 4 || isFalse(row[1] || ''));
-  return { rows: filtered, sheetName: 'SWiTCH' };
+  return { rows: allRows, sheetName: 'SWiTCH' };
 }
 
 // Lecture OSLSWiTCH :
