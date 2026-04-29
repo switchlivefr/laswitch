@@ -2359,7 +2359,7 @@ function renderSwitch(){
     var full=t.trim();
     allSongs.push({artist:a,title:clean,tag:tag,full:full,hidden:isTrue(filterCol)});
   }
-  var sw=document.getElementById('sw-count-sub');if(sw){var c1=g(RAW.switch.rows,0,2);sw.textContent=c1||(allSongs.length+' titres');}
+  var sw=document.getElementById('sw-count-sub');if(sw){var c1=_resaOff?g(RAW.switch.rows,2,5):g(RAW.switch.rows,2,4);sw.textContent=c1||(allSongs.length+' titres');}
   buildAlpha();
   if(searchQuery)paintSongs(allSongs.filter(function(s){ return swMatchSong(s.artist, s.title, searchQuery); }));
   else paintSongs(allSongs);
