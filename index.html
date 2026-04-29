@@ -2129,9 +2129,9 @@ history.pushState(null,'',window.location.href);
     if(Math.abs(dy)>Math.abs(dx)||Math.abs(dx)<th)return;
     var pages;
     if (_adminMode) {
-      pages = _resaOff ? ['p-home','p-switch','p-osl','p-rules','p-resa'] : ['p-home','p-switch','p-osl','p-rules'];
+      pages = _resaOff ? ['p-home','p-switch','p-rules','p-resa'] : ['p-home','p-switch','p-osl','p-rules'];
     } else {
-      pages = _resaOff ? ['p-home','p-prestas','p-switch','p-osl','p-rules','p-resa'] : ['p-home','p-prestas','p-switch','p-osl','p-rules'];
+      pages = _resaOff ? ['p-home','p-prestas','p-switch','p-rules','p-resa'] : ['p-home','p-prestas','p-switch','p-osl','p-rules'];
     }
     var idx=pages.indexOf(currentPage);if(idx===-1)return;
     if(dx<0&&idx<pages.length-1)nav(pages[idx+1],'left');
@@ -2345,18 +2345,19 @@ function renderSwitch(){
   var isFalse=function(v){var s=(v||'').trim().toLowerCase();return s==='false'||s==='faux';};
   var isTrue=function(v){var s=(v||'').trim().toLowerCase();return s==='true'||s==='vrai';};
   for(var i=0;i<rows.length;i++){
-    var a=g(rows,i,0),colB=g(rows,i,1);
-    var t=_resaOff?g(rows,i,5):g(rows,i,2);
+    var a=g(rows,i,0),colB=g(rows,i,1),colF=g(rows,i,5);
+    var t=g(rows,i,2);
     if(t.toLowerCase()==='zzz'||a.toLowerCase()==='zzz')break;
     if(i<4||!a||!t||a==='FIN'||t==='fin')continue;
-    // Mode utilisateur : seulement les titres dont col B = FALSE
-    if(!_adminMode && !isFalse(colB))continue;
+    // Mode utilisateur : resa_on → filtre col B, resa_off → filtre col F
+    var filterCol=_resaOff?colF:colB;
+    if(!_adminMode && !isFalse(filterCol))continue;
     // Mode admin : false=blanc, true=rouge — on prend tout
     var tag=null,m1=t.match(/\[([^\]]+)\]/),m2=t.match(/\(([^)]+)\)/);
     if(m1)tag=m1[1];else if(m2)tag=m2[1];
     var clean=t.replace(/\s*\[[^\]]*\]\s*/g,'').replace(/\s*\([^)]*\)\s*/g,'').trim();
     var full=t.trim();
-    allSongs.push({artist:a,title:clean,tag:tag,full:full,hidden:isTrue(colB)});
+    allSongs.push({artist:a,title:clean,tag:tag,full:full,hidden:isTrue(filterCol)});
   }
   var sw=document.getElementById('sw-count-sub');if(sw){var c1=g(RAW.switch.rows,0,2);sw.textContent=c1||(allSongs.length+' titres');}
   buildAlpha();
@@ -3704,6 +3705,8 @@ function applyResaMode(mode){
   if(lieu)lieu.style.display=_resaOff?'block':'none';
   if(_resaOff)renderLieuHome();
   if(document.getElementById('rules-content'))renderRules();
+  var bnOsl=document.getElementById('bn-osl');
+  if(bnOsl){bnOsl.classList.toggle('bn-resa-off',_resaOff);}
 }
 function secretTap(){
   _tapCount++;clearTimeout(_tapTimer);_tapTimer=setTimeout(function(){_tapCount=0;},1500);
