@@ -43,6 +43,43 @@ async function readSheet(name) {
   return { rows: allRows.filter((_, i) => !hiddenRows[i]), sheetName: name };
 }
 
+// Lecture SWiTCH : garde les lignes header (i<4) + celles dont col B (index 1) = FALSE
+async function readSwitchSheet() {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent('SWiTCH')}?key=${API_KEY}`;
+  const r = await fetch(url);
+  const data = await r.json();
+  if (data.error) throw new Error(data.error.message);
+  const allRows = (data.values || []).map(row => row.map(cell => String(cell || '').trim().replace(/[`\u2018\u2019\u201A\u201B]/g, "'")));
+  const isFalse = v => { const s = v.trim().toLowerCase(); return s === 'false' || s === 'faux'; };
+  const filtered = allRows.filter((row, i) => i < 4 || isFalse(row[1] || ''));
+  return { rows: filtered, sheetName: 'SWiTCH' };
+}
+
+// Lecture OSLSWiTCH :
+//   - Lit I1 (ligne 0, col 8) pour determiner le mode
+//   - Si I1 = false/vide -> garde header (i<4) + col B (index 1) = FALSE
+//   - Si I1 = true       -> garde header (i<4) + col D (index 3) = TRUE
+async function readOslSheet() {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent('OSLSWiTCH')}?key=${API_KEY}`;
+  const r = await fetch(url);
+  const data = await r.json();
+  if (data.error) throw new Error(data.error.message);
+  const allRows = (data.values || []).map(row => row.map(cell => String(cell || '').trim().replace(/[`\u2018\u2019\u201A\u201B]/g, "'")));
+  const i1val = (allRows[0] && allRows[0][8]) ? allRows[0][8].trim().toLowerCase() : '';
+  const i1IsTrue = (i1val === 'true' || i1val === 'vrai');
+  const isFalse = v => { const s = v.trim().toLowerCase(); return s === 'false' || s === 'faux'; };
+  const isTrue  = v => { const s = v.trim().toLowerCase(); return s === 'true'  || s === 'vrai'; };
+  let filtered;
+  if (i1IsTrue) {
+    // Mode I1=TRUE : afficher celles dont col D (index 3) = TRUE
+    filtered = allRows.filter((row, i) => i < 4 || isTrue(row[3] || ''));
+  } else {
+    // Mode I1=FALSE : afficher celles dont col B (index 1) = FALSE
+    filtered = allRows.filter((row, i) => i < 4 || isFalse(row[1] || ''));
+  }
+  return { rows: filtered, sheetName: 'OSLSWiTCH' };
+}
+
 async function handleRequest(request, env) {
   const url = new URL(request.url);
 
@@ -805,7 +842,15 @@ document.addEventListener('keydown', function(e) {
   try {
     const result = {};
     for (const [key, name] of Object.entries(SHEETS)) {
-      try { result[key] = await readSheet(name); }
+      try {
+        if (key === 'switch') {
+          result[key] = await readSwitchSheet();
+        } else if (key === 'osl') {
+          result[key] = await readOslSheet();
+        } else {
+          result[key] = await readSheet(name);
+        }
+      }
       catch(e) { result[key] = { error: e.message }; }
     }
     const homeMode = await env.LASWITCH_KV.get('home_mode');
