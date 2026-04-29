@@ -714,6 +714,29 @@ document.addEventListener('keydown', function(e) {
     }
   }
 
+  // GET getIdsAppli : tous les noms + fb_id depuis IDS_APPLI col A (nom) + col H (fb_id)
+  // Source unique pour toutes les barres de recherche de lappli
+  if (request.method === 'GET' && action === 'getIdsAppli') {
+    try {
+      const sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent('IDS_APPLI')}?key=${API_KEY}`;
+      const r = await fetch(sheetUrl);
+      const data = await r.json();
+      if (data.error) throw new Error(data.error.message);
+      const rows = (data.values || []).slice(1);
+      const ids = rows
+        .map(row => ({ name: (row[0]||'').trim(), fb_id: (row[7]||'').trim() }))
+        .filter(item => item.name)
+        .sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }));
+      return new Response(JSON.stringify({ ids }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'max-age=300' }
+      });
+    } catch(e) {
+      return new Response(JSON.stringify({ ids: [], error: e.message }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
+  }
+
 
   // GET getFbLink : lien Facebook d'un utilisateur depuis IDS_APPLI (col A=nom, H=fb_id, I=lien)
   // Si col I remplie → utilise tel quel
