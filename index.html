@@ -4235,31 +4235,22 @@ function adminVideoEditorSavePhrase2() {
   btn1.disabled = true; btn1.style.opacity = '0.4'; btn1.textContent = '...';
   if (errEl) errEl.style.display = 'none';
 
-  fetch('/api?action=setVideoMeta', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ rowIndex: vid.rowIndex, phrase2: ta.value, fb_ids: vid.fb_ids || '', ids_facebook: vid.ids_facebook || '' })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data) {
-    if (data.ok) {
+  var scriptUrl1 = 'https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=setVideoMeta&rowIndex=' + vid.rowIndex + '&phrase2=' + encodeURIComponent(ta.value) + '&fb_ids=' + encodeURIComponent(vid.fb_ids || '') + '&ids_facebook=' + encodeURIComponent(vid.ids_facebook || '');
+  fetch(scriptUrl1, { redirect: 'follow', mode: 'no-cors' })
+    .then(function() {
       ta.dataset.original = ta.value;
       vid.phrase2 = ta.value;
       adminVideoEditorUpdateCard();
       btn1.textContent = 'MODIFIER';
-    } else {
-      if (errEl) { errEl.textContent = data.error || 'Erreur'; errEl.style.display = 'block'; }
-      btn1.disabled = false; btn1.style.opacity = '1'; btn1.textContent = 'MODIFIER';
-    }
-  })
-  .catch(function() {
-    // Apps Script redirige → la sauvegarde a probablement réussi
-    ta.dataset.original = ta.value;
-    vid.phrase2 = ta.value;
-    adminVideoEditorUpdateCard();
-    btn1.textContent = 'MODIFIER';
-    if (errEl) errEl.style.display = 'none';
-  });
+      if (errEl) errEl.style.display = 'none';
+    })
+    .catch(function() {
+      ta.dataset.original = ta.value;
+      vid.phrase2 = ta.value;
+      adminVideoEditorUpdateCard();
+      btn1.textContent = 'MODIFIER';
+      if (errEl) errEl.style.display = 'none';
+    });
 }
 
 function adminVideoEditorSaveIds() {
@@ -4295,34 +4286,24 @@ function adminVideoEditorSaveIds() {
   var newFbIds      = fbIdsArr.join(' | ');
   var newIdsFacebook = idsFbArr.join(' | ');
 
-  fetch('/api?action=setVideoMeta', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ rowIndex: vid.rowIndex, phrase2: vid.phrase2 || '', fb_ids: newFbIds, ids_facebook: newIdsFacebook })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data) {
-    if (data.ok) {
+  var scriptUrl2 = 'https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=setVideoMeta&rowIndex=' + vid.rowIndex + '&phrase2=' + encodeURIComponent(vid.phrase2 || '') + '&fb_ids=' + encodeURIComponent(newFbIds) + '&ids_facebook=' + encodeURIComponent(newIdsFacebook);
+  fetch(scriptUrl2, { redirect: 'follow', mode: 'no-cors' })
+    .then(function() {
       vid.fb_ids       = newFbIds;
       vid.ids_facebook = newIdsFacebook;
-      // Reconstruire les barres (supprime les vides/effacés) + griser bouton + màj card
       adminVideoEditorBuildPart2();
       adminVideoEditorUpdateCard();
       btn2.textContent = 'MODIFIER';
-    } else {
-      if (errEl) { errEl.textContent = data.error || 'Erreur'; errEl.style.display = 'block'; }
-      btn2.disabled = false; btn2.style.opacity = '1'; btn2.textContent = 'MODIFIER';
-    }
-  })
-  .catch(function() {
-    // Apps Script redirige → la sauvegarde a probablement réussi
-    vid.fb_ids       = newFbIds;
-    vid.ids_facebook = newIdsFacebook;
-    adminVideoEditorBuildPart2();
-    adminVideoEditorUpdateCard();
-    btn2.textContent = 'MODIFIER';
-    if (errEl) errEl.style.display = 'none';
-  });
+      if (errEl) errEl.style.display = 'none';
+    })
+    .catch(function() {
+      vid.fb_ids       = newFbIds;
+      vid.ids_facebook = newIdsFacebook;
+      adminVideoEditorBuildPart2();
+      adminVideoEditorUpdateCard();
+      btn2.textContent = 'MODIFIER';
+      if (errEl) errEl.style.display = 'none';
+    });
 }
 
 function adminVideoEditorUpdateCard() {
