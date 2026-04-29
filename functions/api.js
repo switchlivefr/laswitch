@@ -716,26 +716,42 @@ document.addEventListener('keydown', function(e) {
 
 
   // GET getFbLink : lien Facebook d'un utilisateur depuis IDS_APPLI (col A=nom, H=fb_id, I=lien)
+  // Si col I remplie → utilise tel quel
+  // Sinon construit automatiquement depuis l'ID :
+  //   - purement numérique → https://www.facebook.com/profile.php?id=XXXXX
+  //   - alphanumérique (slug) → https://www.facebook.com/slug
   if (request.method === 'GET' && action === 'getFbLink') {
     try {
       const fbId = (url.searchParams.get('fbid') || '').trim();
       const name = (url.searchParams.get('name') || '').trim().toLowerCase();
+
+      // Fonction de construction du lien depuis un ID brut
+      const buildFbLink = (id) => {
+        if (!id) return '';
+        return /^\d+$/.test(id)
+          ? `https://www.facebook.com/profile.php?id=${id}`
+          : `https://www.facebook.com/${id}`;
+      };
+
       const sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/IDS_APPLI?key=${API_KEY}`;
       const r = await fetch(sheetUrl);
       const data = await r.json();
       if (data.error) throw new Error(data.error.message);
       const rows = (data.values || []).slice(1);
       for (const row of rows) {
-        const rowName = (row[0] || '').trim().toLowerCase();
-        const rowFbId = (row[7] || '').trim();
-        const rowLink = (row[8] || '').trim();
-        if (rowLink && ((fbId && rowFbId === fbId) || (name && rowName === name))) {
-          return new Response(JSON.stringify({ link: rowLink }), {
+        const rowName  = (row[0] || '').trim().toLowerCase();
+        const rowFbId  = (row[7] || '').trim();   // col H = ID brut
+        const rowLink  = (row[8] || '').trim();   // col I = lien manuel (prioritaire)
+        if ((fbId && rowFbId === fbId) || (name && rowName === name)) {
+          const link = rowLink || buildFbLink(rowFbId) || buildFbLink(fbId);
+          return new Response(JSON.stringify({ link }), {
             headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
           });
         }
       }
-      return new Response(JSON.stringify({ link: '' }), {
+      // Pas trouvé dans le sheet → construire depuis le fbId passé en paramètre
+      const link = buildFbLink(fbId);
+      return new Response(JSON.stringify({ link }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
     } catch(e) {
@@ -792,45 +808,11 @@ document.addEventListener('keydown', function(e) {
       if (!query) return new Response(JSON.stringify({ videos: [] }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
-
-      // Normalisation identique au front (swNormalize) : minuscules + suppression des accents
-      const swNormalize = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-
-      // swMatchTokens : chaque token du mot saisi doit commencer un mot distinct du nom candidat
-      const swMatchTokens = (candidate, input) => {
-        const inputTokens = swNormalize(input).trim().split(/\s+/).filter(t => t.length > 0);
-        const nameWords   = swNormalize(candidate).split(/\s+/).filter(w => w.length > 0);
-        const used = [];
-        return inputTokens.every(token => {
-          for (let i = 0; i < nameWords.length; i++) {
-            if (!used.includes(i) && nameWords[i].startsWith(token)) {
-              used.push(i);
-              return true;
-            }
-          }
-          return false;
-        });
-      };
-
-      // Charger VIDEOS et IDS_APPLI en parallèle
-      const [rVideos, rIdsAppli] = await Promise.all([
-        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(VIDEOS_SHEET)}?key=${API_KEY}`),
-        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent('IDS_APPLI')}?key=${API_KEY}`)
-      ]);
-      const [dataVideos, dataIdsAppli] = await Promise.all([rVideos.json(), rIdsAppli.json()]);
-      if (dataVideos.error) throw new Error(dataVideos.error.message);
-
-      // Construire la liste des noms Facebook (col A de IDS_APPLI, sans la ligne d'en-tête)
-      // qui correspondent au mot cherché → ces noms seront exclus des résultats
-      const idsAppliRows = (dataIdsAppli.values || []).slice(1);
-      const matchingFbNames = new Set(
-        idsAppliRows
-          .map(row => (row[0] || '').trim())
-          .filter(name => name && swMatchTokens(name, query))
-          .map(name => swNormalize(name))
-      );
-
-      const rows = (dataVideos.values || []).slice(1);
+      const sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(VIDEOS_SHEET)}?key=${API_KEY}`;
+      const r = await fetch(sheetUrl);
+      const data = await r.json();
+      if (data.error) throw new Error(data.error.message);
+      const rows = (data.values || []).slice(1);
       const videos = [];
       for (let rowIdx = 0; rowIdx < rows.length; rowIdx++) {
         const row = rows[rowIdx];
@@ -846,15 +828,6 @@ document.addEventListener('keydown', function(e) {
         const rowIndex = rowIdx + 2;
         if (!youtube) continue;
         if (!phrase.toLowerCase().includes(query) && !personnes.toLowerCase().includes(query) && !titre.toLowerCase().includes(query) && !phrase2.toLowerCase().includes(query)) continue;
-
-        // Exclure la vidéo si un de ses noms Facebook associés (ids_facebook, séparateur |)
-        // correspond au mot cherché (même logique swMatchTokens)
-        if (matchingFbNames.size > 0 && ids_facebook) {
-          const videoFbNames = ids_facebook.split('|').map(n => n.trim()).filter(Boolean);
-          const hasMatchingFbName = videoFbNames.some(n => matchingFbNames.has(swNormalize(n)));
-          if (hasMatchingFbName) continue;
-        }
-
         videos.push({ youtube, phrase, personnes, date, fb_ids, ids_facebook, titre, phrase2, lieu, rowIndex });
       }
       videos.sort((a, b) => {
