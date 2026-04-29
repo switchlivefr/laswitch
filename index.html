@@ -2261,7 +2261,7 @@ function renderHome(){
   var rows=RAW.switch.rows;
   var ed=g(rows,0,0);if(ed)document.getElementById('home-edition').textContent=ed;
   var ct=g(rows,0,2);var sw=document.getElementById('sw-count-sub');if(sw&&ct)sw.textContent=ct;
-  var eventUrl=g(rows,0,3);var ebtn=document.getElementById('fb-event-btn');
+  var eventUrl=_resaOff?g(rows,3,5):g(rows,3,4);var ebtn=document.getElementById('fb-event-btn');
   if(ebtn&&eventUrl){ebtn.dataset.url=eventUrl;ebtn.style.display='flex';}else if(ebtn){ebtn.style.display='none';}
   var sl1=g(rows,1,0);var sl2=g(rows,1,2);
   var l1=document.querySelector('.hslogan-l1');var l2=document.querySelector('.hslogan-l2');
