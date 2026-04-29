@@ -4180,6 +4180,25 @@ function avmeShowDropdown(inp, isNewRef) {
     item.style.cssText = 'padding:10px 14px;cursor:pointer;font-size:14px;color:#000;border-bottom:1px solid #eee';
     item.textContent = name;
     item.onmousedown = function(e){ e.preventDefault(); }; // empêche blur avant click
+    item.ontouchstart = function(e){
+      e.preventDefault();
+      // Sélectionner immédiatement avant que le blur de l'input ne se déclenche
+      inp.value = name;
+      inp.dataset.selectedName = name;
+      inp.style.color = 'var(--white)';
+      inp.style.borderColor = 'var(--border2)';
+      dd.style.display = 'none';
+      _avmeDdActiveInp = null;
+      if (isNewRef.val) {
+        inp.style.border = '1px solid var(--border2)';
+        inp.dataset.originalName = '';
+        isNewRef.val = false;
+        var container = document.getElementById('avme-ids-container');
+        var newIdx = container.children.length;
+        container.appendChild(adminVideoEditorMakeBar('', newIdx, true));
+      }
+      adminVideoEditorCheckChanged2();
+    };
     item.onclick = function() {
       inp.value = name;
       inp.dataset.selectedName = name;
@@ -4227,6 +4246,7 @@ function adminVideoEditorMakeBar(selectedName, idx, isNew) {
   inp.onblur = function(){
     var dd = document.getElementById('avme-dropdown');
     if (dd && _avmeDdActiveInp === inp) { dd.style.display = 'none'; _avmeDdActiveInp = null; }
+    // Réinitialisation IMMÉDIATE : si aucun nom valide sélectionné → remettre l'original
     var sel = inp.dataset.selectedName || '';
     var known = (_swAccNames || []).indexOf(sel) !== -1;
     if (!known) {
