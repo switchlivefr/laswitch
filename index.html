@@ -4158,61 +4158,92 @@ function adminVideoEditorBuildPart2() {
   if (btn2) { btn2.disabled = true; btn2.style.opacity = '0.4'; }
 }
 
-function adminVideoEditorMakeBar(selectedName, idx, isNew) {
-  var wrap = document.createElement('div');
-  wrap.style.cssText = 'position:relative;margin-bottom:' + (isNew ? '0' : '6px');
-  wrap.dataset.idx = idx;
-  wrap.dataset.isNew = isNew ? '1' : '0';
+// Dropdown partagé pour la 2ème partie de la modale vidéo
+var _avmeDdActiveInp = null;
 
-  // Datalist unique pour cette barre
-  var dlId = 'avme-dl-' + idx + '-' + Date.now();
-  var dl = document.createElement('datalist');
-  dl.id = dlId;
-  var names = window._swAccNames || [];
-  names.forEach(function(n) {
-    var opt = document.createElement('option');
-    opt.value = n;
-    dl.appendChild(opt);
-  });
-
-  var inp = document.createElement('input');
-  inp.type = 'text';
-  inp.setAttribute('list', dlId);
-  inp.autocomplete = 'off';
-  inp.placeholder = isNew ? '+ Ajouter un participant…' : '';
-  inp.value = selectedName;
-  inp.dataset.originalName = selectedName;
-  inp.style.cssText = 'width:100%;background:var(--bg);border:' + (isNew ? '2px dashed var(--gold)' : '1px solid var(--border2)') + ';border-radius:var(--rs);padding:10px 12px;font-family:"DM Sans",sans-serif;font-size:14px;color:' + (selectedName ? 'var(--white)' : 'var(--muted2)') + ';outline:none;caret-color:var(--gold);-webkit-appearance:none;box-sizing:border-box';
-  inp.onfocus = function(){ this.style.borderColor='var(--gold)'; };
-  inp.onblur  = function(){
-    // Au blur : si la valeur ne correspond pas à un nom connu → remettre l'original
-    var val = this.value.trim();
-    var known = (window._swAccNames || []).indexOf(val) !== -1;
-    if (!known && val !== '') { this.value = inp.dataset.originalName; }
-    if (!known) { this.style.borderColor = isNew ? 'var(--gold)' : 'var(--border2)'; }
-    else { this.style.borderColor = 'var(--border2)'; }
-  };
-  inp.oninput = function() {
-    var val = this.value.trim();
-    var known = (window._swAccNames || []).indexOf(val) !== -1;
-    if (known) {
-      this.style.color = 'var(--white)';
-      if (isNew) {
-        // Convertir cette barre en barre normale
+function avmeShowDropdown(inp, isNewRef) {
+  var dd = document.getElementById('avme-dropdown');
+  if (!dd) return;
+  var val = inp.value;
+  var filtered = (_swAccNames || []).filter(function(n){ return swMatchTokens(n, val); });
+  if (!val || !filtered.length) { dd.style.display = 'none'; return; }
+  dd.innerHTML = '';
+  var rect = inp.getBoundingClientRect();
+  dd.style.top   = (rect.bottom + 2) + 'px';
+  dd.style.left  = rect.left + 'px';
+  dd.style.width = rect.width + 'px';
+  dd.style.right = 'auto';
+  dd.style.display = 'block';
+  _avmeDdActiveInp = inp;
+  filtered.slice(0, 8).forEach(function(name) {
+    var item = document.createElement('div');
+    item.style.cssText = 'padding:10px 14px;cursor:pointer;font-size:14px;color:#000;border-bottom:1px solid #eee';
+    item.textContent = name;
+    item.onmousedown = function(e){ e.preventDefault(); }; // empêche blur avant click
+    item.onclick = function() {
+      inp.value = name;
+      inp.dataset.selectedName = name;
+      inp.style.color = 'var(--white)';
+      inp.style.borderColor = 'var(--border2)';
+      dd.style.display = 'none';
+      _avmeDdActiveInp = null;
+      // Si barre vide (nouvelle) : la convertir et ajouter une nouvelle vide
+      if (isNewRef.val) {
         inp.style.border = '1px solid var(--border2)';
         inp.dataset.originalName = '';
-        wrap.dataset.isNew = '0';
-        isNew = false;
-        // Ajouter une nouvelle barre vide en dessous
+        isNewRef.val = false;
         var container = document.getElementById('avme-ids-container');
         var newIdx = container.children.length;
         container.appendChild(adminVideoEditorMakeBar('', newIdx, true));
       }
-    }
+      adminVideoEditorCheckChanged2();
+    };
+    dd.appendChild(item);
+  });
+}
+
+function adminVideoEditorMakeBar(selectedName, idx, isNew) {
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'position:relative;margin-bottom:' + (isNew ? '0' : '6px');
+  wrap.dataset.idx = idx;
+
+  // Objet ref pour que la closure partage la valeur isNew mutable
+  var isNewRef = { val: isNew };
+
+  var inp = document.createElement('input');
+  inp.type = 'text';
+  inp.autocomplete = 'off';
+  inp.spellcheck = false;
+  inp.placeholder = isNew ? '+ Ajouter un SWiTCHer…' : '';
+  inp.value = selectedName;
+  inp.dataset.originalName = selectedName;
+  inp.dataset.selectedName  = selectedName;
+  inp.style.cssText = 'width:100%;background:var(--bg);border:' + (isNew ? '2px dashed var(--gold)' : '1px solid var(--border2)') + ';border-radius:var(--rs);padding:10px 12px;font-family:"DM Sans",sans-serif;font-size:14px;color:' + (selectedName ? 'var(--white)' : 'var(--muted2)') + ';outline:none;caret-color:var(--gold);-webkit-appearance:none;box-sizing:border-box';
+
+  inp.onfocus = function(){
+    this.style.borderColor = 'var(--gold)';
+    if (this.value) avmeShowDropdown(this, isNewRef);
+  };
+  inp.onblur = function(){
+    var dd = document.getElementById('avme-dropdown');
+    // Laisser le click sur un item se déclencher d'abord (géré par onmousedown prevent)
+    setTimeout(function(){
+      if (dd && _avmeDdActiveInp === inp) { dd.style.display = 'none'; _avmeDdActiveInp = null; }
+      // Si valeur pas dans la liste → remettre l'original
+      var val = inp.value.trim();
+      var known = (_swAccNames || []).indexOf(val) !== -1;
+      if (!known && val !== '') { inp.value = inp.dataset.originalName || ''; }
+      inp.style.borderColor = isNewRef.val ? 'var(--gold)' : 'var(--border2)';
+      adminVideoEditorCheckChanged2();
+    }, 150);
+  };
+  inp.oninput = function(){
+    this.style.color = 'var(--muted2)';
+    this.dataset.selectedName = '';
+    avmeShowDropdown(this, isNewRef);
     adminVideoEditorCheckChanged2();
   };
 
-  wrap.appendChild(dl);
   wrap.appendChild(inp);
   return wrap;
 }
@@ -4231,10 +4262,11 @@ function adminVideoEditorCheckChanged2() {
   if (!btn2) return;
   var container = document.getElementById('avme-ids-container');
   if (!container) return;
-  var bars = container.querySelectorAll('select');
+  var inputs = container.querySelectorAll('input');
   var changed = false;
-  bars.forEach(function(sel) {
-    if (sel.value !== sel.dataset.originalName) changed = true;
+  inputs.forEach(function(inp) {
+    var sel = inp.dataset.selectedName || inp.value.trim();
+    if (sel !== (inp.dataset.originalName || '')) changed = true;
   });
   btn2.disabled = !changed;
   btn2.style.opacity = changed ? '1' : '0.4';
@@ -4278,13 +4310,13 @@ function adminVideoEditorSaveIds() {
   btn2.disabled = true; btn2.style.opacity = '0.4'; btn2.textContent = '...';
   if (errEl) errEl.style.display = 'none';
 
-  // Collecter tous les noms sélectionnés (barres non-vides et non-nouvelles)
+  // Collecter tous les noms sélectionnés (valeurs connues, barres non vides)
   var container = document.getElementById('avme-ids-container');
-  var bars = container.querySelectorAll('select');
+  var inputs = container.querySelectorAll('input');
   var selectedNames = [];
-  bars.forEach(function(sel) {
-    var v = sel.value.trim();
-    if (v) selectedNames.push(v);
+  inputs.forEach(function(inp) {
+    var v = (inp.dataset.selectedName || inp.value).trim();
+    if (v && (_swAccNames || []).indexOf(v) !== -1) selectedNames.push(v);
   });
 
   // Chercher les fb_ids correspondants dans _swAccNames et IDS_APPLI
@@ -4485,15 +4517,17 @@ function renderVideoList(videos, onDone) {
     info2.appendChild(bottomRow);
     card.appendChild(info2);
 
-    // ── Bouton ADMIN : modifier les métadonnées de la vidéo ──
+    // ── Appui long 2s sur info2 en mode admin : ouvrir l'éditeur ──
     if (_adminMode) {
-      (function(vid) {
-        var editBtn = document.createElement('button');
-        editBtn.textContent = '✏️ Modifier';
-        editBtn.style.cssText = 'width:100%;background:var(--card);border:none;border-top:1px solid var(--border);padding:10px 14px;color:var(--gold);font-family:"Bebas Neue",sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer;text-align:left';
-        editBtn.onclick = function(e) { e.stopPropagation(); adminOpenVideoEditor(vid); };
-        card.appendChild(editBtn);
-      })(v);
+      (function(vid, el) {
+        var _timer;
+        el.addEventListener('touchstart', function(){ _timer = setTimeout(function(){ adminOpenVideoEditor(vid); }, 2000); }, { passive: true });
+        el.addEventListener('touchend',   function(){ clearTimeout(_timer); }, { passive: true });
+        el.addEventListener('touchmove',  function(){ clearTimeout(_timer); }, { passive: true });
+        el.addEventListener('mousedown',  function(){ _timer = setTimeout(function(){ adminOpenVideoEditor(vid); }, 2000); });
+        el.addEventListener('mouseup',    function(){ clearTimeout(_timer); });
+        el.addEventListener('mouseleave', function(){ clearTimeout(_timer); });
+      })(v, info2);
     }
 
     list.appendChild(card);
@@ -5824,11 +5858,13 @@ function checkFbSession() {
 </div>
 
 <!-- MODALE ADMIN : Éditeur métadonnées vidéo -->
-<div id="m-admin-video-editor" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:1100;background:rgba(0,0,0,.82);align-items:flex-start;justify-content:center;padding:16px;padding-top:12vh;overflow-y:auto" onclick="if(event.target===this)this.style.display='none'">
+<div id="avme-dropdown" style="display:none;position:fixed;background:#fff;border-radius:8px;max-height:200px;overflow-y:auto;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.5);text-align:left"></div>
+
+<div id="m-admin-video-editor" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:1100;background:rgba(0,0,0,.82);align-items:flex-start;justify-content:center;padding:16px;padding-top:12vh;overflow-y:auto" onclick="if(event.target===this){this.style.display='none';var dd=document.getElementById('avme-dropdown');if(dd)dd.style.display='none';}">
   <div style="background:var(--card);border:1px solid var(--gold);border-radius:var(--r);width:100%;max-width:440px;padding:20px 16px 16px;display:flex;flex-direction:column;gap:0" onclick="event.stopPropagation()">
 
     <!-- PARTIE 1 : phrase2 (col H) -->
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--gold);letter-spacing:1.5px;margin-bottom:8px;text-align:center">NOMS (texte affiché)</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--gold);letter-spacing:1.5px;margin-bottom:8px;text-align:center">Liste des SWiTCHERs</div>
     <textarea
       id="avme-phrase2"
       rows="2"
@@ -5844,7 +5880,7 @@ function checkFbSession() {
     <div style="border-top:1px solid var(--border);margin-bottom:14px"></div>
 
     <!-- PARTIE 2 : ids_facebook (col F) -->
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--gold);letter-spacing:1.5px;margin-bottom:8px;text-align:center">PARTICIPANTS (ID Facebook)</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--gold);letter-spacing:1.5px;margin-bottom:8px;text-align:center">SWiTCHERs identifiés</div>
     <div id="avme-ids-container" style="display:flex;flex-direction:column;gap:0;margin-bottom:8px"></div>
     <button id="avme-btn-ids" onclick="adminVideoEditorSaveIds()" disabled
       style="width:100%;background:var(--gold);color:#000;border:none;border-radius:var(--rs);padding:11px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;opacity:0.4;transition:opacity .2s;margin-top:4px">MODIFIER</button>
