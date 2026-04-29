@@ -676,7 +676,8 @@ document.addEventListener('keydown', function(e) {
         const ids_facebook = (row[5] || '').trim();
         const titre   = (row[6] || '').trim();
         const phrase2 = (row[7] || '').trim();
-        const lieu    = (row[8] || '').trim();
+        const lieu      = (row[8] || '').trim();
+        const date_ajout = (row[11] || '').trim();
         const rowIndex = rowIdx + 2; // +1 pour header, +1 pour 1-based
         if (!youtube) continue;
 
@@ -686,7 +687,7 @@ document.addEventListener('keydown', function(e) {
           if (!ids.includes(fbId)) continue;
         }
 
-        videos.push({ youtube, phrase, personnes, date, fb_ids, ids_facebook, titre, phrase2, lieu, rowIndex });
+        videos.push({ youtube, phrase, personnes, date, fb_ids, ids_facebook, titre, phrase2, lieu, date_ajout, rowIndex });
       }
 
       // Tri du plus récent au plus ancien
@@ -848,10 +849,11 @@ document.addEventListener('keydown', function(e) {
         const titre   = (row[6] || '').trim();
         const phrase2 = (row[7] || '').trim();
         const lieu    = (row[8] || '').trim();
+        const date_ajout = (row[11] || '').trim();
         const rowIndex = rowIdx + 2;
         if (!youtube) continue;
         if (!phrase.toLowerCase().includes(query) && !personnes.toLowerCase().includes(query) && !titre.toLowerCase().includes(query) && !phrase2.toLowerCase().includes(query)) continue;
-        videos.push({ youtube, phrase, personnes, date, fb_ids, ids_facebook, titre, phrase2, lieu, rowIndex });
+        videos.push({ youtube, phrase, personnes, date, fb_ids, ids_facebook, titre, phrase2, lieu, date_ajout, rowIndex });
       }
       videos.sort((a, b) => {
         const parseDate = d => { if (!d) return 0; const p = d.split('/'); if (p.length === 3) return new Date(p[2], p[1]-1, p[0]).getTime(); return 0; };
