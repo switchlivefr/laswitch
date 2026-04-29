@@ -4226,24 +4226,17 @@ function adminVideoEditorMakeBar(selectedName, idx, isNew) {
   };
   inp.onblur = function(){
     var dd = document.getElementById('avme-dropdown');
-    // Capturer la valeur ET mettre readonly IMMÉDIATEMENT pour bloquer les frappes mobiles
-    var snapVal = inp.value.trim();
-    var snapSelected = inp.dataset.selectedName || '';
-    inp.setAttribute('readonly', 'readonly');
-    setTimeout(function(){
-      inp.removeAttribute('readonly');
-      if (dd && _avmeDdActiveInp === inp) { dd.style.display = 'none'; _avmeDdActiveInp = null; }
-      var known = (_swAccNames || []).indexOf(snapSelected) !== -1 || (_swAccNames || []).indexOf(snapVal) !== -1;
-      if (!known) {
-        inp.value = inp.dataset.originalName || '';
-        inp.dataset.selectedName = inp.dataset.originalName || '';
-      } else {
-        inp.value = snapSelected || snapVal;
-        inp.dataset.selectedName = snapSelected || snapVal;
-      }
-      inp.style.borderColor = isNewRef.val ? 'var(--gold)' : 'var(--border2)';
-      adminVideoEditorCheckChanged2();
-    }, 200);
+    if (dd && _avmeDdActiveInp === inp) { dd.style.display = 'none'; _avmeDdActiveInp = null; }
+    var sel = inp.dataset.selectedName || '';
+    var known = (_swAccNames || []).indexOf(sel) !== -1;
+    if (!known) {
+      inp.value = inp.dataset.originalName || '';
+      inp.dataset.selectedName = inp.dataset.originalName || '';
+    } else {
+      inp.value = sel;
+    }
+    inp.style.borderColor = isNewRef.val ? 'var(--gold)' : 'var(--border2)';
+    adminVideoEditorCheckChanged2();
   };
   inp.oninput = function(){
     this.style.color = 'var(--muted2)';
