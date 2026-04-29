@@ -921,8 +921,8 @@ var NV = {
   visitedThisSession: false,
   currentVideos: null,
   diff: 0,
-  bannerShownThisSession: false, // true après affichage banner — bloque le réaffichage en navigation
-  newYtIds: [],                  // ytIds des vraies nouvelles vidéos pour le clignotement ciblé
+  bannerShownThisSession: false,
+  newYtIds: [],
 
   // Appelé au lancement : compare nombre actuel vs nombre mémorisé (CODE ORIGINAL - NE PAS MODIFIER)
   check: function(fbId, videos) {
@@ -937,7 +937,6 @@ var NV = {
       return;
     }
     NV.diff = videos.length - parseInt(saved, 10);
-    // Diff négatif : recalage silencieux
     if (NV.diff < 0) {
       localStorage.setItem(key, String(videos.length));
       NV.hasNew = false;
@@ -946,7 +945,7 @@ var NV = {
       return;
     }
     NV.hasNew = (NV.diff > 0);
-    console.log('NV.check — hasNew='+NV.hasNew+' diff='+NV.diff+' bannerShownThisSession='+NV.bannerShownThisSession);
+    console.log('NV.check — hasNew='+NV.hasNew+' diff='+NV.diff);
   },
 
   showBanner: function(diff) {
@@ -955,22 +954,14 @@ var NV = {
     var l1 = document.getElementById('nv-banner-l1');
     var l2 = document.getElementById('nv-banner-l2');
     if (l1 && l2) {
-      if (diff === 1) {
-        l1.textContent = 'TU AS 1 NOUVELLE';
-        l2.textContent = 'VIDÉO À DÉCOUVRIR';
-      } else {
-        l1.textContent = 'TU AS ' + diff + ' NOUVELLES';
-        l2.textContent = 'VIDÉOS À DÉCOUVRIR';
-      }
+      if (diff === 1) { l1.textContent = 'TU AS 1 NOUVELLE'; l2.textContent = 'VIDÉO À DÉCOUVRIR'; }
+      else { l1.textContent = 'TU AS ' + diff + ' NOUVELLES'; l2.textContent = 'VIDÉOS À DÉCOUVRIR'; }
     }
     openM('nv-banner');
   },
 
-  dismissBanner: function() {
-    closeM('nv-banner');
-  },
+  dismissBanner: function() { closeM('nv-banner'); },
 
-  // Clignoter les cartes dont le ytId est dans NV.newYtIds
   startBlink: function(cards) {
     NV.stopBlink();
     if (!NV.fbId || !NV.newYtIds.length) return;
@@ -987,7 +978,6 @@ var NV = {
             info2.style.cssText = 'padding:8px 14px 10px;animation:newVidCardBlink 2s ease-in-out infinite';
             NV.blinkEls.push(info2);
           }
-          console.log('NV.startBlink — clignotement sur ytId='+ytId);
         }
       }
     });
@@ -1002,8 +992,6 @@ var NV = {
     NV.blinkEls = [];
   },
 
-  // Appelé quand l'utilisateur arrive sur MES PRESTAS (CODE ORIGINAL - NE PAS MODIFIER)
-  // Sauvegarde IMMEDIATEMENT le compteur - seule solution fiable Android/iPhone
   updateCount: function(videos) {
     if (!NV.fbId) return;
     var key = 'nv_count_' + NV.fbId;
@@ -1016,112 +1004,64 @@ var NV = {
     NV.dismissBanner();
   },
 
-  // Retourne la date du jour au format "YYYY-MM-DD"
   _today: function() {
     var d = new Date();
     return d.getFullYear()+'-'+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1)+'-'+(d.getDate()<10?'0':'')+d.getDate();
   },
 
-  // Retourne true si la période de clignotement est encore active (jusqu'à minuit J+3)
-  _blinkStillActive: function(seenDate) {
-    if (!seenDate) return false;
-    var parts = seenDate.split('-');
-    if (parts.length !== 3) return false;
-    var expiry = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
-    expiry.setDate(expiry.getDate() + 4);
-    return new Date() < expiry;
+  // Retourne true si une vidéo avec date_ajout donnée est encore dans la période de clignotement
+  // Période = 72h + jusqu'à minuit du J+3 — calculé depuis la date écrite dans VIDEOS col L
+  // Format accepté : "dd/MM/yyyy HH:mm" ou "dd/MM/yyyy" ou timestamp ISO
+  _isNewVideo: function(date_ajout) {
+    if (!date_ajout) return false;
+    var ts = 0;
+    // Essai format dd/MM/yyyy HH:mm ou dd/MM/yyyy
+    var m = date_ajout.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?/);
+    if (m) {
+      ts = new Date(
+        parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]),
+        m[4] ? parseInt(m[4]) : 0,
+        m[5] ? parseInt(m[5]) : 0
+      ).getTime();
+    } else {
+      // Essai ISO ou autre
+      var d = new Date(date_ajout);
+      if (!isNaN(d.getTime())) ts = d.getTime();
+    }
+    if (!ts) return false;
+    // Expiry = minuit au début du J+4 (= fin de journée J+3)
+    var addedDate = new Date(ts);
+    var expiry = new Date(addedDate.getFullYear(), addedDate.getMonth(), addedDate.getDate() + 4, 0, 0, 0);
+    var active = Date.now() < expiry.getTime();
+    console.log('NV._isNewVideo — date_ajout='+date_ajout+' expiry='+expiry.toISOString()+' active='+active);
+    return active;
   },
 
-  // Snapshot pour le clignotement ciblé (indépendant du compteur nv_count_)
-  _snapKey: function(fbId) { return 'nv_snap_' + fbId; },
-
-  _saveSnapshot: function(fbId, videos, newYtIds) {
-    var ytIds = videos.map(function(v) { return extractYtId(v.youtube); }).filter(Boolean);
-    var snap = { count: videos.length, ids: ytIds };
-    if (newYtIds && newYtIds.length) snap.newYtIds = newYtIds;
-    localStorage.setItem(NV._snapKey(fbId), JSON.stringify(snap));
-    console.log('NV._saveSnapshot — count='+videos.length+' ids='+ytIds.length+(newYtIds&&newYtIds.length?' newYtIds=['+newYtIds.join(',')+']':''));
-  },
-
-  // Calcule les ytIds nouveaux (en excès dans currIds vs refIds, gère les doublons)
-  _calcNewIds: function(refIds, currIds) {
-    var counts = {};
-    refIds.forEach(function(id){ counts[id] = (counts[id]||0)+1; });
-    var news = [];
-    currIds.forEach(function(id){
-      if(counts[id] && counts[id] > 0){ counts[id]--; }
-      else { news.push(id); }
-    });
-    return news;
-  },
-
-  // Appelé depuis loadPrestas : identifie les newYtIds pour le clignotement ciblé
-  // N'interfère PAS avec nv_count_ ni avec check/updateCount
+  // Identifie les ytIds des vidéos nouvelles uniquement via date_ajout (col L du Sheets)
+  // Plus de localStorage pour la logique de durée — fonctionne sur tous les appareils
   checkBlink: function(fbId, videos) {
-    var snapRaw  = localStorage.getItem(NV._snapKey(fbId));
-    var seenDate = localStorage.getItem('nv_seen_date_' + fbId);
-    var currentYtIds = videos.map(function(v) { return extractYtId(v.youtube); }).filter(Boolean);
-
-    if (!snapRaw) {
-      // Pas encore de snapshot blink : créer et ne pas clignoter
-      NV._saveSnapshot(fbId, videos);
-      NV.newYtIds = [];
-      console.log('NV.checkBlink — 1er snapshot créé, pas de clignotement');
-      return;
-    }
-
-    var snap;
-    try { snap = JSON.parse(snapRaw); } catch(e) {
-      NV._saveSnapshot(fbId, videos);
-      NV.newYtIds = [];
-      return;
-    }
-
-    // Période encore active : restaurer les newYtIds sauvegardés + détecter d'éventuelles nouvelles
-    if (NV._blinkStillActive(seenDate) && snap.newYtIds && snap.newYtIds.length) {
-      var restored = snap.newYtIds.slice();
-      var extra = NV._calcNewIds(snap.ids || [], currentYtIds);
-      extra.forEach(function(id){ if(restored.indexOf(id)===-1) restored.push(id); });
-      NV.newYtIds = restored;
-      console.log('NV.checkBlink — période active, newYtIds=['+NV.newYtIds.join(',')+'] extra=['+extra.join(',')+']');
-      return;
-    }
-
-    // Cas normal : calculer les nouveaux ytIds
-    var savedIds = snap.ids || [];
-    NV.newYtIds = NV._calcNewIds(savedIds, currentYtIds);
-    // Fallback si désync
-    if (NV.hasNew && NV.newYtIds.length === 0) {
-      NV.newYtIds = currentYtIds.slice(0, NV.diff);
-      console.log('NV.checkBlink — FALLBACK newYtIds=['+NV.newYtIds.join(',')+']');
-    }
-    console.log('NV.checkBlink — newYtIds=['+NV.newYtIds.join(',')+']');
-  },
-
-  // Appelé depuis loadPrestas après startBlink : sauvegarde le snapshot blink si nécessaire
-  saveBlink: function(fbId, videos) {
-    var seenDate = localStorage.getItem('nv_seen_date_' + fbId);
-    if (NV._blinkStillActive(seenDate)) {
-      // Période active : mettre à jour UNIQUEMENT newYtIds dans le snapshot (pas ids ni count)
-      var snapRaw = localStorage.getItem(NV._snapKey(fbId));
-      if (snapRaw) {
-        try {
-          var snap = JSON.parse(snapRaw);
-          snap.newYtIds = NV.newYtIds;  // fusionnés par checkBlink
-          localStorage.setItem(NV._snapKey(fbId), JSON.stringify(snap));
-          console.log('NV.saveBlink — période active, newYtIds mis à jour=['+NV.newYtIds.join(',')+']');
-        } catch(e) {}
+    NV.fbId = fbId;
+    NV.newYtIds = [];
+    videos.forEach(function(v) {
+      if (NV._isNewVideo(v.date_ajout)) {
+        var ytId = extractYtId(v.youtube);
+        if (ytId) NV.newYtIds.push(ytId);
       }
-      return;
-    }
-    // Première visite ou période expirée : sauver snapshot complet + date
-    NV._saveSnapshot(fbId, videos, NV.newYtIds);
-    localStorage.setItem('nv_seen_date_' + fbId, NV._today());
-    console.log('NV.saveBlink — snapshot sauvé, seen_date='+NV._today());
+    });
+    console.log('NV.checkBlink — newYtIds=['+NV.newYtIds.join(',')+'] (basé sur date_ajout Sheets col L)');
   },
+
+  // Plus besoin de sauvegarder quoi que ce soit — la vérité est dans le Sheets
+  saveBlink: function(fbId, videos) {},
 
   // Garde saveCount pour compatibilité
-  saveCount: function() {}
+  saveCount: function() {},
+
+  // Rétrocompat
+  _snapKey: function(fbId) { return 'nv_snap_' + fbId; },
+  _saveSnapshot: function() {},
+  _blinkStillActive: function() { return false; },
+  _calcNewIds: function() { return []; }
 };
 
 function nvCheckAtLaunch() {
