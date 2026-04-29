@@ -2937,7 +2937,91 @@ function reperHintValidate(){
 function showHint(){var el=document.getElementById('hint-bar');if(!el)return;el.classList.remove('pulsing');void el.offsetWidth;el.classList.add('pulsing');el.addEventListener('animationend',function h(){el.classList.remove('pulsing');el.removeEventListener('animationend',h);});}
 function hideHint(){var el=document.getElementById('hint-bar');if(el)el.classList.remove('pulsing');}
 
+
+// ============================================================
+// ADMIN : éditeur note colonne D de SWiTCH
+// ============================================================
+function adminOpenNoteEditor(title, ctx, full) {
+  // Chercher le texte col D dans RAW.switch.rows (col C=index 2 pour le titre, col D=index 3)
+  var noteText = '';
+  var rows = RAW.switch && RAW.switch.rows ? RAW.switch.rows : [];
+  var fullTitle = full || title;
+  for (var i = 4; i < rows.length; i++) {
+    var colC = (rows[i][2] || '').trim();
+    if (colC === fullTitle || colC === title) {
+      noteText = (rows[i][3] || '').trim();
+      break;
+    }
+  }
+  // Stocker le contexte
+  var overlay = document.getElementById('m-admin-note-editor');
+  if (!overlay) return;
+  overlay._noteTitle    = fullTitle;
+  overlay._noteOriginal = noteText;
+  // Remplir la modale
+  var titleEl = document.getElementById('admin-note-editor-title');
+  if (titleEl) titleEl.textContent = title;
+  var textarea = document.getElementById('admin-note-editor-textarea');
+  if (textarea) {
+    textarea.value = noteText;
+    textarea.dataset.original = noteText;
+  }
+  var btn = document.getElementById('admin-note-editor-btn');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.4'; }
+  var errEl = document.getElementById('admin-note-editor-err');
+  if (errEl) errEl.style.display = 'none';
+  overlay.style.display = 'flex';
+  setTimeout(function(){ if (textarea) { textarea.focus(); textarea.setSelectionRange(textarea.value.length, textarea.value.length); } }, 150);
+}
+
+function adminNoteEditorInput() {
+  var textarea = document.getElementById('admin-note-editor-textarea');
+  var btn = document.getElementById('admin-note-editor-btn');
+  if (!textarea || !btn) return;
+  var changed = textarea.value !== textarea.dataset.original;
+  btn.disabled = !changed;
+  btn.style.opacity = changed ? '1' : '0.4';
+}
+
+function adminNoteEditorValider() {
+  var overlay = document.getElementById('m-admin-note-editor');
+  var textarea = document.getElementById('admin-note-editor-textarea');
+  var btn = document.getElementById('admin-note-editor-btn');
+  var errEl = document.getElementById('admin-note-editor-err');
+  if (!overlay || !textarea || !btn) return;
+  var title = overlay._noteTitle;
+  var newNote = textarea.value;
+  btn.disabled = true; btn.style.opacity = '0.4'; btn.textContent = '...';
+  var scriptUrl = 'https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec?action=setNoteSwitch&title=' + encodeURIComponent(title) + '&note=' + encodeURIComponent(newNote);
+  fetch(scriptUrl)
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (data.ok) {
+        // Mettre à jour RAW.switch en mémoire pour reflet immédiat
+        var rows = RAW.switch && RAW.switch.rows ? RAW.switch.rows : [];
+        for (var i = 4; i < rows.length; i++) {
+          var colC = (rows[i][2] || '').trim();
+          if (colC === title) { rows[i][3] = newNote; break; }
+        }
+        overlay.style.display = 'none';
+        btn.textContent = 'VALIDER';
+      } else {
+        if (errEl) { errEl.textContent = data.error || 'Erreur'; errEl.style.display = 'block'; }
+        btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'VALIDER';
+      }
+    })
+    .catch(function(e){
+      if (errEl) { errEl.textContent = 'Erreur réseau'; errEl.style.display = 'block'; }
+      btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'VALIDER';
+    });
+}
+
 function openMarco(title, ctx, full) {
+  // MODE ADMIN : ouvrir l'éditeur col D au lieu de la fenêtre utilisateur
+  if (_adminMode) {
+    adminOpenNoteEditor(title, ctx, full);
+    return;
+  }
   document.getElementById('m-marco-title').textContent = title;
   window._marcoTitle = full || title;
   window._marcoCtx = ctx;
@@ -5491,6 +5575,28 @@ function checkFbSession() {
       onclick="swAdminPrenomAjouter()"
       style="width:100%;background:#1877f2;color:#fff;border:none;border-radius:var(--rs);padding:14px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer"
     >AJOUTER</button>
+  </div>
+</div>
+
+<!-- MODALE ADMIN : Éditeur note colonne D SWiTCH -->
+<div id="m-admin-note-editor" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.78);align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--card);border:1px solid var(--gold);border-radius:var(--r);width:100%;max-width:420px;padding:24px 20px 20px;display:flex;flex-direction:column;gap:14px">
+    <div id="admin-note-editor-title" style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold);letter-spacing:1.5px;text-align:center;line-height:1.2"></div>
+    <textarea
+      id="admin-note-editor-textarea"
+      rows="6"
+      spellcheck="false"
+      oninput="adminNoteEditorInput()"
+      style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:var(--rs);padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.55;color:var(--white);outline:none;caret-color:var(--gold);resize:vertical;-webkit-appearance:none;box-sizing:border-box"
+      onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border2)'"
+    ></textarea>
+    <div id="admin-note-editor-err" style="display:none;font-size:12px;color:#e53935;text-align:center;margin-top:-6px"></div>
+    <button
+      id="admin-note-editor-btn"
+      onclick="adminNoteEditorValider()"
+      disabled
+      style="width:100%;background:var(--gold);color:#000;border:none;border-radius:var(--rs);padding:14px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer;opacity:0.4;transition:opacity .2s"
+    >VALIDER</button>
   </div>
 </div>
 
