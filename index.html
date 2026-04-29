@@ -4677,11 +4677,12 @@ function closeDropdown() {
 
 function openSelectedFbProfile() {
   if (!_selectedFbItem) return;
-  fetch('/api?action=getFbLink&fbid=' + encodeURIComponent(_selectedFbItem.fb_id) + '&name=' + encodeURIComponent(_selectedFbItem.name))
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.link) { window.open(data.link, '_blank'); }
-    });
+  var id = (_selectedFbItem.fb_id || '').trim();
+  if (!id) return;
+  var link = /^\d+$/.test(id)
+    ? 'https://www.facebook.com/profile.php?id=' + id
+    : 'https://www.facebook.com/' + id;
+  window.open(link, '_blank');
 }
 
 function runIdSearch(fbId, name) {
