@@ -3707,6 +3707,7 @@ function applyResaMode(mode){
   if(document.getElementById('rules-content'))renderRules();
   var bnOsl=document.getElementById('bn-osl');
   if(bnOsl){bnOsl.classList.toggle('bn-resa-off',_resaOff);}
+  renderHome();
 }
 function secretTap(){
   _tapCount++;clearTimeout(_tapTimer);_tapTimer=setTimeout(function(){_tapCount=0;},1500);
