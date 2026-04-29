@@ -4226,19 +4226,29 @@ function adminVideoEditorMakeBar(selectedName, idx, isNew) {
   };
   inp.onblur = function(){
     var dd = document.getElementById('avme-dropdown');
-    // Annuler tout input en cours (empêche la mémorisation de frappes pendant le délai)
-    inp.value = inp.value; // flush
+    // Capturer la valeur AU MOMENT du blur (avant tout event ultérieur)
+    var snapVal = inp.value.trim();
+    var snapSelected = inp.dataset.selectedName || '';
+    // Désactiver oninput temporairement
+    inp._blurring = true;
     setTimeout(function(){
+      inp._blurring = false;
       if (dd && _avmeDdActiveInp === inp) { dd.style.display = 'none'; _avmeDdActiveInp = null; }
-      // Si valeur pas dans la liste → remettre l'original immédiatement
-      var val = inp.value.trim();
-      var known = (_swAccNames || []).indexOf(val) !== -1;
-      if (!known) { inp.value = inp.dataset.originalName || ''; inp.dataset.selectedName = inp.dataset.originalName || ''; }
+      // Restaurer la valeur snapshot (annule tout ce qui a pu être tapé pendant le délai)
+      var known = (_swAccNames || []).indexOf(snapSelected) !== -1 || (_swAccNames || []).indexOf(snapVal) !== -1;
+      if (!known) {
+        inp.value = inp.dataset.originalName || '';
+        inp.dataset.selectedName = inp.dataset.originalName || '';
+      } else {
+        inp.value = snapSelected || snapVal;
+        inp.dataset.selectedName = snapSelected || snapVal;
+      }
       inp.style.borderColor = isNewRef.val ? 'var(--gold)' : 'var(--border2)';
       adminVideoEditorCheckChanged2();
     }, 150);
   };
   inp.oninput = function(){
+    if (this._blurring) return; // ignorer les events pendant le blur
     this.style.color = 'var(--muted2)';
     this.dataset.selectedName = '';
     avmeShowDropdown(this, isNewRef);
@@ -4345,9 +4355,10 @@ function adminVideoEditorSaveIds() {
     if (data.ok) {
       vid.fb_ids       = newFbIds;
       vid.ids_facebook = newIdsFacebook;
-      // Mettre à jour les originalName sur toutes les barres
+      // Mettre à jour les originalName sur toutes les barres et griser le bouton
       inputs.forEach(function(inp2) { inp2.dataset.originalName = inp2.dataset.selectedName || inp2.value; });
       btn2.textContent = 'MODIFIER';
+      adminVideoEditorCheckChanged2();
     } else {
       if (errEl) { errEl.textContent = data.error || 'Erreur'; errEl.style.display = 'block'; }
       btn2.disabled = false; btn2.style.opacity = '1'; btn2.textContent = 'MODIFIER';
@@ -4360,6 +4371,7 @@ function adminVideoEditorSaveIds() {
     inputs.forEach(function(inp2) { inp2.dataset.originalName = inp2.dataset.selectedName || inp2.value; });
     btn2.textContent = 'MODIFIER';
     if (errEl) errEl.style.display = 'none';
+    adminVideoEditorCheckChanged2();
   });
 }
 
@@ -4529,10 +4541,10 @@ function renderVideoList(videos, onDone) {
     if (_adminMode) {
       (function(vid, el) {
         var _timer;
-        el.addEventListener('touchstart', function(){ _timer = setTimeout(function(){ adminOpenVideoEditor(vid); }, 2000); }, { passive: true });
+        el.addEventListener('touchstart', function(){ _timer = setTimeout(function(){ adminOpenVideoEditor(vid); }, 1000); }, { passive: true });
         el.addEventListener('touchend',   function(){ clearTimeout(_timer); }, { passive: true });
         el.addEventListener('touchmove',  function(){ clearTimeout(_timer); }, { passive: true });
-        el.addEventListener('mousedown',  function(){ _timer = setTimeout(function(){ adminOpenVideoEditor(vid); }, 2000); });
+        el.addEventListener('mousedown',  function(){ _timer = setTimeout(function(){ adminOpenVideoEditor(vid); }, 1000); });
         el.addEventListener('mouseup',    function(){ clearTimeout(_timer); });
         el.addEventListener('mouseleave', function(){ clearTimeout(_timer); });
       })(v, info2);
