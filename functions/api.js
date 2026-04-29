@@ -17,7 +17,7 @@ const SHEETS = {
   'promoSw':       'PROMO SWiTCH',
   'pitchMesPrestas': 'PITCH MES PRESTAS'
 };
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzRxLRh2URcPDRhMKC9mQwDsToEBTGCkrRrULgAFqYSvaldTh2wWRZGP7vbZa9eMYWP/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec';
 const FB_APP_ID = '3170724703113870';
 const VIDEOS_SHEET = 'VIDEOS';
 
