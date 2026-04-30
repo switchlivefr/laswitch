@@ -493,17 +493,15 @@ function doFullReset() {
   nomInput.value       = '';
   prenomInput.value    = '';
   prenomInput.placeholder = 'Prénom';
-  nomInput.disabled    = true;
+  nomInput.disabled    = false;
   hideDropdown(ddNom);
   hideDropdown(ddPrenom);
   hideFeedback();
   btnLabel.textContent = 'AJOUTER';
   submitBtn.disabled   = true;
   submitBtn.className  = 'btn';
-  loadData().then(function(){
-    nomInput.disabled = false;
-    setTimeout(function(){ nomInput.focus(); }, 50);
-  });
+  loadData();
+  setTimeout(function(){ nomInput.focus(); }, 50);
 }
 </script>
 
@@ -570,11 +568,12 @@ function closeAdminM() {
 function swAdminAjoutNomFacebook() {
   closeAdminM();
   setTimeout(function(){
-    if (nomInput) {
-      nomInput.disabled = false;
-      nomInput.focus();
+    if (typeof doFullReset === 'function') {
+      doFullReset();
+    } else {
+      if (nomInput)  { nomInput.disabled = false; nomInput.focus(); }
+      if (submitBtn) { submitBtn.disabled = true; }
     }
-    if (submitBtn) submitBtn.disabled = true;
   }, 150);
 }
 
