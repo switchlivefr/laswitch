@@ -1102,6 +1102,42 @@ window.addEventListener('DOMContentLoaded',function(){openAdminM();swLoadAdminRe
     }
   }
 
+  // GET getBlinkData — lit col J de IDS_APPLI pour l'utilisateur (nom en col A)
+  // Retourne { data: "YYYY-MM-DD|ytId1,ytId2,..." } ou { data: '' }
+  if (request.method === 'GET' && action === 'getBlinkData') {
+    try {
+      const name = (url.searchParams.get('name') || '').trim().toLowerCase();
+      if (!name) return new Response(JSON.stringify({ data: '' }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+      const sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent('IDS_APPLI')}?key=${API_KEY}`;
+      const r = await fetch(sheetUrl);
+      const d = await r.json();
+      if (d.error) throw new Error(d.error.message);
+      const rows = (d.values || []).slice(1);
+      const match = rows.find(row => (row[0]||'').trim().toLowerCase() === name);
+      const data = match ? (match[9]||'').trim() : ''; // col J = index 9
+      return new Response(JSON.stringify({ data }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+    } catch(e) {
+      return new Response(JSON.stringify({ data: '', error: e.message }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+    }
+  }
+
+  // POST setBlinkData — écrit col J de IDS_APPLI via Apps Script
+  // Body : { name, data } où data = "YYYY-MM-DD|ytId1,ytId2,..."
+  if (request.method === 'POST' && action === 'setBlinkData') {
+    try {
+      const body = await request.json();
+      const name = (body.name || '').trim();
+      const data = (body.data || '').trim();
+      if (!name) return new Response(JSON.stringify({ error: 'name manquant' }), { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+      const scriptUrl = APPS_SCRIPT_URL + '?action=setBlinkData&name=' + encodeURIComponent(name) + '&data=' + encodeURIComponent(data);
+      const r = await fetch(scriptUrl);
+      const d = await r.json();
+      return new Response(JSON.stringify(d), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+    } catch(e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+    }
+  }
+
   // GET IDS_FBK : liste des IDs Facebook pour la recherche admin
   if (request.method === 'GET' && action === 'getIdsFbk') {
     try {
