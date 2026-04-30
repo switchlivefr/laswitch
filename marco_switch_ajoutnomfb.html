@@ -38,7 +38,6 @@
 .mfoot{padding:12px 18px;border-top:1px solid var(--border);flex-shrink:0;display:flex;gap:8px}
 .mbtn{flex:1;padding:12px;border-radius:var(--rs);border:none;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;cursor:pointer;-webkit-appearance:none}
 .mbtn.sec{background:var(--card);border:1px solid var(--border2);color:var(--muted2)}
-@keyframes spin{to{transform:rotate(360deg)}}
 html{height:100%;overscroll-behavior:none}
 body{
   background:var(--bg);
@@ -76,9 +75,9 @@ body::before{
   border-radius:var(--r);padding:14px 18px;
   font-family:'DM Sans',sans-serif;font-size:17px;font-weight:600;
   color:var(--white);outline:none;-webkit-appearance:none;
-  transition:border-color .2s,box-shadow .2s;caret-color:#1877f2;
+  transition:border-color .2s,box-shadow .2s;caret-color:var(--gold);
 }
-.field:focus{border-color:#1877f2;box-shadow:0 0 0 3px rgba(24,119,242,.18)}
+.field:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(242,201,76,.12)}
 .field::placeholder{color:var(--muted);font-weight:400}
 .ac-wrap{position:relative;width:100%;margin-bottom:12px}
 .ac-wrap.narrow{max-width:380px;margin-left:auto;margin-right:auto;margin-top:16px}
@@ -103,7 +102,7 @@ body::before{
 .feedback.visible{opacity:1}
 .feedback.abandon{color:#e8407a}
 .btn{
-  width:100%;background:#1877f2;color:#fff;border:none;border-radius:var(--r);
+  width:100%;background:var(--gold);color:#000;border:none;border-radius:var(--r);
   padding:15px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;
   cursor:pointer;transition:opacity .15s,transform .1s,background .2s,color .2s;-webkit-appearance:none;
 }
@@ -193,7 +192,7 @@ document.head.appendChild(__link);
     <div class="spinner"></div>
   </button>
 
-  <button id="btn-demande-acces" onclick="openAdminM();swLoadAdminRequests()"
+  <button onclick="openAdminM();swLoadAdminRequests()"
     style="width:100%;margin-top:12px;background:transparent;color:var(--white);border:1px solid var(--border2);border-radius:var(--r);padding:14px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;-webkit-appearance:none">
     DEMANDES D'ACCÈS EN ATTENTE
   </button>
@@ -493,21 +492,23 @@ function doFullReset() {
   nomInput.value       = '';
   prenomInput.value    = '';
   prenomInput.placeholder = 'Prénom';
-  nomInput.disabled    = false;
+  nomInput.disabled    = true;
   hideDropdown(ddNom);
   hideDropdown(ddPrenom);
   hideFeedback();
   btnLabel.textContent = 'AJOUTER';
   submitBtn.disabled   = true;
   submitBtn.className  = 'btn';
-  loadData();
-  setTimeout(function(){ nomInput.focus(); }, 50);
+  loadData().then(function(){
+    nomInput.disabled = false;
+    setTimeout(function(){ nomInput.focus(); }, 50);
+  });
 }
 </script>
+</body>
+</html>
 
-<!-- ══════════════════════════════════════════════════════════
-     MODALE ADMIN : DEMANDES D'ACCÈS — identique à index.html
-     ══════════════════════════════════════════════════════════ -->
+<!-- MODALE DEMANDES D'ACCÈS -->
 <div class="moverlay" id="m-sw-admin" onclick="if(event.target===this)closeAdminM()">
   <div class="mbox" style="display:flex;flex-direction:column;max-height:calc(88vh - 64px)">
     <div class="mhead" style="text-align:center;flex-shrink:0">
@@ -519,34 +520,23 @@ function doFullReset() {
     </div>
     <div class="mfoot" style="flex-direction:row;gap:8px">
       <button onclick="swLoadAdminRequests()" style="flex:1;background:var(--border2);border:none;border-radius:8px;padding:10px;color:var(--white);font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">ACTUALISER</button>
-      <button onclick="swAdminAjoutNomFacebook()" style="flex:1;background:#1877f2;border:none;border-radius:8px;padding:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">AJOUT NOM FACEBOOK</button>
+      <button onclick="closeAdminM()" style="flex:1;background:#1877f2;border:none;border-radius:8px;padding:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">AJOUT NOM FACEBOOK</button>
     </div>
   </div>
 </div>
 
-<!-- Saisie du prénom avant validation — identique à index.html -->
+<!-- Modale saisie prénom pour validation -->
 <div id="m-sw-admin-prenom" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:24px">
   <div style="background:var(--card);border:1px solid #1877f2;border-radius:var(--r);width:100%;max-width:340px;padding:28px 24px 24px;display:flex;flex-direction:column;gap:16px">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#1877f2;letter-spacing:2px;text-align:center">Prénom</div>
-    <input
-      id="sw-admin-prenom-input"
-      type="text"
-      placeholder="Prénom…"
-      autocomplete="off"
-      autocorrect="off"
-      autocapitalize="words"
-      spellcheck="false"
+    <input id="sw-admin-prenom-input" type="text" placeholder="Prénom…" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false"
       style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:var(--rs);padding:14px 16px;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:600;color:var(--white);outline:none;caret-color:#1877f2;-webkit-appearance:none"
       onfocus="this.style.borderColor='#1877f2'" onblur="this.style.borderColor='var(--border2)'"
-      oninput="swAccCapitalize(this)"
-      onkeydown="if(event.key==='Enter')swAdminPrenomAjouter()"
-    >
+      oninput="var v=this.value;this.value=v.charAt(0).toUpperCase()+v.slice(1)"
+      onkeydown="if(event.key==='Enter')swAdminPrenomAjouter()">
     <div id="sw-admin-prenom-err" style="display:none;font-size:12px;color:#e53935;text-align:center;margin-top:-8px"></div>
-    <button
-      id="sw-admin-prenom-addbtn"
-      onclick="swAdminPrenomAjouter()"
-      style="width:100%;background:#1877f2;color:#fff;border:none;border-radius:var(--rs);padding:14px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer"
-    >AJOUTER</button>
+    <button id="sw-admin-prenom-addbtn" onclick="swAdminPrenomAjouter()"
+      style="width:100%;background:#1877f2;color:#fff;border:none;border-radius:var(--rs);padding:14px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer">AJOUTER</button>
   </div>
 </div>
 
@@ -554,7 +544,6 @@ function doFullReset() {
 var ADMIN_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec';
 var ADMIN_API_BASE = '/api';
 
-/* ── Ouvrir / fermer la modale admin ── */
 function openAdminM() {
   var el = document.getElementById('m-sw-admin');
   if (el) el.classList.add('open');
@@ -564,20 +553,6 @@ function closeAdminM() {
   if (el) el.classList.remove('open');
 }
 
-/* ── Bouton "AJOUT NOM FACEBOOK" : ferme la modale, révèle la page ── */
-function swAdminAjoutNomFacebook() {
-  closeAdminM();
-  setTimeout(function(){
-    if (typeof doFullReset === 'function') {
-      doFullReset();
-    } else {
-      if (nomInput)  { nomInput.disabled = false; nomInput.focus(); }
-      if (submitBtn) { submitBtn.disabled = true; }
-    }
-  }, 150);
-}
-
-/* ── Charger les demandes d'accès (identique index.html swLoadAdminRequests) ── */
 function swLoadAdminRequests() {
   var list  = document.getElementById('sw-admin-list');
   var count = document.getElementById('sw-admin-count');
@@ -604,7 +579,7 @@ function swLoadAdminRequests() {
         var nom = (row.name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
         var d = document.createElement('div');
         d.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:8px';
-        var info = '<div style="flex:1"><div style="font-size:14px;font-weight:700;color:' + (isVal?'var(--muted2)':'var(--white)') + '">' + nom + '</div><div style="font-size:11px;color:var(--muted2);font-family:DM Mono,monospace">' + (row.date||'').replace(/\s*\(.*\)\s*/,'') + '</div></div>';
+        var info = '<div style="flex:1"><div style="font-size:14px;font-weight:700;color:' + (isVal?'var(--muted2)':'var(--white)') + '">' + nom + '</div><div style="font-size:11px;color:var(--muted2)">' + (row.date||'') + '</div></div>';
         d.innerHTML = info;
         if (isVal) {
           var tag = document.createElement('div');
@@ -626,7 +601,6 @@ function swLoadAdminRequests() {
     });
 }
 
-/* ── Valider une demande (identique index.html) ── */
 function swAdminValidate(name, btn) {
   btn.textContent = '...'; btn.disabled = true;
   fetch(ADMIN_API_BASE + '?action=getPrenom&name=' + encodeURIComponent(name))
@@ -640,9 +614,7 @@ function swAdminValidate(name, btn) {
         swAdminDoValidate(name, btn);
       }
     })
-    .catch(function(){
-      swAdminDoValidate(name, btn);
-    });
+    .catch(function(){ swAdminDoValidate(name, btn); });
 }
 
 function swAdminDoValidate(name, btn) {
@@ -659,9 +631,7 @@ function swAdminDoValidate(name, btn) {
         if (btn) { btn.textContent = 'ERREUR'; btn.disabled = false; }
       }
     })
-    .catch(function(){
-      if (btn) { btn.textContent = 'ERREUR'; btn.disabled = false; }
-    });
+    .catch(function(){ if (btn) { btn.textContent = 'ERREUR'; btn.disabled = false; } });
 }
 
 function swAdminAskPrenom(name, btn) {
@@ -670,7 +640,7 @@ function swAdminAskPrenom(name, btn) {
   overlay._targetName = name;
   overlay._targetBtn  = btn;
   var input = document.getElementById('sw-admin-prenom-input');
-  if (input) { input.value = ''; }
+  if (input) input.value = '';
   var errEl = document.getElementById('sw-admin-prenom-err');
   if (errEl) errEl.style.display = 'none';
   overlay.style.display = 'flex';
@@ -705,17 +675,9 @@ function swAdminPrenomAjouter() {
     });
 }
 
-/* ── swAccCapitalize : utilisé par l'input prénom (repris de index.html) ── */
-function swAccCapitalize(inp) {
-  var v = inp.value;
-  inp.value = v.charAt(0).toUpperCase() + v.slice(1);
-}
-
-/* ── Ouvrir la modale au chargement de la page ── */
+/* Ouvrir la modale au chargement — NE TOUCHE PAS au formulaire principal */
 window.addEventListener('DOMContentLoaded', function() {
   openAdminM();
   swLoadAdminRequests();
 });
 </script>
-</body>
-</html>
