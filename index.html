@@ -4550,9 +4550,11 @@ function setupPrestasScrollPause(listEl) {
     var d = window._prestasOpenCardData;
     if (!d || !window._prestasActivePlayer) return;
     var thumbRect = d.thumb.getBoundingClientRect();
-    var listRect  = listEl.getBoundingClientRect();
-    // La fenêtre vidéo est visible si elle chevauche la zone d'affichage du conteneur
-    var inView = thumbRect.bottom > listRect.top && thumbRect.top < listRect.bottom;
+    var navEl = document.querySelector('.bnav');
+    var navH = navEl ? navEl.getBoundingClientRect().height : 72;
+    // Limite basse visible = juste au-dessus du bandeau d'onglets
+    var visibleBottom = window.innerHeight - navH;
+    var inView = thumbRect.bottom > 0 && thumbRect.top < visibleBottom;
     if (!inView) {
       try { window._prestasActivePlayer.pauseVideo(); } catch(e) {}
     }
