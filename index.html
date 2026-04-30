@@ -329,7 +329,7 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
   <div style="text-align:center;animation:newVidBannerIn .5s ease forwards">
     <div id="nv-banner-l1" style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--white);letter-spacing:2px;line-height:1.35"></div>
     <div id="nv-banner-l2" style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--white);letter-spacing:2px;line-height:1.35"></div>
-    <div id="nv-banner-l3" style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold);letter-spacing:2px;line-height:1.35;margin-top:8px"></div>
+    <div id="nv-banner-l3" style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--white);letter-spacing:2px;line-height:1.35;margin-top:8px"></div>
   </div>
 </div>
 <div id="fb-browser-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(30,20,0,.92);color:#f2c94c;font-family:'DM Sans',sans-serif;font-size:11px;padding:6px 14px;text-align:center;letter-spacing:0.3px">
@@ -974,8 +974,8 @@ var NV = {
         if (snapRaw && NV._blinkStillActive(seenDate)) {
           var snap = JSON.parse(snapRaw);
           var prev = (snap.newYtIds && snap.newYtIds.length) ? snap.newYtIds.length : 0;
-          if (prev === 1) l3.textContent = 'EN PLUS DE LA PRÉCÉDENTE';
-          else if (prev > 1) l3.textContent = 'EN PLUS DES PRÉCÉDENTES';
+          if (prev === 1) l3.textContent = '(EN PLUS DE LA PRÉCÉDENTE)';
+          else if (prev > 1) l3.textContent = '(EN PLUS DES ' + prev + ' PRÉCÉDENTES)';
         }
       } catch(e) {}
     }
