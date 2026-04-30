@@ -4659,12 +4659,16 @@ function renderVideoList(videos, onDone) {
         capturedThumb.appendChild(container);
         window._prestasActiveThumb = capturedThumb;
 
+        // Calculer la hauteur exacte basée sur la largeur réelle de la carte
+        var cardWidth = capturedCard.offsetWidth;
+        var videoHeight = Math.round(cardWidth * 9 / 16) + 'px';
+
         // Ouvrir l'espace avec animation 0.5s — thumb grandit, info remonte
         capturedThumb.style.transition = 'max-height 0.5s ease, opacity 0.4s ease';
-        capturedThumb.style.maxHeight = '56.25vw';
+        capturedThumb.style.maxHeight = videoHeight;
         capturedThumb.style.opacity = '1';
         capturedInfo.style.transition = 'margin-top 0.5s ease';
-        capturedInfo.style.marginTop = '-56.25vw';
+        capturedInfo.style.marginTop = '-' + videoHeight;
 
         capturedCard._splitOpen = true;
         window._prestasOpenCardData = { card: capturedCard, thumb: capturedThumb, info: capturedInfo };
