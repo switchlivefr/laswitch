@@ -1153,11 +1153,6 @@ var NV = {
     // Cas normal : calculer les nouveaux ytIds
     var savedIds = snap.ids || [];
     NV.newYtIds = NV._calcNewIds(savedIds, currentYtIds);
-    // Fallback si désync
-    if (NV.hasNew && NV.newYtIds.length === 0) {
-      NV.newYtIds = currentYtIds.slice(0, NV.diff);
-      console.log('NV.checkBlink — FALLBACK newYtIds=['+NV.newYtIds.join(',')+']');
-    }
     // Filtrer : ne garder que les ytIds encore présents dans les vidéos de cet utilisateur
     NV.newYtIds = NV.newYtIds.filter(function(id){ return currentYtIds.indexOf(id) !== -1; });
     console.log('NV.checkBlink — newYtIds=['+NV.newYtIds.join(',')+']');
