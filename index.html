@@ -4183,7 +4183,7 @@ function extractYtId(url) {
 
 // Quand l'appli passe en arrière-plan (ouverture appli YouTube via le logo),
 // remettre le player à 0 — YouTube ouvrira alors la vidéo depuis le début.
-// Quand on revient sur l'appli, relancer la lecture.
+// Ne pas relancer automatiquement au retour — l'utilisateur reprend manuellement.
 document.addEventListener('visibilitychange', function() {
   if (document.hidden) {
     if (window._prestasActivePlayer) {
@@ -4192,11 +4192,8 @@ document.addEventListener('visibilitychange', function() {
         window._prestasActivePlayer.pauseVideo();
       } catch(e) {}
     }
-  } else {
-    if (window._prestasActivePlayer) {
-      try { window._prestasActivePlayer.playVideo(); } catch(e) {}
-    }
   }
+  // Retour en premier plan : ne rien faire — pas de reprise automatique
 });
 
 // Callback global appelé automatiquement par l'API IFrame YouTube quand elle est prête
@@ -4547,10 +4544,9 @@ function setupPrestasScrollPause(listEl) {
     if (!d || !window._prestasActivePlayer) return;
     var rect = d.thumb.getBoundingClientRect();
     var inView = rect.bottom > 0 && rect.top < window.innerHeight;
+    // Pause uniquement quand hors écran — ne jamais reprendre automatiquement
     if (!inView) {
       try { window._prestasActivePlayer.pauseVideo(); } catch(e) {}
-    } else {
-      try { window._prestasActivePlayer.playVideo(); } catch(e) {}
     }
   }, { passive: true });
 }
@@ -4709,8 +4705,8 @@ function renderVideoList(videos, onDone) {
       }
 
       // ── Logique appui long commun aux deux blocs (info haut + info2 bas) ──
-      // Appui 0.5s → toggle vidéo
-      // Sur info2 en mode admin : 1s complet → ouvre éditeur (annule le toggle vidéo)
+      // Appui 0.2s → toggle vidéo
+      // Sur info2 en mode admin : 1.5s complet → ouvre éditeur (annule le toggle vidéo)
       function attachLongPress(el, isInfo2) {
         var _timerVideo = null;
         var _timerAdmin = null;
@@ -4724,7 +4720,7 @@ function renderVideoList(videos, onDone) {
           _videoFired = false;
           _adminFired = false;
 
-          // Timer 0.5s pour toggle vidéo
+          // Timer 0.2s pour toggle vidéo
           _timerVideo = setTimeout(function() {
             if (!_pressing) return;
             _videoFired = true;
@@ -4735,19 +4731,19 @@ function renderVideoList(videos, onDone) {
               // Ouvrir
               startVideo();
             }
-          }, 500);
+          }, 200);
 
-          // Timer 1s pour admin (info2 uniquement, admin uniquement)
+          // Timer 1.5s pour admin (info2 uniquement, admin uniquement)
           if (isInfo2 && _adminMode) {
             _timerAdmin = setTimeout(function() {
               if (!_pressing) return;
               _adminFired = true;
-              // Si la vidéo venait de s'ouvrir au 0.5s, on la referme avant l'éditeur
+              // Si la vidéo venait de s'ouvrir au 0.2s, on la referme avant l'éditeur
               if (_videoFired && capturedCard._splitOpen) {
                 closePrestasOpenCard(false);
               }
               adminOpenVideoEditor(v);
-            }, 1000);
+            }, 1500);
           }
         }
 
