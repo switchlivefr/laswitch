@@ -413,7 +413,8 @@ function doSubmit() {
   var isReplace = (state.nomSelectionne && state.prenomExistant && norm(prenom) !== norm(state.prenomExistant));
   var action = isReplace ? 'replacePrenom' : 'addAppliName';
 
-  var url = '/api?action=' + action
+  var url = APPS_SCRIPT_URL
+    + '?action=' + action
     + '&name='   + encodeURIComponent(nom)
     + '&prenom=' + encodeURIComponent(prenom);
 
@@ -438,7 +439,8 @@ function doResetPin(nom) {
   submitBtn.classList.add('loading');
   submitBtn.disabled = true;
 
-  var url = '/api?action=resetPin'
+  var url = APPS_SCRIPT_URL
+    + '?action=resetPin'
     + '&name=' + encodeURIComponent(nom);
 
   fetch(url)
