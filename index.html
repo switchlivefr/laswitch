@@ -1002,7 +1002,7 @@ var NV = {
       if (ytId && NV.newYtIds.indexOf(ytId) !== -1) {
         var info = card.querySelector('.presta-info');
         if (info) {
-          info.style.cssText = 'padding:8px 14px 4px;animation:newVidCardBlink 2s ease-in-out infinite';
+          info.style.cssText = 'padding:10px 14px 0px;animation:newVidCardBlink 2s ease-in-out infinite';
           NV.blinkEls.push(info);
           var info2 = card.querySelector('.presta-info2');
           if (info2) {
@@ -1018,7 +1018,7 @@ var NV = {
 
   stopBlink: function() {
     NV.blinkEls.forEach(function(el){
-      if (el.classList.contains('presta-info')) el.style.cssText='padding:8px 14px 4px';
+      if (el.classList.contains('presta-info')) el.style.cssText='padding:10px 14px 0px';
       else if (el.classList.contains('presta-info2')) el.style.cssText='padding:8px 14px 10px';
     });
     NV.blinkEls = [];
