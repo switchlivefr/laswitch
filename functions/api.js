@@ -85,7 +85,6 @@ async function handleRequest(request, env) {
 
   if (url.pathname === '/marco-switch-ajoutnomfb' || url.pathname === '/marco-switch-ajoutnomfb.html') {
     return env.ASSETS.fetch(request);
-  }    });
   }
 
   if (url.pathname !== '/api') {
@@ -606,7 +605,7 @@ async function handleRequest(request, env) {
     }
   }
 
-  // GET addAppliName — ajoute nom + prenom dans IDS_APPLI via Apps Script
+  // GET addAppliName — proxy vers Apps Script
   if (request.method === 'GET' && action === 'addAppliName') {
     try {
       const name   = (url.searchParams.get('name')   || '').trim();
@@ -621,12 +620,12 @@ async function handleRequest(request, env) {
     }
   }
 
-  // GET replacePrenom — remplace le prénom en col G via Apps Script
+  // GET replacePrenom — proxy vers Apps Script
   if (request.method === 'GET' && action === 'replacePrenom') {
     try {
       const name   = (url.searchParams.get('name')   || '').trim();
       const prenom = (url.searchParams.get('prenom') || '').trim();
-      if (!name || !prenom) return new Response(JSON.stringify({ ok: false, error: 'Paramètres manquants' }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+      if (!name || !prenom) return new Response(JSON.stringify({ ok: false, error: 'Params manquants' }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
       const scriptUrl = APPS_SCRIPT_URL + '?action=replacePrenom&name=' + encodeURIComponent(name) + '&prenom=' + encodeURIComponent(prenom);
       const r = await fetch(scriptUrl);
       const data = await r.json();
@@ -636,7 +635,7 @@ async function handleRequest(request, env) {
     }
   }
 
-  // GET resetPin — réinitialise le PIN en col F via Apps Script
+  // GET resetPin — proxy vers Apps Script
   if (request.method === 'GET' && action === 'resetPin') {
     try {
       const name = (url.searchParams.get('name') || '').trim();
