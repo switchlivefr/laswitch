@@ -308,7 +308,7 @@ function highlight(text, input) {
   var tokens = norm(input).split(/\s+/).filter(Boolean);
   var result = text;
   tokens.forEach(function(tok){
-    var safe = tok.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    var safe = tok.replace(/[.*+?^$\{\}()|[\]\\]/g,'\\$&');
     var re = new RegExp('(' + safe + ')', 'gi');
     result = result.replace(re,'<em>$1</em>');
   });
