@@ -4525,7 +4525,6 @@ function closePrestasOpenCard(skipAnimation) {
   if (skipAnimation) {
     if (d.wrap) {
       d.wrap.style.transition = 'none';
-      d.wrap.style.height = '0px';
       d.wrap.style.clipPath = 'inset(100% 0 0 0)';
     }
     d.thumb.innerHTML = '';
@@ -4535,9 +4534,8 @@ function closePrestasOpenCard(skipAnimation) {
 
   // Animation fermeture 0.5s
   if (d.wrap) {
-    d.wrap.style.transition = 'clip-path 0.5s ease, height 0.5s ease';
+    d.wrap.style.transition = 'clip-path 0.5s ease';
     d.wrap.style.clipPath = 'inset(100% 0 0 0)';
-    d.wrap.style.height = '0px';
   }
   setTimeout(function() {
     d.thumb.innerHTML = '';
@@ -4545,7 +4543,7 @@ function closePrestasOpenCard(skipAnimation) {
   }, 500);
 }
 
-// Stoppe uniquement la lecture si la carte est hors écran (sans la fermer)
+// Stoppe uniquement la lecture si la carte est hors de la zone visible (sans la fermer)
 function setupPrestasScrollPause(listEl) {
   if (!listEl || listEl._scrollPauseInit) return;
   listEl._scrollPauseInit = true;
@@ -4553,14 +4551,11 @@ function setupPrestasScrollPause(listEl) {
     var d = window._prestasOpenCardData;
     if (!d || !window._prestasActivePlayer) return;
     var thumbRect = d.wrap ? d.wrap.getBoundingClientRect() : d.thumb.getBoundingClientRect();
-    var listRect  = listEl.getBoundingClientRect();
     var navEl = document.querySelector('.bnav');
     var navH = navEl ? navEl.offsetHeight : 72;
-    // Ajouter aussi le safe-area-inset-bottom si disponible
-    var safeBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sab') || '0') || 0;
-    var listBottom = listRect.bottom - navH - safeBottom;
-    // Pause si complètement sortie par le bas OU par le haut
-    var inView = thumbRect.bottom > listRect.top && thumbRect.top < listBottom;
+    // Zone visible réelle : entre 0 (haut écran) et window.innerHeight - navH (dessus du bandeau)
+    var visibleBottom = window.innerHeight - navH;
+    var inView = thumbRect.bottom > 0 && thumbRect.top < visibleBottom;
     if (!inView) {
       try { window._prestasActivePlayer.pauseVideo(); } catch(e) {}
     }
@@ -4596,13 +4591,18 @@ function renderVideoList(videos, onDone) {
     }
     card.appendChild(info);
 
-    // ── Zone vidéo : cachée par défaut, se révèle du bas vers le haut ──
+    // ── Zone vidéo : cachée par défaut, se révèle du bas vers le haut via clip-path ──
     var thumbWrap = document.createElement('div');
-    thumbWrap.style.cssText = 'overflow:hidden;width:100%;clip-path:inset(100% 0 0 0);transition:clip-path 0.5s ease,height 0.5s ease;height:0px';
+    thumbWrap.style.cssText = 'overflow:hidden;width:100%;clip-path:inset(100% 0 0 0);transition:clip-path 0.5s ease';
+    // La hauteur est fixée après insertion dans le DOM (besoin de offsetWidth)
     var thumb = document.createElement('div');
     thumb.style.cssText = 'position:relative;background:#000;width:100%;aspect-ratio:16/9';
     thumbWrap.appendChild(thumb);
     card.appendChild(thumbWrap);
+    // Fixer la hauteur explicite après insertion
+    requestAnimationFrame(function() {
+      thumbWrap.style.height = (thumbWrap.offsetWidth * 9 / 16) + 'px';
+    });
 
     // ── Bloc BAS (presta-info2) ──
     var info2 = document.createElement('div');
@@ -4664,11 +4664,8 @@ function renderVideoList(videos, onDone) {
         capturedThumb.appendChild(container);
         window._prestasActiveThumb = capturedThumb;
 
-        // Calculer la hauteur cible (ratio 16/9 de la largeur de la carte)
-        var targetH = capturedWrap.offsetWidth * 9 / 16;
-        capturedWrap.style.transition = 'clip-path 0.5s ease, height 0.5s ease';
-        capturedWrap.style.height = targetH + 'px';
-        // Laisser le reflow se faire puis déclencher l'animation clip
+        // Révéler la vidéo depuis le bas (clip-path : masque du haut → tout visible)
+        capturedWrap.style.transition = 'clip-path 0.5s ease';
         requestAnimationFrame(function() {
           requestAnimationFrame(function() {
             capturedWrap.style.clipPath = 'inset(0% 0 0 0)';
