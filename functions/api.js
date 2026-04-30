@@ -109,6 +109,10 @@ async function handleRequest(request, env) {
   --muted:#5a5a78;
   --green:#4caf7d;
   --r:14px;
+  --rs:8px;
+  --border2:#2a2a40;
+  --muted2:#7a7a95;
+  --cyan:#34d1c0;
 }
 html{height:100%;overscroll-behavior:none}
 body{
@@ -216,7 +220,7 @@ body::before{
 .btn.loading .spinner{display:block}
 .moverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:500;align-items:center;justify-content:center;padding:14px}
 .moverlay.open{display:flex}
-.mbox{background:var(--card);border:1px solid #2a2a40;border-radius:14px;width:100%;max-width:460px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden}
+.mbox{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);width:100%;max-width:460px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden}
 </style>
 <script>
 const __manifest = {
@@ -266,7 +270,7 @@ document.head.appendChild(__link);
     <span class="btn-label" id="btn-label">AJOUTER</span>
     <div class="spinner"></div>
   </button>
-  <button onclick="openAdminM();swLoadAdminRequests()" style="width:100%;margin-top:12px;background:transparent;color:var(--white);border:1px solid #2a2a40;border-radius:14px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;-webkit-appearance:none">DEMANDES D'ACCÈS EN ATTENTE</button>
+  <button onclick="openAdminM();swLoadAdminRequests()" style="width:100%;margin-top:12px;background:transparent;color:var(--white);border:1px solid var(--border2);border-radius:var(--r);padding:14px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;-webkit-appearance:none">DEMANDES D'ACCÈS EN ATTENTE</button>
 </div>
 
 <script>
@@ -561,7 +565,6 @@ function doFullReset() {
   nomInput.value       = '';
   prenomInput.value    = '';
   prenomInput.placeholder = 'Prénom';
-  nomInput.disabled    = false;
   hideDropdown(ddNom);
   hideDropdown(ddPrenom);
   hideFeedback();
@@ -590,7 +593,7 @@ function doFullReset() {
   </div>
 </div>
 <div id="m-sw-admin-prenom" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:24px">
-  <div style="background:var(--card);border:1px solid #1877f2;border-radius:14px;width:100%;max-width:340px;padding:28px 24px 24px;display:flex;flex-direction:column;gap:16px">
+  <div style="background:var(--card);border:1px solid #1877f2;border-radius:var(--r);width:100%;max-width:340px;padding:28px 24px 24px;display:flex;flex-direction:column;gap:16px">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#1877f2;letter-spacing:2px;text-align:center">Prénom</div>
     <input id="sw-admin-prenom-input" type="text" placeholder="Prénom..." autocomplete="off" autocapitalize="words" spellcheck="false"
       style="width:100%;background:var(--bg);border:1px solid #2a2a40;border-radius:8px;padding:14px 16px;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:600;color:var(--white);outline:none;caret-color:#1877f2;-webkit-appearance:none"
