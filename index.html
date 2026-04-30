@@ -4209,22 +4209,8 @@ window.onYouTubeIframeAPIReady = function() {
 };
 
 function stopPrestasVideo() {
-  // Stopper le player IFrame API si actif
-  if (window._prestasActivePlayer) {
-    try { window._prestasActivePlayer.stopVideo(); } catch(e) {}
-    window._prestasActivePlayer = null;
-  }
-  // Supprimer l'iframe active et remettre la miniature
-  var iframe = document.getElementById('prestas-active-iframe');
-  if (iframe) {
-    iframe.src = '';
-    var thumb = window._prestasActiveThumb;
-    if (thumb) {
-      thumb.innerHTML = '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:48px;height:48px;background:rgba(255,0,0,.85);border-radius:50%;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 10 10" fill="white"><polygon points="3,1 9,5 3,9"/></svg></div>';
-      window._prestasActiveThumb = null;
-    }
-    iframe.removeAttribute('id');
-  }
+  // Délègue au système split-card (fermeture immédiate sans animation)
+  closePrestasOpenCard(true);
 }
 
 
@@ -4514,22 +4500,81 @@ function adminLoadIdsAppliCache() {
     .catch(function(){});
 }
 
+// ── Référence globale à la carte actuellement ouverte (split-card vidéo) ──
+window._prestasOpenCardData = null; // { card, thumb, closeCard }
+
+// Ferme la carte ouverte (animation de fermeture + stop vidéo)
+function closePrestasOpenCard(skipAnimation) {
+  var d = window._prestasOpenCardData;
+  if (!d) return;
+  window._prestasOpenCardData = null;
+
+  // Stopper la vidéo (mais ne pas vider le thumb — l'animation s'en charge)
+  if (window._prestasActivePlayer) {
+    try { window._prestasActivePlayer.stopVideo(); } catch(e) {}
+    window._prestasActivePlayer = null;
+  }
+  var iframe = document.getElementById('prestas-active-iframe');
+  if (iframe) { iframe.src = ''; iframe.removeAttribute('id'); }
+  window._prestasActiveThumb = null;
+
+  if (skipAnimation) {
+    // Fermeture immédiate (ex. ouverture d'une autre carte)
+    d.thumb.style.transition = 'none';
+    d.thumb.style.maxHeight = '0px';
+    d.thumb.style.opacity = '0';
+    d.thumb.innerHTML = '';
+    d.card._splitOpen = false;
+    return;
+  }
+
+  // Animation fermeture 0.5s
+  d.thumb.style.transition = 'max-height 0.5s ease, opacity 0.4s ease';
+  d.thumb.style.maxHeight = '0px';
+  d.thumb.style.opacity = '0';
+  setTimeout(function() {
+    d.thumb.innerHTML = '';
+    d.card._splitOpen = false;
+  }, 500);
+}
+
+// Stoppe uniquement la lecture si la carte est hors écran (sans la fermer)
+function setupPrestasScrollPause(listEl) {
+  if (!listEl || listEl._scrollPauseInit) return;
+  listEl._scrollPauseInit = true;
+  listEl.addEventListener('scroll', function() {
+    var d = window._prestasOpenCardData;
+    if (!d || !window._prestasActivePlayer) return;
+    var rect = d.thumb.getBoundingClientRect();
+    var inView = rect.bottom > 0 && rect.top < window.innerHeight;
+    if (!inView) {
+      try { window._prestasActivePlayer.pauseVideo(); } catch(e) {}
+    } else {
+      try { window._prestasActivePlayer.playVideo(); } catch(e) {}
+    }
+  }, { passive: true });
+}
+
 function renderVideoList(videos, onDone) {
   var list = document.getElementById('prestas-list');
   list.innerHTML = '';
+  setupPrestasScrollPause(list);
   var cards = [];
+
   videos.forEach(function(v) {
     var ytId = extractYtId(v.youtube);
+
+    // ── Wrapper carte ──
     var card = document.createElement('div');
     card.style.cssText = 'background:#101828;border-radius:14px;overflow:hidden;margin-bottom:14px';
     if (ytId) card.dataset.ytid = ytId;
+    card._splitOpen = false;
 
-    // Zone cliquable entière = presta-info (c'est elle qui clignote)
+    // ── Bloc HAUT (presta-info) ──
     var info = document.createElement('div');
     info.className = 'presta-info';
     info.style.cssText = 'padding:8px 14px 4px';
 
-    // ── Titre (col G) au-dessus de la vidéo ──
     if (v.titre) {
       var titreTopEl = document.createElement('div');
       titreTopEl.className = 'presta-titre';
@@ -4537,116 +4582,27 @@ function renderVideoList(videos, onDone) {
       titreTopEl.textContent = v.titre;
       info.appendChild(titreTopEl);
     }
-
     card.appendChild(info);
 
-    // ── Miniature YouTube cliquable — bord à bord, coins carrés ──
+    // ── Zone vidéo : cachée par défaut, s'ouvre par animation ──
     var thumb = document.createElement('div');
-    thumb.style.cssText = 'position:relative;aspect-ratio:16/9;background:#000;cursor:pointer;width:100%';
-    if (ytId) {
-      var img = document.createElement('img');
-      img.src = 'https://img.youtube.com/vi/' + ytId + '/mqdefault.jpg';
-      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
-      img.loading = 'lazy';
-      thumb.appendChild(img);
-    }
-    // Bouton play
-    var play = document.createElement('div');
-    play.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:48px;height:48px;background:rgba(255,0,0,.85);border-radius:50%;display:flex;align-items:center;justify-content:center';
-    play.innerHTML = '<svg width="18" height="18" viewBox="0 0 10 10" fill="white"><polygon points="3,1 9,5 3,9"/></svg>';
-    thumb.appendChild(play);
-
-    // Lecture inline au clic — YouTube IFrame API pour forcer seekTo(0) au chargement
-    (function(capturedYtId, capturedThumb) {
-      capturedThumb.onclick = function() {
-        if (!capturedYtId) return;
-        stopPrestasVideo();
-
-        // Conteneur pour le player
-        var container = document.createElement('div');
-        container.style.cssText = 'width:100%;aspect-ratio:16/9;display:block';
-        var playerId = 'yt-player-' + capturedYtId + '-' + Date.now();
-        container.id = playerId;
-        capturedThumb.innerHTML = '';
-        capturedThumb.appendChild(container);
-        window._prestasActiveThumb = capturedThumb;
-
-        function createPlayer() {
-          var _seekDone = false;
-          var player = new YT.Player(playerId, {
-            playerVars: { autoplay: 1, start: 0, rel: 0, playsinline: 1 },
-            width: '100%',
-            height: '100%',
-            events: {
-              onReady: function(e) {
-                window._prestasActivePlayer = e.target;
-                e.target.loadVideoById({ videoId: capturedYtId, startSeconds: 0 });
-                var iframe = capturedThumb.querySelector('iframe');
-                if (iframe) {
-                  iframe.id = 'prestas-active-iframe';
-                  // Superposer un div sur le coin bas-droit pour bloquer le logo YouTube
-                  // et le remplacer par un lien qui ouvre l'appli à t=0
-                  var overlay = document.createElement('a');
-                  overlay.href = 'https://www.youtube.com/watch?v=' + capturedYtId + '&t=0';
-                  overlay.target = '_blank';
-                  overlay.rel = 'noopener';
-                  overlay.style.cssText = 'position:absolute;bottom:0;right:0;width:90px;height:36px;z-index:10;display:block;cursor:pointer;background:transparent';
-                  overlay.title = 'Ouvrir dans YouTube';
-                  capturedThumb.style.position = 'relative';
-                  capturedThumb.appendChild(overlay);
-                }
-              },
-              onStateChange: function(e) {
-                // Double sécurité : au premier PLAYING, seekTo(0) si pas encore fait
-                if (!_seekDone && e.data === 1) {
-                  _seekDone = true;
-                  if (e.target.getCurrentTime() > 2) {
-                    e.target.seekTo(0, true);
-                  }
-                }
-                // Marquer l'iframe si pas encore fait (délai API)
-                if (e.data === 1 || e.data === 3) {
-                  var iframe = capturedThumb.querySelector('iframe');
-                  if (iframe && !iframe.id) iframe.id = 'prestas-active-iframe';
-                }
-              }
-            }
-          });
-        }
-
-        // Charger l'API IFrame si pas encore disponible
-        if (window.YT && window.YT.Player) {
-          createPlayer();
-        } else {
-          window._ytPendingCreate = createPlayer;
-          if (!document.getElementById('yt-iframe-api-script')) {
-            var tag = document.createElement('script');
-            tag.id = 'yt-iframe-api-script';
-            tag.src = 'https://www.youtube.com/iframe_api';
-            document.head.appendChild(tag);
-          }
-        }
-      };
-    })(ytId, thumb);
+    thumb.style.cssText = 'position:relative;background:#000;width:100%;max-height:0px;overflow:hidden;opacity:0;transition:max-height 0.5s ease,opacity 0.4s ease';
     card.appendChild(thumb);
 
-    // ── Bloc infos sous la vidéo (phrase + lieu/date) ──
+    // ── Bloc BAS (presta-info2) ──
     var info2 = document.createElement('div');
     info2.className = 'presta-info2';
     info2.style.cssText = 'padding:8px 14px 10px';
 
-    // ── Phrase (col H) sous la vidéo — plus gros si moins de 45 caractères ──
     if (v.phrase2) {
       var phraseEl = document.createElement('div');
       var phraseFontSize = v.phrase2.length < 45 ? '15.6px' : '12px';
       phraseEl.style.cssText = 'font-size:' + phraseFontSize + ';font-weight:600;color:var(--white);line-height:1.4;margin-bottom:6px;text-align:center';
       phraseEl.textContent = v.phrase2;
       info2.appendChild(phraseEl);
-      // Stocker la ref DOM pour mise à jour depuis l'éditeur admin
       v._domPhrase2El = phraseEl;
     }
 
-    // ── Ligne lieu (gauche) + date (droite) ──
     var bottomRow = document.createElement('div');
     bottomRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between';
     if (v.lieu) {
@@ -4666,18 +4622,153 @@ function renderVideoList(videos, onDone) {
     info2.appendChild(bottomRow);
     card.appendChild(info2);
 
-    // ── Appui long 2s sur info2 en mode admin : ouvrir l'éditeur ──
-    if (_adminMode) {
-      (function(vid, el) {
-        var _timer;
-        el.addEventListener('touchstart', function(e){ e.preventDefault(); _timer = setTimeout(function(){ adminOpenVideoEditor(vid); }, 1000); }, { passive: false });
-        el.addEventListener('touchend',   function(){ clearTimeout(_timer); }, { passive: true });
-        el.addEventListener('touchmove',  function(){ clearTimeout(_timer); }, { passive: true });
-        el.addEventListener('mousedown',  function(){ _timer = setTimeout(function(){ adminOpenVideoEditor(vid); }, 1000); });
-        el.addEventListener('mouseup',    function(){ clearTimeout(_timer); });
-        el.addEventListener('mouseleave', function(){ clearTimeout(_timer); });
-      })(v, info2);
-    }
+    // ── Fonction pour lancer la vidéo dans le thumb ──
+    (function(capturedYtId, capturedCard, capturedThumb) {
+      function startVideo() {
+        if (!capturedYtId) return;
+
+        // Fermer l'autre carte ouverte si différente
+        if (window._prestasOpenCardData && window._prestasOpenCardData.card !== capturedCard) {
+          closePrestasOpenCard(true);
+        }
+
+        // Stopper le player précédent si même carte
+        if (window._prestasActivePlayer) {
+          try { window._prestasActivePlayer.stopVideo(); } catch(e) {}
+          window._prestasActivePlayer = null;
+        }
+        var oldIframe = document.getElementById('prestas-active-iframe');
+        if (oldIframe) { oldIframe.src = ''; oldIframe.removeAttribute('id'); }
+
+        // Créer le conteneur player
+        capturedThumb.innerHTML = '';
+        var container = document.createElement('div');
+        container.style.cssText = 'width:100%;aspect-ratio:16/9;display:block';
+        var playerId = 'yt-player-' + capturedYtId + '-' + Date.now();
+        container.id = playerId;
+        capturedThumb.appendChild(container);
+        window._prestasActiveThumb = capturedThumb;
+
+        // Ouvrir l'espace avec animation 0.5s
+        capturedThumb.style.transition = 'max-height 0.5s ease, opacity 0.4s ease';
+        // hauteur cible = 56.25vw (aspect-ratio 16/9, largeur = 100% de la carte)
+        capturedThumb.style.maxHeight = '56.25vw';
+        capturedThumb.style.opacity = '1';
+
+        capturedCard._splitOpen = true;
+        window._prestasOpenCardData = { card: capturedCard, thumb: capturedThumb };
+
+        function createPlayer() {
+          var _seekDone = false;
+          new YT.Player(playerId, {
+            playerVars: { autoplay: 1, start: 0, rel: 0, playsinline: 1 },
+            width: '100%',
+            height: '100%',
+            events: {
+              onReady: function(e) {
+                window._prestasActivePlayer = e.target;
+                e.target.loadVideoById({ videoId: capturedYtId, startSeconds: 0 });
+                var iframe = capturedThumb.querySelector('iframe');
+                if (iframe) {
+                  iframe.id = 'prestas-active-iframe';
+                  var overlay = document.createElement('a');
+                  overlay.href = 'https://www.youtube.com/watch?v=' + capturedYtId + '&t=0';
+                  overlay.target = '_blank';
+                  overlay.rel = 'noopener';
+                  overlay.style.cssText = 'position:absolute;bottom:0;right:0;width:90px;height:36px;z-index:10;display:block;cursor:pointer;background:transparent';
+                  overlay.title = 'Ouvrir dans YouTube';
+                  capturedThumb.style.position = 'relative';
+                  capturedThumb.appendChild(overlay);
+                }
+              },
+              onStateChange: function(e) {
+                if (!_seekDone && e.data === 1) {
+                  _seekDone = true;
+                  if (e.target.getCurrentTime() > 2) e.target.seekTo(0, true);
+                }
+                if (e.data === 1 || e.data === 3) {
+                  var iframe = capturedThumb.querySelector('iframe');
+                  if (iframe && !iframe.id) iframe.id = 'prestas-active-iframe';
+                }
+              }
+            }
+          });
+        }
+
+        if (window.YT && window.YT.Player) {
+          createPlayer();
+        } else {
+          window._ytPendingCreate = createPlayer;
+          if (!document.getElementById('yt-iframe-api-script')) {
+            var tag = document.createElement('script');
+            tag.id = 'yt-iframe-api-script';
+            tag.src = 'https://www.youtube.com/iframe_api';
+            document.head.appendChild(tag);
+          }
+        }
+      }
+
+      // ── Logique appui long commun aux deux blocs (info haut + info2 bas) ──
+      // Appui 0.5s → toggle vidéo
+      // Sur info2 en mode admin : 1s complet → ouvre éditeur (annule le toggle vidéo)
+      function attachLongPress(el, isInfo2) {
+        var _timerVideo = null;
+        var _timerAdmin = null;
+        var _videoFired = false;
+        var _adminFired = false;
+        var _pressing = false;
+
+        function onStart(e) {
+          // Ne pas prévenir le scroll
+          _pressing = true;
+          _videoFired = false;
+          _adminFired = false;
+
+          // Timer 0.5s pour toggle vidéo
+          _timerVideo = setTimeout(function() {
+            if (!_pressing) return;
+            _videoFired = true;
+            if (capturedCard._splitOpen) {
+              // Fermer
+              closePrestasOpenCard(false);
+            } else {
+              // Ouvrir
+              startVideo();
+            }
+          }, 500);
+
+          // Timer 1s pour admin (info2 uniquement, admin uniquement)
+          if (isInfo2 && _adminMode) {
+            _timerAdmin = setTimeout(function() {
+              if (!_pressing) return;
+              _adminFired = true;
+              // Si la vidéo venait de s'ouvrir au 0.5s, on la referme avant l'éditeur
+              if (_videoFired && capturedCard._splitOpen) {
+                closePrestasOpenCard(false);
+              }
+              adminOpenVideoEditor(v);
+            }, 1000);
+          }
+        }
+
+        function onEnd(e) {
+          _pressing = false;
+          clearTimeout(_timerVideo);
+          clearTimeout(_timerAdmin);
+        }
+
+        el.addEventListener('touchstart', onStart, { passive: true });
+        el.addEventListener('touchend',   onEnd,   { passive: true });
+        el.addEventListener('touchmove',  onEnd,   { passive: true });
+        el.addEventListener('mousedown',  onStart);
+        el.addEventListener('mouseup',    onEnd);
+        el.addEventListener('mouseleave', onEnd);
+      }
+
+      attachLongPress(capturedCard.querySelector('.presta-info'),  false);
+      attachLongPress(capturedCard.querySelector('.presta-info2'), true);
+
+    })(ytId, card, thumb);
 
     list.appendChild(card);
     cards.push(card);
