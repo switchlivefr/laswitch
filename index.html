@@ -1107,10 +1107,8 @@ var NV = {
             }
             // Période encore active : restaurer depuis Sheets dans localStorage
             var restoredYtIds = parsed.ytIds || [];
-            if (restoredYtIds.length > 0) {
-              var extra = NV._calcNewIds(restoredYtIds, currentYtIds);
-              extra.forEach(function(id){ if(restoredYtIds.indexOf(id)===-1) restoredYtIds.push(id); });
-            }
+            var extra = NV._calcNewIds(restoredYtIds, currentYtIds);
+            extra.forEach(function(id){ if(restoredYtIds.indexOf(id)===-1) restoredYtIds.push(id); });
             NV.newYtIds = restoredYtIds;
             // Reconstituer snapshot local
             var snap = { count: videos.length, ids: currentYtIds, newYtIds: restoredYtIds };
@@ -1155,6 +1153,11 @@ var NV = {
     // Cas normal : calculer les nouveaux ytIds
     var savedIds = snap.ids || [];
     NV.newYtIds = NV._calcNewIds(savedIds, currentYtIds);
+    // Fallback si désync
+    if (NV.hasNew && NV.newYtIds.length === 0) {
+      NV.newYtIds = currentYtIds.slice(0, NV.diff);
+      console.log('NV.checkBlink — FALLBACK newYtIds=['+NV.newYtIds.join(',')+']');
+    }
     // Filtrer : ne garder que les ytIds encore présents dans les vidéos de cet utilisateur
     NV.newYtIds = NV.newYtIds.filter(function(id){ return currentYtIds.indexOf(id) !== -1; });
     console.log('NV.checkBlink — newYtIds=['+NV.newYtIds.join(',')+']');
@@ -4630,9 +4633,9 @@ function renderVideoList(videos, onDone) {
       function startVideo() {
         if (!capturedYtId) return;
 
-        // Fermer l'autre carte ouverte si différente
+        // Fermer l'autre carte ouverte avec animation simultanée
         if (window._prestasOpenCardData && window._prestasOpenCardData.card !== capturedCard) {
-          closePrestasOpenCard(true);
+          closePrestasOpenCard(false);
         }
 
         // Stopper le player précédent si même carte
