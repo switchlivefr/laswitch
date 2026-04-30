@@ -4513,7 +4513,7 @@ function closePrestasOpenCard(skipAnimation) {
   if (!d) return;
   window._prestasOpenCardData = null;
 
-  // Stopper la vidéo (mais ne pas vider le thumb — l'animation s'en charge)
+  // Stopper la vidéo
   if (window._prestasActivePlayer) {
     try { window._prestasActivePlayer.stopVideo(); } catch(e) {}
     window._prestasActivePlayer = null;
@@ -4523,19 +4523,17 @@ function closePrestasOpenCard(skipAnimation) {
   window._prestasActiveThumb = null;
 
   if (skipAnimation) {
-    // Fermeture immédiate (ex. ouverture d'une autre carte)
-    d.thumb.style.transition = 'none';
-    d.thumb.style.maxHeight = '0px';
-    d.thumb.style.opacity = '0';
+    if (d.wrap) { d.wrap.style.transition = 'none'; d.wrap.style.height = '0px'; }
     d.thumb.innerHTML = '';
     d.card._splitOpen = false;
     return;
   }
 
   // Animation fermeture 0.5s
-  d.thumb.style.transition = 'max-height 0.5s ease, opacity 0.4s ease';
-  d.thumb.style.maxHeight = '0px';
-  d.thumb.style.opacity = '0';
+  if (d.wrap) {
+    d.wrap.style.transition = 'height 0.5s ease';
+    d.wrap.style.height = '0px';
+  }
   setTimeout(function() {
     d.thumb.innerHTML = '';
     d.card._splitOpen = false;
@@ -4549,10 +4547,13 @@ function setupPrestasScrollPause(listEl) {
   listEl.addEventListener('scroll', function() {
     var d = window._prestasOpenCardData;
     if (!d || !window._prestasActivePlayer) return;
-    var thumbRect = d.thumb.getBoundingClientRect();
+    var thumbRect = d.wrap ? d.wrap.getBoundingClientRect() : d.thumb.getBoundingClientRect();
     var listRect  = listEl.getBoundingClientRect();
-    // La fenêtre vidéo est visible si elle chevauche la zone d'affichage du conteneur
-    var inView = thumbRect.bottom > listRect.top && thumbRect.top < listRect.bottom;
+    // Soustraire la hauteur du bandeau de navigation du bas du conteneur
+    var navEl = document.querySelector('.bnav');
+    var navH = navEl ? navEl.offsetHeight : 72;
+    var listBottom = listRect.bottom - navH;
+    var inView = thumbRect.bottom > listRect.top && thumbRect.top < listBottom;
     if (!inView) {
       try { window._prestasActivePlayer.pauseVideo(); } catch(e) {}
     }
@@ -4588,10 +4589,13 @@ function renderVideoList(videos, onDone) {
     }
     card.appendChild(info);
 
-    // ── Zone vidéo : cachée par défaut, s'ouvre par animation ──
+    // ── Zone vidéo : cachée par défaut, s'ouvre par clip depuis le haut ──
+    var thumbWrap = document.createElement('div');
+    thumbWrap.style.cssText = 'overflow:hidden;width:100%;height:0px;transition:height 0.5s ease';
     var thumb = document.createElement('div');
-    thumb.style.cssText = 'position:relative;background:#000;width:100%;max-height:0px;overflow:hidden;opacity:0;transition:max-height 0.5s ease,opacity 0.4s ease';
-    card.appendChild(thumb);
+    thumb.style.cssText = 'position:relative;background:#000;width:100%;aspect-ratio:16/9';
+    thumbWrap.appendChild(thumb);
+    card.appendChild(thumbWrap);
 
     // ── Bloc BAS (presta-info2) ──
     var info2 = document.createElement('div');
@@ -4627,7 +4631,7 @@ function renderVideoList(videos, onDone) {
     card.appendChild(info2);
 
     // ── Fonction pour lancer la vidéo dans le thumb ──
-    (function(capturedYtId, capturedCard, capturedThumb) {
+    (function(capturedYtId, capturedCard, capturedThumb, capturedWrap) {
       function startVideo() {
         if (!capturedYtId) return;
 
@@ -4653,14 +4657,13 @@ function renderVideoList(videos, onDone) {
         capturedThumb.appendChild(container);
         window._prestasActiveThumb = capturedThumb;
 
-        // Ouvrir l'espace avec animation 0.5s
-        capturedThumb.style.transition = 'max-height 0.5s ease, opacity 0.4s ease';
-        // hauteur cible = 56.25vw (aspect-ratio 16/9, largeur = 100% de la carte)
-        capturedThumb.style.maxHeight = '56.25vw';
-        capturedThumb.style.opacity = '1';
+        // Calculer la hauteur cible (ratio 16/9 de la largeur de la carte)
+        var targetH = capturedWrap.offsetWidth * 9 / 16;
+        capturedWrap.style.transition = 'height 0.5s ease';
+        capturedWrap.style.height = targetH + 'px';
 
         capturedCard._splitOpen = true;
-        window._prestasOpenCardData = { card: capturedCard, thumb: capturedThumb };
+        window._prestasOpenCardData = { card: capturedCard, thumb: capturedThumb, wrap: capturedWrap };
 
         function createPlayer() {
           var _seekDone = false;
@@ -4770,7 +4773,7 @@ function renderVideoList(videos, onDone) {
       attachLongPress(capturedCard.querySelector('.presta-info'),  false);
       attachLongPress(capturedCard.querySelector('.presta-info2'), true);
 
-    })(ytId, card, thumb);
+    })(ytId, card, thumb, thumbWrap);
 
     list.appendChild(card);
     cards.push(card);
