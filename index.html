@@ -4523,10 +4523,10 @@ function closePrestasOpenCard(skipAnimation) {
   window._prestasActiveThumb = null;
 
   if (skipAnimation) {
+    // Fermeture immédiate (ex. ouverture d'une autre carte)
     d.thumb.style.transition = 'none';
     d.thumb.style.maxHeight = '0px';
     d.thumb.style.opacity = '0';
-    d.thumb.style.display = 'none';
     d.thumb.innerHTML = '';
     d.card._splitOpen = false;
     return;
@@ -4538,7 +4538,6 @@ function closePrestasOpenCard(skipAnimation) {
   d.thumb.style.opacity = '0';
   setTimeout(function() {
     d.thumb.innerHTML = '';
-    d.thumb.style.display = 'none';
     d.card._splitOpen = false;
   }, 500);
 }
@@ -4593,7 +4592,7 @@ function renderVideoList(videos, onDone) {
 
     // ── Zone vidéo : cachée par défaut, s'ouvre par animation ──
     var thumb = document.createElement('div');
-    thumb.style.cssText = 'position:relative;background:#000;width:100%;max-height:0px;overflow:hidden;opacity:0;transition:max-height 0.5s ease,opacity 0.4s ease;display:none';
+    thumb.style.cssText = 'position:relative;background:#000;width:100%;max-height:0px;overflow:hidden;opacity:0;transition:max-height 0.5s ease,opacity 0.4s ease';
     card.appendChild(thumb);
 
     // ── Bloc BAS (presta-info2) ──
@@ -4657,7 +4656,6 @@ function renderVideoList(videos, onDone) {
         window._prestasActiveThumb = capturedThumb;
 
         // Ouvrir l'espace avec animation 0.5s
-        capturedThumb.style.display = 'block';
         capturedThumb.style.transition = 'max-height 0.5s ease, opacity 0.4s ease';
         // hauteur cible = 56.25vw (aspect-ratio 16/9, largeur = 100% de la carte)
         capturedThumb.style.maxHeight = '56.25vw';
