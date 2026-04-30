@@ -4569,7 +4569,7 @@ function renderVideoList(videos, onDone) {
     // ── Bloc HAUT (presta-info) ──
     var info = document.createElement('div');
     info.className = 'presta-info';
-    info.style.cssText = 'padding:14px 14px 12px';
+    info.style.cssText = 'padding:10px 14px 6px';
 
     if (v.titre) {
       var titreTopEl = document.createElement('div');
@@ -4720,7 +4720,7 @@ function renderVideoList(videos, onDone) {
           _videoFired = false;
           _adminFired = false;
 
-          // Timer 0.1s pour toggle vidéo
+          // Timer 0.2s pour toggle vidéo
           _timerVideo = setTimeout(function() {
             if (!_pressing) return;
             _videoFired = true;
@@ -4729,7 +4729,7 @@ function renderVideoList(videos, onDone) {
             } else {
               startVideo();
             }
-          }, 100);
+          }, 200);
 
           // Timer 1.5s pour admin (info2 uniquement, admin uniquement)
           if (isInfo2 && _adminMode) {
