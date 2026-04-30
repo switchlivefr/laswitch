@@ -271,6 +271,7 @@ document.head.appendChild(__link);
     <span class="btn-label" id="btn-label">AJOUTER</span>
     <div class="spinner"></div>
   </button>
+  <button onclick="openAdminM();swLoadAdminRequests()" style="width:100%;margin-top:12px;background:transparent;color:var(--white);border:1px solid #2a2a40;border-radius:var(--r);padding:14px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;-webkit-appearance:none">DEMANDES D'ACCÈS EN ATTENTE</button>
 </div>
 
 <script>
@@ -373,7 +374,7 @@ window.addEventListener('load', function(){
   });
 
   nomInput.addEventListener('focus', function(){
-    if (state.nomSelectionne && !state.resultShown) { doFullReset(); }
+    if (state.nomSelectionne) { doFullReset(); setTimeout(function(){ nomInput.focus(); },10); }
   });
   nomInput.addEventListener('blur', function(){
     setTimeout(function(){ hideDropdown(ddNom); }, 150);
@@ -580,20 +581,18 @@ function doFullReset() {
   });
 }
 </script>
-</body>
-</html>
 
 <!-- MODALE DEMANDES D'ACCÈS -->
 <div class="moverlay" id="m-sw-admin" onclick="if(event.target===this)closeAdminM()">
   <div class="mbox" style="display:flex;flex-direction:column;max-height:calc(88vh - 64px)">
     <div style="padding:16px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0;text-align:center">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--gold)">DEMANDES D'ACCES</div>
-      <div id="sw-admin-count" style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;color:var(--gold)">Chargement...</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold)">DEMANDES D'ACCES</div>
+      <div id="sw-admin-count" style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--gold)">Chargement...</div>
     </div>
     <div style="padding:16px 18px;overflow-y:auto;flex:1;min-height:0">
-      <div id="sw-admin-list" style="padding:0 4px"></div>
+      <div id="sw-admin-list"></div>
     </div>
-    <div style="padding:12px 18px;border-top:1px solid var(--border);flex-shrink:0;display:flex;gap:8px">
+    <div style="padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px">
       <button onclick="swLoadAdminRequests()" style="flex:1;background:#2a2a40;border:none;border-radius:8px;padding:10px;color:var(--white);font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">ACTUALISER</button>
       <button onclick="closeAdminM()" style="flex:1;background:#1877f2;border:none;border-radius:8px;padding:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;cursor:pointer">AJOUT NOM FACEBOOK</button>
     </div>
@@ -604,7 +603,7 @@ function doFullReset() {
 <div id="m-sw-admin-prenom" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:24px">
   <div style="background:var(--card);border:1px solid #1877f2;border-radius:var(--r);width:100%;max-width:340px;padding:28px 24px 24px;display:flex;flex-direction:column;gap:16px">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#1877f2;letter-spacing:2px;text-align:center">Prénom</div>
-    <input id="sw-admin-prenom-input" type="text" placeholder="Prénom…" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false"
+    <input id="sw-admin-prenom-input" type="text" placeholder="Prénom..." autocomplete="off" autocapitalize="words" spellcheck="false"
       style="width:100%;background:var(--bg);border:1px solid #2a2a40;border-radius:8px;padding:14px 16px;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:600;color:var(--white);outline:none;caret-color:#1877f2;-webkit-appearance:none"
       oninput="var v=this.value;this.value=v.charAt(0).toUpperCase()+v.slice(1)"
       onkeydown="if(event.key==='Enter')swAdminPrenomAjouter()">
@@ -618,7 +617,12 @@ function doFullReset() {
 var ADMIN_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec';
 var ADMIN_API_BASE = '/api';
 
-function openAdminM(){var el=document.getElementById('m-sw-admin');if(el)el.classList.add('open');}
+function openAdminM(){
+  hideFeedback();
+  doFullReset();
+  var el=document.getElementById('m-sw-admin');
+  if(el)el.classList.add('open');
+}
 function closeAdminM(){var el=document.getElementById('m-sw-admin');if(el)el.classList.remove('open');}
 
 function swLoadAdminRequests(){
@@ -641,7 +645,7 @@ function swLoadAdminRequests(){
         var nom=(row.name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
         var d=document.createElement('div');
         d.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:8px';
-        d.innerHTML='<div style="flex:1"><div style="font-size:14px;font-weight:700;color:'+(isVal?'#7a7a95':'var(--white)')+'">'+nom+'</div><div style="font-size:11px;color:#7a7a95">'+(row.date||'')+'</div></div>';
+        d.innerHTML='<div style="flex:1"><div style="font-size:14px;font-weight:700;color:'+(isVal?'#7a7a95':'var(--white)')+'">'+ nom+'</div><div style="font-size:11px;color:#7a7a95">'+(row.date||'')+'</div></div>';
         if(isVal){var tag=document.createElement('div');tag.textContent='VALIDE';tag.style.cssText='color:#34d1c0;font-size:12px;font-weight:700;font-family:Bebas Neue,sans-serif;letter-spacing:1px;flex-shrink:0';d.appendChild(tag);}
         else{var btn=document.createElement('button');btn.textContent='VALIDER';btn.style.cssText='background:#34d1c0;border:none;border-radius:8px;padding:8px 14px;color:#000;font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:1px;cursor:pointer;flex-shrink:0';btn.onclick=(function(n,b){return function(){swAdminValidate(n,b);};})(row.name||'',btn);d.appendChild(btn);}
         list.appendChild(d);
@@ -699,12 +703,13 @@ function swAdminPrenomAjouter(){
     .catch(function(){overlay.style.display='none';if(addBtn){addBtn.textContent='AJOUTER';addBtn.disabled=false;}swAdminDoValidate(name,btn);});
 }
 
-/* Ouvre la modale au chargement — NE TOUCHE PAS au formulaire */
 window.addEventListener('DOMContentLoaded',function(){
   openAdminM();
   swLoadAdminRequests();
 });
 </script>
+</body>
+</html>
 `, {
       headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' }
     });
