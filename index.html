@@ -923,6 +923,7 @@ var NV = {
   diff: 0,
   bannerShownThisSession: false, // true après affichage banner — bloque le réaffichage en navigation
   newYtIds: [],                  // ytIds des vraies nouvelles vidéos pour le clignotement ciblé
+  _blinkRestorePromise: null,    // promesse de restauration async depuis Sheets (si localStorage vide)
 
   // Appelé au lancement : compare nombre actuel vs nombre mémorisé (CODE ORIGINAL - NE PAS MODIFIER)
   check: function(fbId, videos) {
@@ -1063,10 +1064,50 @@ var NV = {
     var currentYtIds = videos.map(function(v) { return extractYtId(v.youtube); }).filter(Boolean);
 
     if (!snapRaw) {
-      // Pas encore de snapshot blink : créer et ne pas clignoter
-      NV._saveSnapshot(fbId, videos);
-      NV.newYtIds = [];
-      console.log('NV.checkBlink — 1er snapshot créé, pas de clignotement');
+      // Pas de snapshot local → tenter une restauration depuis Sheets (fallback cache effacé)
+      var name = localStorage.getItem('sw_name') || '';
+      if (name) {
+        NV._blinkRestorePromise = fetch('/api?action=getBlinkData&name=' + encodeURIComponent(name.toLowerCase()))
+          .then(function(r){ return r.json(); })
+          .then(function(d){
+            var raw = (d && d.data) ? d.data.trim() : '';
+            if (!raw) {
+              console.log('NV.checkBlink — pas de données Sheets, 1er snapshot créé');
+              NV._saveSnapshot(fbId, videos);
+              NV.newYtIds = [];
+              return false;
+            }
+            var parsed = NV._parseBlinkData(raw);
+            if (!parsed || !NV._blinkStillActive(parsed.seenDate)) {
+              console.log('NV.checkBlink — données Sheets expirées, 1er snapshot créé');
+              NV._saveSnapshot(fbId, videos);
+              NV.newYtIds = [];
+              return false;
+            }
+            // Période encore active : restaurer depuis Sheets dans localStorage
+            var restoredYtIds = parsed.ytIds || [];
+            var extra = NV._calcNewIds(restoredYtIds, currentYtIds);
+            extra.forEach(function(id){ if(restoredYtIds.indexOf(id)===-1) restoredYtIds.push(id); });
+            NV.newYtIds = restoredYtIds;
+            // Reconstituer snapshot local
+            var snap = { count: videos.length, ids: currentYtIds, newYtIds: restoredYtIds };
+            localStorage.setItem(NV._snapKey(fbId), JSON.stringify(snap));
+            localStorage.setItem('nv_seen_date_' + fbId, parsed.seenDate);
+            console.log('NV.checkBlink — restauré depuis Sheets, newYtIds=['+NV.newYtIds.join(',')+']');
+            return true; // signal : il y a des ytIds à faire clignoter
+          })
+          .catch(function(e){
+            console.log('NV.checkBlink — erreur fetch Sheets:'+e);
+            NV._saveSnapshot(fbId, videos);
+            NV.newYtIds = [];
+            return false;
+          });
+      } else {
+        // Pas encore de snapshot blink : créer et ne pas clignoter
+        NV._saveSnapshot(fbId, videos);
+        NV.newYtIds = [];
+        console.log('NV.checkBlink — 1er snapshot créé, pas de clignotement');
+      }
       return;
     }
 
@@ -1098,9 +1139,36 @@ var NV = {
     console.log('NV.checkBlink — newYtIds=['+NV.newYtIds.join(',')+']');
   },
 
+  // Sérialise seenDate + newYtIds dans le format col J : "YYYY-MM-DD|ytId1,ytId2,..."
+  _serializeBlinkData: function(seenDate, ytIds) {
+    return seenDate + (ytIds && ytIds.length ? '|' + ytIds.join(',') : '');
+  },
+
+  // Désérialise le format col J → { seenDate, ytIds }
+  _parseBlinkData: function(raw) {
+    if (!raw) return null;
+    var idx = raw.indexOf('|');
+    if (idx === -1) return { seenDate: raw, ytIds: [] };
+    return { seenDate: raw.substring(0, idx), ytIds: raw.substring(idx + 1).split(',').filter(Boolean) };
+  },
+
+  // Écrit la donnée blink en col J de IDS_APPLI via l'API (fire & forget)
+  _persistBlinkToSheet: function(name, seenDate, ytIds) {
+    if (!name) return;
+    var payload = NV._serializeBlinkData(seenDate, ytIds);
+    fetch('/api?action=setBlinkData', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, data: payload })
+    }).then(function(r){ return r.json(); })
+      .then(function(d){ console.log('NV._persistBlinkToSheet — ok, name='+name+' data='+payload); })
+      .catch(function(e){ console.log('NV._persistBlinkToSheet — erreur:'+e); });
+  },
+
   // Appelé depuis loadPrestas après startBlink : sauvegarde le snapshot blink si nécessaire
   saveBlink: function(fbId, videos) {
     var seenDate = localStorage.getItem('nv_seen_date_' + fbId);
+    var name = localStorage.getItem('sw_name') || '';
     if (NV._blinkStillActive(seenDate)) {
       // Période active : mettre à jour UNIQUEMENT newYtIds dans le snapshot (pas ids ni count)
       var snapRaw = localStorage.getItem(NV._snapKey(fbId));
@@ -1112,12 +1180,17 @@ var NV = {
           console.log('NV.saveBlink — période active, newYtIds mis à jour=['+NV.newYtIds.join(',')+']');
         } catch(e) {}
       }
+      // Persister la mise à jour des ytIds en Sheets
+      NV._persistBlinkToSheet(name, seenDate, NV.newYtIds);
       return;
     }
     // Première visite ou période expirée : sauver snapshot complet + date
     NV._saveSnapshot(fbId, videos, NV.newYtIds);
-    localStorage.setItem('nv_seen_date_' + fbId, NV._today());
-    console.log('NV.saveBlink — snapshot sauvé, seen_date='+NV._today());
+    var today = NV._today();
+    localStorage.setItem('nv_seen_date_' + fbId, today);
+    console.log('NV.saveBlink — snapshot sauvé, seen_date='+today);
+    // Persister en Sheets
+    NV._persistBlinkToSheet(name, today, NV.newYtIds);
   },
 
   // Garde saveCount pour compatibilité
@@ -4039,13 +4112,25 @@ function loadPrestas(me) {
       }
 
       renderVideoList(videos, function(cards){
+        NV._blinkRestorePromise = null;
         if (NV.fbId) NV.checkBlink(NV.fbId, videos);
-        // Clignotement indépendant de hasNew — basé uniquement sur newYtIds
+        // Cas synchrone : snapshot local présent
         if (NV.newYtIds.length > 0) {
           NV.startBlink(cards);
           NV.saveBlink(NV.fbId, videos);
           localStorage.setItem('nv_count_' + NV.fbId, String(videos.length));
           console.log('loadPrestas — blink actif, nv_count_ sauvé:'+videos.length);
+        } else if (NV._blinkRestorePromise) {
+          // Cas async : snapshot absent, restauration Sheets en cours
+          NV._blinkRestorePromise.then(function(hasData) {
+            if (hasData && NV.newYtIds.length > 0) {
+              NV.startBlink(cards);
+              localStorage.setItem('nv_count_' + NV.fbId, String(videos.length));
+              console.log('loadPrestas — blink restauré depuis Sheets, nv_count_ sauvé:'+videos.length);
+            } else {
+              NV.updateCount(videos);
+            }
+          });
         } else {
           NV.updateCount(videos);
         }
