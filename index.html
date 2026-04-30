@@ -4664,6 +4664,10 @@ function renderVideoList(videos, onDone) {
         capturedCard._splitOpen = true;
         window._prestasOpenCardData = { card: capturedCard, thumb: capturedThumb };
 
+        // Mémoriser la position de scroll du conteneur pour la restaurer après création de l'iframe
+        var _listEl = document.getElementById('prestas-list');
+        var _savedScroll = _listEl ? _listEl.scrollTop : 0;
+
         function createPlayer() {
           var _seekDone = false;
           new YT.Player(playerId, {
@@ -4672,6 +4676,8 @@ function renderVideoList(videos, onDone) {
             height: '100%',
             events: {
               onReady: function(e) {
+                // Restaurer immédiatement le scroll pour annuler le recalage auto du navigateur
+                if (_listEl) _listEl.scrollTop = _savedScroll;
                 window._prestasActivePlayer = e.target;
                 e.target.loadVideoById({ videoId: capturedYtId, startSeconds: 0 });
                 var iframe = capturedThumb.querySelector('iframe');
