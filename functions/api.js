@@ -80,12 +80,310 @@ async function readOslSheet() {
   return { rows: filtered, sheetName: 'OSLSWiTCH' };
 }
 
-
 async function handleRequest(request, env) {
   const url = new URL(request.url);
 
   if (url.pathname === '/marco-switch-ajoutnomfb') {
-    return env.ASSETS.fetch(request);
+    return new Response(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ajouter Nom">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0f">
+<title>Ajouter un nom</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a0a0f;
+  --card:#13131f;
+  --border:#1e1e30;
+  --gold:#f2c94c;
+  --gglo:rgba(242,201,76,.25);
+  --cyan:#34d1c0;
+  --white:#ece9e0;
+  --muted:#5a5a78;
+  --r:14px;
+}
+html,body{height:100%;overscroll-behavior:none}
+body{
+  background:var(--bg);
+  color:var(--white);
+  font-family:'DM Sans',sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  padding:24px 20px;
+  padding-top:max(24px,env(safe-area-inset-top));
+  padding-bottom:max(24px,env(safe-area-inset-bottom));
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(242,201,76,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.wrap{position:relative;z-index:1;width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:0}
+
+/* Titre */
+.title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(42px,12vw,64px);
+  letter-spacing:4px;
+  color:var(--gold);
+  text-shadow:0 0 40px var(--gglo);
+  text-align:center;
+  margin-bottom:6px;
+}
+.subtitle{
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;
+  color:var(--muted);
+  letter-spacing:2px;
+  text-transform:uppercase;
+  text-align:center;
+  margin-bottom:36px;
+}
+
+/* Champ */
+.field{
+  width:100%;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:16px 20px;
+  font-family:'DM Sans',sans-serif;
+  font-size:18px;
+  font-weight:600;
+  color:var(--white);
+  outline:none;
+  -webkit-appearance:none;
+  transition:border-color .2s, box-shadow .2s;
+  caret-color:var(--gold);
+  margin-bottom:14px;
+}
+.field:focus{
+  border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(242,201,76,.12);
+}
+.field::placeholder{color:var(--muted);font-weight:400}
+
+/* Aperçu du nom saisi */
+.preview{
+  width:100%;
+  min-height:28px;
+  text-align:center;
+  font-size:15px;
+  font-weight:600;
+  color:var(--cyan);
+  letter-spacing:.5px;
+  margin-bottom:20px;
+  opacity:0;
+  transition:opacity .2s;
+}
+.preview.visible{opacity:1}
+
+/* Bouton */
+.btn{
+  width:100%;
+  background:var(--gold);
+  color:#000;
+  border:none;
+  border-radius:var(--r);
+  padding:18px;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:22px;
+  letter-spacing:3px;
+  cursor:pointer;
+  transition:opacity .15s, transform .1s;
+  -webkit-appearance:none;
+}
+.btn:disabled{opacity:.35;cursor:default}
+.btn:not(:disabled):active{transform:scale(0.98);opacity:.9}
+
+/* État résultat */
+.result{
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  gap:14px;
+  text-align:center;
+  padding:10px 0;
+}
+.result.visible{display:flex}
+.result-icon{font-size:52px;line-height:1}
+.result-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:28px;
+  letter-spacing:2px;
+}
+.result-name{
+  font-size:17px;
+  font-weight:700;
+  color:var(--cyan);
+}
+.result-msg{font-size:14px;color:var(--muted);line-height:1.5}
+.btn-again{
+  margin-top:8px;
+  background:none;
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:14px 28px;
+  font-family:'DM Sans',sans-serif;
+  font-size:15px;
+  font-weight:700;
+  color:var(--white);
+  cursor:pointer;
+  -webkit-appearance:none;
+}
+
+/* Spinner */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{
+  display:none;
+  width:24px;height:24px;
+  border:3px solid rgba(0,0,0,.2);
+  border-top-color:#000;
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+  margin:0 auto;
+}
+.btn.loading .btn-label{display:none}
+.btn.loading .spinner{display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- FORMULAIRE -->
+  <div id="form-view">
+    <div class="title">SWiTCH</div>
+    <div class="subtitle">Ajouter un nom Facebook</div>
+
+    <input
+      class="field"
+      id="nom-input"
+      type="text"
+      placeholder="Prénom Nom exact Facebook…"
+      autocomplete="off"
+      autocorrect="off"
+      spellcheck="false"
+      oninput="onInput(this.value)"
+    >
+
+    <div class="preview" id="preview"></div>
+
+    <button class="btn" id="submit-btn" disabled onclick="submit()">
+      <span class="btn-label">AJOUTER</span>
+      <div class="spinner"></div>
+    </button>
+  </div>
+
+  <!-- RÉSULTAT -->
+  <div class="result" id="result-view">
+    <div class="result-icon" id="result-icon">✅</div>
+    <div class="result-title" id="result-title">AJOUTÉ !</div>
+    <div class="result-name" id="result-name"></div>
+    <div class="result-msg" id="result-msg"></div>
+    <button class="btn-again" onclick="reset()">Ajouter un autre nom</button>
+  </div>
+
+</div>
+
+<script>
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec';
+
+function onInput(val) {
+  var preview = document.getElementById('preview');
+  var btn = document.getElementById('submit-btn');
+  var trimmed = val.trim();
+  if (trimmed) {
+    preview.textContent = '→ "' + trimmed + '"';
+    preview.classList.add('visible');
+    btn.disabled = false;
+  } else {
+    preview.textContent = '';
+    preview.classList.remove('visible');
+    btn.disabled = true;
+  }
+}
+
+function submit() {
+  var input = document.getElementById('nom-input');
+  var nom = input.value.trim();
+  if (!nom) return;
+
+  var btn = document.getElementById('submit-btn');
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  var url = APPS_SCRIPT_URL + '?action=addAppliName&name=' + encodeURIComponent(nom);
+
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      btn.classList.remove('loading');
+      if (data.ok) {
+        showResult(true, nom, data.ligne ? 'Ligne ' + data.ligne + ' de IDS_APPLI' : '');
+      } else if (data.duplicate) {
+        showResult(false, nom, 'Ce nom existe déjà dans la liste.');
+      } else {
+        showResult(false, nom, data.error || 'Erreur inconnue.');
+      }
+    })
+    .catch(function(e) {
+      btn.classList.remove('loading');
+      showResult(false, nom, 'Erreur réseau. Vérifie ta connexion.');
+    });
+}
+
+function showResult(ok, nom, msg) {
+  document.getElementById('form-view').style.display = 'none';
+  var rv = document.getElementById('result-view');
+  rv.classList.add('visible');
+  document.getElementById('result-icon').textContent = ok ? '✅' : '⚠️';
+  document.getElementById('result-title').textContent = ok ? 'AJOUTÉ !' : 'PROBLÈME';
+  document.getElementById('result-title').style.color = ok ? 'var(--gold)' : '#e8407a';
+  document.getElementById('result-name').textContent = '"' + nom + '"';
+  document.getElementById('result-msg').textContent = msg || '';
+}
+
+function reset() {
+  document.getElementById('form-view').style.display = '';
+  var rv = document.getElementById('result-view');
+  rv.classList.remove('visible');
+  var input = document.getElementById('nom-input');
+  input.value = '';
+  document.getElementById('preview').classList.remove('visible');
+  document.getElementById('preview').textContent = '';
+  var btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.classList.remove('loading');
+  setTimeout(function(){ input.focus(); }, 100);
+}
+
+// Focus auto au chargement
+window.addEventListener('load', function() {
+  setTimeout(function(){ document.getElementById('nom-input').focus(); }, 300);
+});
+
+// Entrée clavier = soumettre
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    var btn = document.getElementById('submit-btn');
+    if (!btn.disabled) submit();
+  }
+});
+</script>
+</body>
+</html>
+`, {
+      headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' }
+    });
   }
 
   if (url.pathname !== '/api') {
@@ -603,50 +901,6 @@ async function handleRequest(request, env) {
       return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
     } catch(e) {
       return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
-    }
-  }
-
-  // GET addAppliName — proxy vers Apps Script
-  if (request.method === 'GET' && action === 'addAppliName') {
-    try {
-      const name   = (url.searchParams.get('name')   || '').trim();
-      const prenom = (url.searchParams.get('prenom') || '').trim();
-      if (!name) return new Response(JSON.stringify({ ok: false, error: 'Nom vide' }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
-      const scriptUrl = APPS_SCRIPT_URL + '?action=addAppliName&name=' + encodeURIComponent(name) + '&prenom=' + encodeURIComponent(prenom);
-      const r = await fetch(scriptUrl);
-      const data = await r.json();
-      return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
-    } catch(e) {
-      return new Response(JSON.stringify({ ok: false, error: e.message }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
-    }
-  }
-
-  // GET replacePrenom — proxy vers Apps Script
-  if (request.method === 'GET' && action === 'replacePrenom') {
-    try {
-      const name   = (url.searchParams.get('name')   || '').trim();
-      const prenom = (url.searchParams.get('prenom') || '').trim();
-      if (!name || !prenom) return new Response(JSON.stringify({ ok: false, error: 'Params manquants' }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
-      const scriptUrl = APPS_SCRIPT_URL + '?action=replacePrenom&name=' + encodeURIComponent(name) + '&prenom=' + encodeURIComponent(prenom);
-      const r = await fetch(scriptUrl);
-      const data = await r.json();
-      return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
-    } catch(e) {
-      return new Response(JSON.stringify({ ok: false, error: e.message }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
-    }
-  }
-
-  // GET resetPin — proxy vers Apps Script
-  if (request.method === 'GET' && action === 'resetPin') {
-    try {
-      const name = (url.searchParams.get('name') || '').trim();
-      if (!name) return new Response(JSON.stringify({ ok: false, error: 'Nom vide' }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
-      const scriptUrl = APPS_SCRIPT_URL + '?action=resetPin&name=' + encodeURIComponent(name);
-      const r = await fetch(scriptUrl);
-      const data = await r.json();
-      return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
-    } catch(e) {
-      return new Response(JSON.stringify({ ok: false, error: e.message }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
     }
   }
 
