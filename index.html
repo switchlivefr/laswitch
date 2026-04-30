@@ -4720,7 +4720,7 @@ function renderVideoList(videos, onDone) {
           _videoFired = false;
           _adminFired = false;
 
-          // Timer 0s pour toggle vidéo (instantané)
+          // Timer 0.1s pour toggle vidéo
           _timerVideo = setTimeout(function() {
             if (!_pressing) return;
             _videoFired = true;
@@ -4729,7 +4729,7 @@ function renderVideoList(videos, onDone) {
             } else {
               startVideo();
             }
-          }, 0);
+          }, 100);
 
           // Timer 1.5s pour admin (info2 uniquement, admin uniquement)
           if (isInfo2 && _adminMode) {
