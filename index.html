@@ -4523,11 +4523,11 @@ function closePrestasOpenCard(skipAnimation) {
   window._prestasActiveThumb = null;
 
   if (skipAnimation) {
-    // Fermeture immédiate (ex. ouverture d'une autre carte)
     d.thumb.style.transition = 'none';
     d.thumb.style.maxHeight = '0px';
     d.thumb.style.opacity = '0';
     d.thumb.innerHTML = '';
+    if (d.info) { d.info.style.transition = 'none'; d.info.style.marginTop = '0px'; }
     d.card._splitOpen = false;
     return;
   }
@@ -4536,6 +4536,10 @@ function closePrestasOpenCard(skipAnimation) {
   d.thumb.style.transition = 'max-height 0.5s ease, opacity 0.4s ease';
   d.thumb.style.maxHeight = '0px';
   d.thumb.style.opacity = '0';
+  if (d.info) {
+    d.info.style.transition = 'margin-top 0.5s ease';
+    d.info.style.marginTop = '0px';
+  }
   setTimeout(function() {
     d.thumb.innerHTML = '';
     d.card._splitOpen = false;
@@ -4570,13 +4574,32 @@ function renderVideoList(videos, onDone) {
   videos.forEach(function(v) {
     var ytId = extractYtId(v.youtube);
 
-    // ── Wrapper carte : flex column-reverse pour que thumb pousse info vers le haut ──
+    // ── Wrapper carte ──
     var card = document.createElement('div');
-    card.style.cssText = 'background:#101828;border-radius:14px;overflow:hidden;margin-bottom:14px;display:flex;flex-direction:column-reverse';
+    card.style.cssText = 'background:#101828;border-radius:14px;overflow:hidden;margin-bottom:14px;position:relative';
     if (ytId) card.dataset.ytid = ytId;
     card._splitOpen = false;
 
-    // ── Bloc BAS (presta-info2) — ajouté en premier dans le DOM (affiché en bas) ──
+    // ── Bloc HAUT (presta-info) ──
+    var info = document.createElement('div');
+    info.className = 'presta-info';
+    info.style.cssText = 'padding:10px 14px 0px;transition:margin-top 0.5s ease';
+
+    if (v.titre) {
+      var titreTopEl = document.createElement('div');
+      titreTopEl.className = 'presta-titre';
+      titreTopEl.style.cssText = 'font-size:18px;font-weight:700;line-height:1.3;margin-bottom:8px;letter-spacing:-0.2px;text-align:center;animation:rainbow 2s linear infinite';
+      titreTopEl.textContent = v.titre;
+      info.appendChild(titreTopEl);
+    }
+    card.appendChild(info);
+
+    // ── Zone vidéo : cachée par défaut, s'ouvre vers le haut en poussant info ──
+    var thumb = document.createElement('div');
+    thumb.style.cssText = 'position:relative;background:#000;width:100%;max-height:0px;overflow:hidden;opacity:0;transition:max-height 0.5s ease,opacity 0.4s ease';
+    card.appendChild(thumb);
+
+    // ── Bloc BAS (presta-info2) ──
     var info2 = document.createElement('div');
     info2.className = 'presta-info2';
     info2.style.cssText = 'padding:8px 14px 10px';
@@ -4609,27 +4632,8 @@ function renderVideoList(videos, onDone) {
     info2.appendChild(bottomRow);
     card.appendChild(info2);
 
-    // ── Zone vidéo : cachée par défaut, s'ouvre vers le haut ──
-    var thumb = document.createElement('div');
-    thumb.style.cssText = 'position:relative;background:#000;width:100%;max-height:0px;overflow:hidden;opacity:0;transition:max-height 0.5s ease,opacity 0.4s ease';
-    card.appendChild(thumb);
-
-    // ── Bloc HAUT (presta-info) — ajouté en dernier dans le DOM (affiché en haut) ──
-    var info = document.createElement('div');
-    info.className = 'presta-info';
-    info.style.cssText = 'padding:10px 14px 0px';
-
-    if (v.titre) {
-      var titreTopEl = document.createElement('div');
-      titreTopEl.className = 'presta-titre';
-      titreTopEl.style.cssText = 'font-size:18px;font-weight:700;line-height:1.3;margin-bottom:8px;letter-spacing:-0.2px;text-align:center;animation:rainbow 2s linear infinite';
-      titreTopEl.textContent = v.titre;
-      info.appendChild(titreTopEl);
-    }
-    card.appendChild(info);
-
     // ── Fonction pour lancer la vidéo dans le thumb ──
-    (function(capturedYtId, capturedCard, capturedThumb) {
+    (function(capturedYtId, capturedCard, capturedThumb, capturedInfo) {
       function startVideo() {
         if (!capturedYtId) return;
 
@@ -4655,14 +4659,15 @@ function renderVideoList(videos, onDone) {
         capturedThumb.appendChild(container);
         window._prestasActiveThumb = capturedThumb;
 
-        // Ouvrir l'espace avec animation 0.5s
+        // Ouvrir l'espace avec animation 0.5s — thumb grandit, info remonte
         capturedThumb.style.transition = 'max-height 0.5s ease, opacity 0.4s ease';
-        // hauteur cible = 56.25vw (aspect-ratio 16/9, largeur = 100% de la carte)
         capturedThumb.style.maxHeight = '56.25vw';
         capturedThumb.style.opacity = '1';
+        capturedInfo.style.transition = 'margin-top 0.5s ease';
+        capturedInfo.style.marginTop = '-56.25vw';
 
         capturedCard._splitOpen = true;
-        window._prestasOpenCardData = { card: capturedCard, thumb: capturedThumb };
+        window._prestasOpenCardData = { card: capturedCard, thumb: capturedThumb, info: capturedInfo };
 
         function createPlayer() {
           var _seekDone = false;
@@ -4772,7 +4777,7 @@ function renderVideoList(videos, onDone) {
       attachLongPress(capturedCard.querySelector('.presta-info'),  false);
       attachLongPress(capturedCard.querySelector('.presta-info2'), true);
 
-    })(ytId, card, thumb);
+    })(ytId, card, thumb, info);
 
     list.appendChild(card);
     cards.push(card);
