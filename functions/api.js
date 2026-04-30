@@ -84,8 +84,7 @@ async function handleRequest(request, env) {
   const url = new URL(request.url);
 
   if (url.pathname === '/marco-switch-ajoutnomfb') {
-    return new Response(`
-<!DOCTYPE html>
+    return new Response(`<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -110,10 +109,6 @@ async function handleRequest(request, env) {
   --muted:#5a5a78;
   --green:#4caf7d;
   --r:14px;
-  --rs:8px;
-  --border2:#2a2a40;
-  --muted2:#7a7a95;
-  --cyan:#34d1c0;
 }
 html{height:100%;overscroll-behavior:none}
 body{
@@ -221,7 +216,7 @@ body::before{
 .btn.loading .spinner{display:block}
 .moverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:500;align-items:center;justify-content:center;padding:14px}
 .moverlay.open{display:flex}
-.mbox{background:var(--card);border:1px solid var(--border2);border-radius:var(--r);width:100%;max-width:460px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden}
+.mbox{background:var(--card);border:1px solid #2a2a40;border-radius:14px;width:100%;max-width:460px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden}
 </style>
 <script>
 const __manifest = {
@@ -271,7 +266,7 @@ document.head.appendChild(__link);
     <span class="btn-label" id="btn-label">AJOUTER</span>
     <div class="spinner"></div>
   </button>
-  <button onclick="openAdminM();swLoadAdminRequests()" style="width:100%;margin-top:12px;background:transparent;color:var(--white);border:1px solid #2a2a40;border-radius:var(--r);padding:14px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;-webkit-appearance:none">DEMANDES D'ACCÈS EN ATTENTE</button>
+  <button onclick="openAdminM();swLoadAdminRequests()" style="width:100%;margin-top:12px;background:transparent;color:var(--white);border:1px solid #2a2a40;border-radius:14px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;-webkit-appearance:none">DEMANDES D'ACCÈS EN ATTENTE</button>
 </div>
 
 <script>
@@ -297,7 +292,7 @@ function highlight(text, input) {
   var tokens = norm(input).split(/\s+/).filter(Boolean);
   var result = text;
   tokens.forEach(function(tok){
-    var safe = tok.replace(/[.*+?^\${}()|[\]\\]/g,'\\$&');
+    var safe = tok.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
     var re = new RegExp('(' + safe + ')', 'gi');
     result = result.replace(re,'<em>$1</em>');
   });
@@ -568,17 +563,15 @@ function doFullReset() {
   nomInput.value       = '';
   prenomInput.value    = '';
   prenomInput.placeholder = 'Prénom';
-  nomInput.disabled    = true;
+  nomInput.disabled    = false;
   hideDropdown(ddNom);
   hideDropdown(ddPrenom);
   hideFeedback();
   btnLabel.textContent = 'AJOUTER';
   submitBtn.disabled   = true;
   submitBtn.className  = 'btn';
-  loadData().then(function(){
-    nomInput.disabled = false;
-    setTimeout(function(){ nomInput.focus(); }, 50);
-  });
+  loadData();
+  setTimeout(function(){ nomInput.focus(); }, 50);
 }
 </script>
 
@@ -598,10 +591,8 @@ function doFullReset() {
     </div>
   </div>
 </div>
-
-<!-- Modale saisie prénom -->
 <div id="m-sw-admin-prenom" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:24px">
-  <div style="background:var(--card);border:1px solid #1877f2;border-radius:var(--r);width:100%;max-width:340px;padding:28px 24px 24px;display:flex;flex-direction:column;gap:16px">
+  <div style="background:var(--card);border:1px solid #1877f2;border-radius:14px;width:100%;max-width:340px;padding:28px 24px 24px;display:flex;flex-direction:column;gap:16px">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#1877f2;letter-spacing:2px;text-align:center">Prénom</div>
     <input id="sw-admin-prenom-input" type="text" placeholder="Prénom..." autocomplete="off" autocapitalize="words" spellcheck="false"
       style="width:100%;background:var(--bg);border:1px solid #2a2a40;border-radius:8px;padding:14px 16px;font-family:'DM Sans',sans-serif;font-size:17px;font-weight:600;color:var(--white);outline:none;caret-color:#1877f2;-webkit-appearance:none"
@@ -612,31 +603,22 @@ function doFullReset() {
       style="width:100%;background:#1877f2;color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;cursor:pointer">AJOUTER</button>
   </div>
 </div>
-
 <script>
 var ADMIN_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-6BtAXoKEx2oWbfFt8u3N6XuKMjfZ7f7ReGDn7wbkbz9JlJnRv0fR5Zqm8JWyDpM1/exec';
 var ADMIN_API_BASE = '/api';
-
-function openAdminM(){
-  hideFeedback();
-  doFullReset();
-  var el=document.getElementById('m-sw-admin');
-  if(el)el.classList.add('open');
-}
+function openAdminM(){var el=document.getElementById('m-sw-admin');if(el)el.classList.add('open');}
 function closeAdminM(){var el=document.getElementById('m-sw-admin');if(el)el.classList.remove('open');}
-
 function swLoadAdminRequests(){
-  var list=document.getElementById('sw-admin-list');
-  var count=document.getElementById('sw-admin-count');
+  var list=document.getElementById('sw-admin-list'),count=document.getElementById('sw-admin-count');
   if(!list)return;
   list.innerHTML='<div style="color:#7a7a95;font-size:13px;padding:12px;text-align:center">Chargement...</div>';
-  var limit=Date.now()-48*3600*1000;
   fetch(ADMIN_APPS_SCRIPT_URL+'?action=getAccessRequests')
     .then(function(r){return r.json();})
     .then(function(data){
+      var limit=Date.now()-48*3600*1000;
       var rows=(data.rows||[]).filter(function(r){return r.validated||(r.timestamp||0)>limit;});
       var pending=rows.filter(function(r){return !r.validated;}).length;
-      if(count)count.textContent=pending+' EN ATTENTE · '+(rows.length-pending)+' VALIDEES';
+      if(count)count.textContent=pending+' EN ATTENTE';
       list.innerHTML='';
       if(!rows.length){list.innerHTML='<div style="color:#7a7a95;font-size:13px;padding:12px;text-align:center">Aucune demande</div>';return;}
       rows.sort(function(a,b){return(a.validated?1:0)-(b.validated?1:0)||(b.timestamp||0)-(a.timestamp||0);});
@@ -645,15 +627,14 @@ function swLoadAdminRequests(){
         var nom=(row.name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
         var d=document.createElement('div');
         d.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:8px';
-        d.innerHTML='<div style="flex:1"><div style="font-size:14px;font-weight:700;color:'+(isVal?'#7a7a95':'var(--white)')+'">'+ nom+'</div><div style="font-size:11px;color:#7a7a95">'+(row.date||'')+'</div></div>';
-        if(isVal){var tag=document.createElement('div');tag.textContent='VALIDE';tag.style.cssText='color:#34d1c0;font-size:12px;font-weight:700;font-family:Bebas Neue,sans-serif;letter-spacing:1px;flex-shrink:0';d.appendChild(tag);}
-        else{var btn=document.createElement('button');btn.textContent='VALIDER';btn.style.cssText='background:#34d1c0;border:none;border-radius:8px;padding:8px 14px;color:#000;font-family:Bebas Neue,sans-serif;font-size:14px;letter-spacing:1px;cursor:pointer;flex-shrink:0';btn.onclick=(function(n,b){return function(){swAdminValidate(n,b);};})(row.name||'',btn);d.appendChild(btn);}
+        d.innerHTML='<div style="flex:1"><div style="font-size:14px;font-weight:700;color:'+(isVal?'#7a7a95':'var(--white)')+'">'+nom+'</div><div style="font-size:11px;color:#7a7a95">'+(row.date||'')+'</div></div>';
+        if(isVal){var tag=document.createElement('div');tag.textContent='VALIDE';tag.style.cssText='color:#34d1c0;font-size:12px;font-weight:700;font-family:Bebas Neue,sans-serif;flex-shrink:0';d.appendChild(tag);}
+        else{var b=document.createElement('button');b.textContent='VALIDER';b.style.cssText='background:#34d1c0;border:none;border-radius:8px;padding:8px 14px;color:#000;font-family:Bebas Neue,sans-serif;font-size:14px;cursor:pointer;flex-shrink:0';b.onclick=(function(n,x){return function(){swAdminValidate(n,x);};})(row.name||'',b);d.appendChild(b);}
         list.appendChild(d);
       });
     })
     .catch(function(){list.innerHTML='<div style="color:#e53935;font-size:13px;padding:12px">Erreur</div>';});
 }
-
 function swAdminValidate(name,btn){
   btn.textContent='...';btn.disabled=true;
   fetch(ADMIN_API_BASE+'?action=getPrenom&name='+encodeURIComponent(name))
@@ -661,52 +642,41 @@ function swAdminValidate(name,btn){
     .then(function(data){
       if(!(data.prenom||'').trim()){btn.textContent='VALIDER';btn.disabled=false;swAdminAskPrenom(name,btn);}
       else swAdminDoValidate(name,btn);
-    })
-    .catch(function(){swAdminDoValidate(name,btn);});
+    }).catch(function(){swAdminDoValidate(name,btn);});
 }
-
 function swAdminDoValidate(name,btn){
   if(btn){btn.textContent='...';btn.disabled=true;}
   fetch(ADMIN_APPS_SCRIPT_URL+'?action=validateRequest&name='+encodeURIComponent(name))
     .then(function(r){return r.json();})
     .then(function(data){
-      if(data.ok){var tag=document.createElement('div');tag.textContent='VALIDE';tag.style.cssText='color:#34d1c0;font-size:12px;font-weight:700;font-family:Bebas Neue,sans-serif;letter-spacing:1px;flex-shrink:0';if(btn&&btn.parentNode)btn.parentNode.replaceChild(tag,btn);}
+      if(data.ok){var tag=document.createElement('div');tag.textContent='VALIDE';tag.style.cssText='color:#34d1c0;font-size:12px;font-weight:700;font-family:Bebas Neue,sans-serif;flex-shrink:0';if(btn&&btn.parentNode)btn.parentNode.replaceChild(tag,btn);}
       else if(btn){btn.textContent='ERREUR';btn.disabled=false;}
-    })
-    .catch(function(){if(btn){btn.textContent='ERREUR';btn.disabled=false;}});
+    }).catch(function(){if(btn){btn.textContent='ERREUR';btn.disabled=false;}});
 }
-
 function swAdminAskPrenom(name,btn){
-  var overlay=document.getElementById('m-sw-admin-prenom');
-  if(!overlay)return;
-  overlay._targetName=name;overlay._targetBtn=btn;
-  var input=document.getElementById('sw-admin-prenom-input');
-  if(input)input.value='';
-  var errEl=document.getElementById('sw-admin-prenom-err');
-  if(errEl)errEl.style.display='none';
-  overlay.style.display='flex';
-  setTimeout(function(){if(input)input.focus();},120);
+  var o=document.getElementById('m-sw-admin-prenom');if(!o)return;
+  o._targetName=name;o._targetBtn=btn;
+  var inp=document.getElementById('sw-admin-prenom-input');
+  if(inp)inp.value='';
+  var err=document.getElementById('sw-admin-prenom-err');
+  if(err)err.style.display='none';
+  o.style.display='flex';
+  setTimeout(function(){if(inp)inp.focus();},120);
 }
-
 function swAdminPrenomAjouter(){
-  var overlay=document.getElementById('m-sw-admin-prenom');if(!overlay)return;
-  var name=overlay._targetName,btn=overlay._targetBtn;
-  var input=document.getElementById('sw-admin-prenom-input');
-  var errEl=document.getElementById('sw-admin-prenom-err');
-  var addBtn=document.getElementById('sw-admin-prenom-addbtn');
-  var prenom=(input?input.value.trim():'');
-  if(!prenom){if(errEl){errEl.textContent='Saisis un prénom';errEl.style.display='block';}return;}
-  if(addBtn){addBtn.textContent='...';addBtn.disabled=true;}
-  fetch(ADMIN_APPS_SCRIPT_URL+'?action=setPrenom&name='+encodeURIComponent(name)+'&prenom='+encodeURIComponent(prenom))
+  var o=document.getElementById('m-sw-admin-prenom');if(!o)return;
+  var inp=document.getElementById('sw-admin-prenom-input');
+  var err=document.getElementById('sw-admin-prenom-err');
+  var ab=document.getElementById('sw-admin-prenom-addbtn');
+  var prenom=(inp?inp.value.trim():'');
+  if(!prenom){if(err){err.textContent='Saisis un prénom';err.style.display='block';}return;}
+  if(ab){ab.textContent='...';ab.disabled=true;}
+  fetch(ADMIN_APPS_SCRIPT_URL+'?action=setPrenom&name='+encodeURIComponent(o._targetName)+'&prenom='+encodeURIComponent(prenom))
     .then(function(r){return r.json();})
-    .then(function(){overlay.style.display='none';if(addBtn){addBtn.textContent='AJOUTER';addBtn.disabled=false;}swAdminDoValidate(name,btn);})
-    .catch(function(){overlay.style.display='none';if(addBtn){addBtn.textContent='AJOUTER';addBtn.disabled=false;}swAdminDoValidate(name,btn);});
+    .then(function(){o.style.display='none';if(ab){ab.textContent='AJOUTER';ab.disabled=false;}swAdminDoValidate(o._targetName,o._targetBtn);})
+    .catch(function(){o.style.display='none';if(ab){ab.textContent='AJOUTER';ab.disabled=false;}swAdminDoValidate(o._targetName,o._targetBtn);});
 }
-
-window.addEventListener('DOMContentLoaded',function(){
-  openAdminM();
-  swLoadAdminRequests();
-});
+window.addEventListener('DOMContentLoaded',function(){openAdminM();swLoadAdminRequests();});
 </script>
 </body>
 </html>
