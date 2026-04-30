@@ -569,6 +569,13 @@ function closeAdminM() {
 /* ── Bouton "AJOUT NOM FACEBOOK" : ferme la modale, révèle la page ── */
 function swAdminAjoutNomFacebook() {
   closeAdminM();
+  setTimeout(function(){
+    if (nomInput) {
+      nomInput.disabled = false;
+      nomInput.focus();
+    }
+    if (submitBtn) submitBtn.disabled = true;
+  }, 150);
 }
 
 /* ── Charger les demandes d'accès (identique index.html swLoadAdminRequests) ── */
