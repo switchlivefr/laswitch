@@ -1107,8 +1107,10 @@ var NV = {
             }
             // Période encore active : restaurer depuis Sheets dans localStorage
             var restoredYtIds = parsed.ytIds || [];
-            var extra = NV._calcNewIds(restoredYtIds, currentYtIds);
-            extra.forEach(function(id){ if(restoredYtIds.indexOf(id)===-1) restoredYtIds.push(id); });
+            if (restoredYtIds.length > 0) {
+              var extra = NV._calcNewIds(restoredYtIds, currentYtIds);
+              extra.forEach(function(id){ if(restoredYtIds.indexOf(id)===-1) restoredYtIds.push(id); });
+            }
             NV.newYtIds = restoredYtIds;
             // Reconstituer snapshot local
             var snap = { count: videos.length, ids: currentYtIds, newYtIds: restoredYtIds };
