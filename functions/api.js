@@ -368,9 +368,7 @@ window.addEventListener('load', function(){
     });
   });
 
-  nomInput.addEventListener('focus', function(){
-    if (state.nomSelectionne) { doFullReset(); setTimeout(function(){ nomInput.focus(); },10); }
-  });
+  nomInput.addEventListener('focus', function(){ });
   nomInput.addEventListener('blur', function(){
     setTimeout(function(){ hideDropdown(ddNom); }, 150);
   });
