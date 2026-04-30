@@ -1294,7 +1294,7 @@ function nav(id,direction){
       setTimeout(function(){ne.style.transition='';ne.style.transform='';ne.classList.remove('sliding');ne.classList.add('active');},330);
     }else{ne.classList.add('active');}
   }
-  if(id==='p-prestas'){checkFbSession();hideHint();hideScrollHints();}
+  if(id==='p-prestas'){checkFbSession();hideHint();hideScrollHints();var _plist=document.getElementById('prestas-list');if(_plist&&_plist.children.length>0)showPrestasHint();}
   if(oldId==='p-prestas'&&id!=='p-prestas'){stopPrestasVideo();hidePrestasHint();if(typeof _swPendingPollTimer!=='undefined'&&_swPendingPollTimer){clearInterval(_swPendingPollTimer);_swPendingPollTimer=null;}}
   if(id==='p-switch'){renderSwitch();showHint();
     var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
@@ -4549,9 +4549,10 @@ function setupPrestasScrollPause(listEl) {
   listEl.addEventListener('scroll', function() {
     var d = window._prestasOpenCardData;
     if (!d || !window._prestasActivePlayer) return;
-    var rect = d.thumb.getBoundingClientRect();
-    var inView = rect.bottom > 0 && rect.top < window.innerHeight;
-    // Pause uniquement quand hors écran — ne jamais reprendre automatiquement
+    var thumbRect = d.thumb.getBoundingClientRect();
+    var listRect  = listEl.getBoundingClientRect();
+    // La fenêtre vidéo est visible si elle chevauche la zone d'affichage du conteneur
+    var inView = thumbRect.bottom > listRect.top && thumbRect.top < listRect.bottom;
     if (!inView) {
       try { window._prestasActivePlayer.pauseVideo(); } catch(e) {}
     }
