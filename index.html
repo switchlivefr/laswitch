@@ -4578,11 +4578,19 @@ function renderVideoList(videos, onDone) {
   window._prestasInnerTranslate = 0;
   setupPrestasScrollPause(list);
 
-  // Wrapper interne qui glissera vers le haut quand une vidéo s'ouvre
+  // Calculer la hauteur d'une vidéo (ratio 16/9 sur la largeur de la liste moins padding)
+  var listWidth = list.clientWidth - 32; // 16px padding de chaque côté
+  var videoH = Math.round(listWidth * 9 / 16);
+  window._prestasVideoHeight = videoH;
+
+  // Wrapper interne : padding-top = hauteur d'une vidéo (espace caché sous le titre)
   var inner = document.createElement('div');
   inner.id = 'prestas-cards-inner';
-  inner.style.cssText = 'padding:12px 0 80px;transition:transform 0.5s ease';
+  inner.style.cssText = 'padding:' + videoH + 'px 0 80px;transition:transform 0.5s ease';
   list.appendChild(inner);
+
+  // Masquer le padding-top immédiatement (les cartes apparaissent en haut)
+  requestAnimationFrame(function() { list.scrollTop = videoH; });
 
   var cards = [];
 
@@ -4674,8 +4682,8 @@ function renderVideoList(videos, onDone) {
         capturedThumb.appendChild(container);
         window._prestasActiveThumb = capturedThumb;
 
-        // Calculer la hauteur de la vidéo
-        var videoHeight = Math.round(capturedCard.offsetWidth * 9 / 16);
+        // Hauteur de la vidéo (précalculée à la création de la liste)
+        var videoHeight = window._prestasVideoHeight || Math.round(capturedCard.offsetWidth * 9 / 16);
 
         // Ouvrir la vidéo (max-height)
         capturedThumb.style.transition = 'max-height 0.5s ease, opacity 0.4s ease';
