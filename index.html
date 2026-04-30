@@ -1002,7 +1002,7 @@ var NV = {
       if (ytId && NV.newYtIds.indexOf(ytId) !== -1) {
         var info = card.querySelector('.presta-info');
         if (info) {
-          info.style.cssText = 'padding:10px 14px 0px;animation:newVidCardBlink 2s ease-in-out infinite';
+          info.style.cssText = 'padding:8px 14px 4px;animation:newVidCardBlink 2s ease-in-out infinite';
           NV.blinkEls.push(info);
           var info2 = card.querySelector('.presta-info2');
           if (info2) {
@@ -1018,7 +1018,7 @@ var NV = {
 
   stopBlink: function() {
     NV.blinkEls.forEach(function(el){
-      if (el.classList.contains('presta-info')) el.style.cssText='padding:10px 14px 0px';
+      if (el.classList.contains('presta-info')) el.style.cssText='padding:8px 14px 4px';
       else if (el.classList.contains('presta-info2')) el.style.cssText='padding:8px 14px 10px';
     });
     NV.blinkEls = [];
@@ -4664,10 +4664,6 @@ function renderVideoList(videos, onDone) {
         capturedCard._splitOpen = true;
         window._prestasOpenCardData = { card: capturedCard, thumb: capturedThumb };
 
-        // Mémoriser la position de scroll du conteneur pour la restaurer après création de l'iframe
-        var _listEl = document.getElementById('prestas-list');
-        var _savedScroll = _listEl ? _listEl.scrollTop : 0;
-
         function createPlayer() {
           var _seekDone = false;
           new YT.Player(playerId, {
@@ -4676,8 +4672,6 @@ function renderVideoList(videos, onDone) {
             height: '100%',
             events: {
               onReady: function(e) {
-                // Restaurer immédiatement le scroll pour annuler le recalage auto du navigateur
-                if (_listEl) _listEl.scrollTop = _savedScroll;
                 window._prestasActivePlayer = e.target;
                 e.target.loadVideoById({ videoId: capturedYtId, startSeconds: 0 });
                 var iframe = capturedThumb.querySelector('iframe');
