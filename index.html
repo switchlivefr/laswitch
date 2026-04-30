@@ -329,7 +329,6 @@ body.coverlay-open #reper-side-hint,body.modal-open #reper-side-hint{opacity:0!i
   <div style="text-align:center;animation:newVidBannerIn .5s ease forwards">
     <div id="nv-banner-l1" style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--white);letter-spacing:2px;line-height:1.35"></div>
     <div id="nv-banner-l2" style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--white);letter-spacing:2px;line-height:1.35"></div>
-    <div id="nv-banner-l3" style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--white);letter-spacing:2px;line-height:1.35;margin-top:8px"></div>
   </div>
 </div>
 <div id="fb-browser-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(30,20,0,.92);color:#f2c94c;font-family:'DM Sans',sans-serif;font-size:11px;padding:6px 14px;text-align:center;letter-spacing:0.3px">
@@ -956,7 +955,6 @@ var NV = {
     NV.bannerShownThisSession = true;
     var l1 = document.getElementById('nv-banner-l1');
     var l2 = document.getElementById('nv-banner-l2');
-    var l3 = document.getElementById('nv-banner-l3');
     if (l1 && l2) {
       if (diff === 1) {
         l1.textContent = 'TU AS 1 NOUVELLE';
@@ -965,19 +963,6 @@ var NV = {
         l1.textContent = 'TU AS ' + diff + ' NOUVELLES';
         l2.textContent = 'VIDÉOS À DÉCOUVRIR';
       }
-    }
-    if (l3) {
-      l3.textContent = '';
-      try {
-        var snapRaw  = NV.fbId ? localStorage.getItem(NV._snapKey(NV.fbId)) : null;
-        var seenDate = NV.fbId ? localStorage.getItem('nv_seen_date_' + NV.fbId) : null;
-        if (snapRaw && NV._blinkStillActive(seenDate)) {
-          var snap = JSON.parse(snapRaw);
-          var prev = (snap.newYtIds && snap.newYtIds.length) ? snap.newYtIds.length : 0;
-          if (prev === 1) l3.textContent = '(EN PLUS DE LA PRÉCÉDENTE)';
-          else if (prev > 1) l3.textContent = '(EN PLUS DES ' + prev + ' PRÉCÉDENTES)';
-        }
-      } catch(e) {}
     }
     openM('nv-banner');
   },
@@ -1103,13 +1088,14 @@ var NV = {
             var restoredYtIds = parsed.ytIds || [];
             var extra = NV._calcNewIds(restoredYtIds, currentYtIds);
             extra.forEach(function(id){ if(restoredYtIds.indexOf(id)===-1) restoredYtIds.push(id); });
-            NV.newYtIds = restoredYtIds;
+            // Filtrer : ne garder que les ytIds encore présents dans les vidéos de cet utilisateur
+            NV.newYtIds = restoredYtIds.filter(function(id){ return currentYtIds.indexOf(id) !== -1; });
             // Reconstituer snapshot local
-            var snap = { count: videos.length, ids: currentYtIds, newYtIds: restoredYtIds };
+            var snap = { count: videos.length, ids: currentYtIds, newYtIds: NV.newYtIds };
             localStorage.setItem(NV._snapKey(fbId), JSON.stringify(snap));
             localStorage.setItem('nv_seen_date_' + fbId, parsed.seenDate);
             console.log('NV.checkBlink — restauré depuis Sheets, newYtIds=['+NV.newYtIds.join(',')+']');
-            return true; // signal : il y a des ytIds à faire clignoter
+            return NV.newYtIds.length > 0; // signal : il reste des ytIds à faire clignoter
           })
           .catch(function(e){
             console.log('NV.checkBlink — erreur fetch Sheets:'+e);
@@ -1138,7 +1124,8 @@ var NV = {
       var restored = snap.newYtIds.slice();
       var extra = NV._calcNewIds(snap.ids || [], currentYtIds);
       extra.forEach(function(id){ if(restored.indexOf(id)===-1) restored.push(id); });
-      NV.newYtIds = restored;
+      // Filtrer : ne garder que les ytIds encore présents dans les vidéos de cet utilisateur
+      NV.newYtIds = restored.filter(function(id){ return currentYtIds.indexOf(id) !== -1; });
       console.log('NV.checkBlink — période active, newYtIds=['+NV.newYtIds.join(',')+'] extra=['+extra.join(',')+']');
       return;
     }
@@ -1151,6 +1138,8 @@ var NV = {
       NV.newYtIds = currentYtIds.slice(0, NV.diff);
       console.log('NV.checkBlink — FALLBACK newYtIds=['+NV.newYtIds.join(',')+']');
     }
+    // Filtrer : ne garder que les ytIds encore présents dans les vidéos de cet utilisateur
+    NV.newYtIds = NV.newYtIds.filter(function(id){ return currentYtIds.indexOf(id) !== -1; });
     console.log('NV.checkBlink — newYtIds=['+NV.newYtIds.join(',')+']');
   },
 
