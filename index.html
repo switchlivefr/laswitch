@@ -969,13 +969,16 @@ var NV = {
     if (l3) {
       l3.textContent = '';
       try {
-        var snapRaw  = NV.fbId ? localStorage.getItem(NV._snapKey(NV.fbId)) : null;
-        var seenDate = NV.fbId ? localStorage.getItem('nv_seen_date_' + NV.fbId) : null;
-        if (snapRaw && NV._blinkStillActive(seenDate)) {
-          var snap = JSON.parse(snapRaw);
-          var prev = (snap.newYtIds && snap.newYtIds.length) ? snap.newYtIds.length : 0;
-          if (prev === 1) l3.textContent = '(EN PLUS DE LA PRÉCÉDENTE)';
-          else if (prev > 1) l3.textContent = '(EN PLUS DES ' + prev + ' PRÉCÉDENTES)';
+        var fbId = NV.fbId || localStorage.getItem('sw_fbId');
+        if (fbId) {
+          var snapRaw  = localStorage.getItem(NV._snapKey(fbId));
+          var seenDate = localStorage.getItem('nv_seen_date_' + fbId);
+          if (snapRaw && NV._blinkStillActive(seenDate)) {
+            var snap = JSON.parse(snapRaw);
+            var prev = (snap.newYtIds && snap.newYtIds.length) ? snap.newYtIds.length : 0;
+            if (prev === 1) l3.textContent = '(EN PLUS DE LA PRÉCÉDENTE)';
+            else if (prev > 1) l3.textContent = '(EN PLUS DES ' + prev + ' PRÉCÉDENTES)';
+          }
         }
       } catch(e) {}
     }
@@ -1138,7 +1141,8 @@ var NV = {
       var restored = snap.newYtIds.slice();
       var extra = NV._calcNewIds(snap.ids || [], currentYtIds);
       extra.forEach(function(id){ if(restored.indexOf(id)===-1) restored.push(id); });
-      NV.newYtIds = restored;
+      // Filtrer : ne garder que les ytIds encore présents dans les vidéos de cet utilisateur
+      NV.newYtIds = restored.filter(function(id){ return currentYtIds.indexOf(id) !== -1; });
       console.log('NV.checkBlink — période active, newYtIds=['+NV.newYtIds.join(',')+'] extra=['+extra.join(',')+']');
       return;
     }
@@ -1151,6 +1155,8 @@ var NV = {
       NV.newYtIds = currentYtIds.slice(0, NV.diff);
       console.log('NV.checkBlink — FALLBACK newYtIds=['+NV.newYtIds.join(',')+']');
     }
+    // Filtrer : ne garder que les ytIds encore présents dans les vidéos de cet utilisateur
+    NV.newYtIds = NV.newYtIds.filter(function(id){ return currentYtIds.indexOf(id) !== -1; });
     console.log('NV.checkBlink — newYtIds=['+NV.newYtIds.join(',')+']');
   },
 
