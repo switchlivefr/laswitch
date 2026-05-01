@@ -1161,38 +1161,92 @@ window.addEventListener('DOMContentLoaded',function(){openAdminM();swLoadAdminRe
   }
 
   // GET searchVideos : recherche par phrase (mode texte libre)
+  // Colonnes recherchées : B(index 1), C(index 2), G(index 6), H(index 7), K(index 10)
+  // Exclusion : toute vidéo dont l'une des colonnes B/C/G/H/K contient un nom Facebook
+  //             complet de la liste IDS_FBK col A (comparaison insensible casse/accents)
   if (request.method === 'GET' && action === 'searchVideos') {
     try {
-      const query = (url.searchParams.get('q') || '').trim().toLowerCase();
+      const query = (url.searchParams.get('q') || '').trim();
       if (!query) return new Response(JSON.stringify({ videos: [] }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
-      const sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(VIDEOS_SHEET)}?key=${API_KEY}`;
-      const r = await fetch(sheetUrl);
-      const data = await r.json();
-      if (data.error) throw new Error(data.error.message);
-      const rows = (data.values || []).slice(1);
+
+      // Normalisation unicode : supprime accents, passe en minuscules
+      const normalize = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      const qNorm = normalize(query);
+
+      // Charger VIDEOS et IDS_FBK en parallèle
+      const [videosResp, fbkResp] = await Promise.all([
+        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(VIDEOS_SHEET)}?key=${API_KEY}`),
+        fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent('IDS_FBK')}?key=${API_KEY}`)
+      ]);
+      const [videosData, fbkData] = await Promise.all([videosResp.json(), fbkResp.json()]);
+
+      if (videosData.error) throw new Error(videosData.error.message);
+
+      // Construire la liste des noms Facebook normalisés (IDS_FBK col A, skip header)
+      const fbkRows = (fbkData.values || []).slice(1);
+      // fbkNamesNorm : tableau de noms normalisés (ex: "cedric cazenave")
+      const fbkNamesNorm = fbkRows
+        .map(row => normalize((row[0] || '').trim()))
+        .filter(n => n.length > 0);
+
+      // Vérifie si un texte contient un nom Facebook complet (comme sous-chaîne délimitée par mot)
+      // On utilise une correspondance de mot entier pour éviter les faux positifs
+      const containsFbkName = (text) => {
+        const tNorm = normalize(text);
+        for (const fbName of fbkNamesNorm) {
+          if (!fbName) continue;
+          // Cherche fbName comme séquence complète dans le texte
+          // On accepte les délimiteurs : début/fin de chaîne, espace, virgule, pipe, tiret
+          const escaped = fbName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const re = new RegExp('(?:^|[\\s,|\\-])' + escaped + '(?:$|[\\s,|\\-])', '');
+          if (re.test(tNorm)) return true;
+          // aussi correspondance exacte (si le texte IS le nom)
+          if (tNorm === fbName) return true;
+        }
+        return false;
+      };
+
+      const rows = (videosData.values || []).slice(1);
       const videos = [];
+
       for (let rowIdx = 0; rowIdx < rows.length; rowIdx++) {
         const row = rows[rowIdx];
-        const youtube = (row[0] || '').trim();
-        const phrase  = (row[1] || '').trim();
-        const personnes = (row[2] || '').trim();
-        const date    = (row[3] || '').trim();
-        const fb_ids  = (row[4] || '').trim();
+        const youtube     = (row[0]  || '').trim();
+        const phrase      = (row[1]  || '').trim();   // col B
+        const personnes   = (row[2]  || '').trim();   // col C
+        const date        = (row[3]  || '').trim();
+        const fb_ids      = (row[4]  || '').trim();
         const ids_facebook = (row[5] || '').trim();
-        const titre   = (row[6] || '').trim();
-        const phrase2 = (row[7] || '').trim();
-        const lieu    = (row[8] || '').trim();
-        const rowIndex = rowIdx + 2;
+        const titre       = (row[6]  || '').trim();   // col G
+        const phrase2     = (row[7]  || '').trim();   // col H
+        const lieu        = (row[8]  || '').trim();
+        const colK        = (row[10] || '').trim();   // col K
+        const rowIndex    = rowIdx + 2;
+
         if (!youtube) continue;
-        if (!phrase.toLowerCase().includes(query) && !personnes.toLowerCase().includes(query) && !titre.toLowerCase().includes(query) && !phrase2.toLowerCase().includes(query)) continue;
-        videos.push({ youtube, phrase, personnes, date, fb_ids, ids_facebook, titre, phrase2, lieu, rowIndex });
+
+        // Les 5 colonnes dans lesquelles on cherche
+        const searchFields = [phrase, personnes, titre, phrase2, colK];
+
+        // 1. Le mot-clé doit apparaître dans au moins l'une des colonnes B/C/G/H/K
+        const qMatches = searchFields.some(f => normalize(f).includes(qNorm));
+        if (!qMatches) continue;
+
+        // 2. Exclusion : si l'une des colonnes B/C/G/H/K contient un nom Facebook complet
+        //    de IDS_FBK col A, on exclut la vidéo
+        const hasFbkName = searchFields.some(f => f && containsFbkName(f));
+        if (hasFbkName) continue;
+
+        videos.push({ youtube, phrase, personnes, date, fb_ids, ids_facebook, titre, phrase2, lieu, colK, rowIndex });
       }
+
       videos.sort((a, b) => {
         const parseDate = d => { if (!d) return 0; const p = d.split('/'); if (p.length === 3) return new Date(p[2], p[1]-1, p[0]).getTime(); return 0; };
         return parseDate(b.date) - parseDate(a.date);
       });
+
       return new Response(JSON.stringify({ videos }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-cache' }
       });
