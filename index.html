@@ -43,6 +43,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 @keyframes prcColFadeIn{from{opacity:0}to{opacity:1}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 @keyframes newVidCardBlink{0%,100%{background:#101828}50%{background:rgba(24,119,242,.55);box-shadow:inset 0 0 20px rgba(24,119,242,.8)}}
+@keyframes cardBorderPulse{0%,100%{border-color:rgba(255,255,255,.18)}50%{border-color:rgba(24,119,242,.9)}}
 @keyframes newVidBannerIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes titlepulse{0%,100%{opacity:.1}50%{opacity:1}}
 @keyframes hintpulse{0%,100%{color:var(--gold);opacity:.1}50%{color:var(--gold);opacity:1}}
@@ -4528,12 +4529,16 @@ function closePrestasOpenCard(skipAnimation) {
     d.thumb.style.opacity = '0';
     d.thumb.innerHTML = '';
     d.card._splitOpen = false;
+    d.card.style.animation = '';
+    d.card.style.borderColor = 'rgba(255,255,255,.18)';
     return;
   }
 
   d.thumb.style.transition = 'max-height 0.5s ease, opacity 0.4s ease';
   d.thumb.style.maxHeight = '0px';
   d.thumb.style.opacity = '0';
+  d.card.style.animation = '';
+  d.card.style.borderColor = 'rgba(255,255,255,.18)';
   setTimeout(function() {
     d.thumb.innerHTML = '';
     d.card._splitOpen = false;
@@ -4568,7 +4573,7 @@ function renderVideoList(videos, onDone) {
     var ytId = extractYtId(v.youtube);
 
     var card = document.createElement('div');
-    card.style.cssText = 'background:#101828;border-radius:14px;overflow:hidden;margin-bottom:14px';
+    card.style.cssText = 'background:#101828;border-radius:14px;overflow:hidden;margin-bottom:14px;border:1px solid rgba(255,255,255,.18)';
     if (ytId) card.dataset.ytid = ytId;
     card._splitOpen = false;
 
@@ -4646,6 +4651,8 @@ function renderVideoList(videos, onDone) {
         capturedThumb.style.opacity = '1';
 
         capturedCard._splitOpen = true;
+        capturedCard.style.animation = 'cardBorderPulse 2s ease-in-out infinite';
+        capturedCard.style.borderColor = 'rgba(255,255,255,.18)';
         window._prestasOpenCardData = { card: capturedCard, thumb: capturedThumb };
 
         function createPlayer() {
@@ -6016,13 +6023,7 @@ function _startPendingPoll(token, name) {
 }
 
 function checkFbSession() {
-  if (_adminMode) {
-    // En mode admin, masquer les panneaux utilisateur qui n'ont rien à faire ici
-    ['prestas-nologin','prestas-nofriend','prestas-empty','prestas-loading'].forEach(function(id){
-      var el = document.getElementById(id); if (el) el.style.display = 'none';
-    });
-    return;
-  }
+  if (_adminMode) return;
   if (window._swLoaded) return;
   // Déconnexion volontaire : ne pas reconnecter automatiquement
   if (localStorage.getItem('sw_disconnected') === '1') {
