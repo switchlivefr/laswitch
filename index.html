@@ -3999,6 +3999,13 @@ function fbLogout() {
   window._swLoaded = false;
   // Arrêter tout polling en cours
   if (typeof _swPendingPollTimer !== 'undefined' && _swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
+  // Purger les clés nv_ du localStorage — AVANT de perdre sw_fbId et NV.fbId
+  var _fbIdToClear = NV.fbId || localStorage.getItem('sw_fbId') || '';
+  if (_fbIdToClear) {
+    localStorage.removeItem('nv_snap_' + _fbIdToClear);
+    localStorage.removeItem('nv_seen_date_' + _fbIdToClear);
+    localStorage.removeItem('nv_count_' + _fbIdToClear);
+  }
   localStorage.removeItem('sw_token');
   localStorage.removeItem('sw_name');
   localStorage.removeItem('sw_fbId');
@@ -4974,6 +4981,13 @@ function swChangeAccount() {
   var pending = document.getElementById('m-sw-pending');
   if (pending && pending.classList.contains('open')) closeM('m-sw-pending');
   // Effacer les données de session (déconnexion complète)
+  // Purger les clés nv_ du localStorage — AVANT de perdre sw_fbId et NV.fbId
+  var _fbIdToClear = NV.fbId || localStorage.getItem('sw_fbId') || '';
+  if (_fbIdToClear) {
+    localStorage.removeItem('nv_snap_' + _fbIdToClear);
+    localStorage.removeItem('nv_seen_date_' + _fbIdToClear);
+    localStorage.removeItem('nv_count_' + _fbIdToClear);
+  }
   localStorage.removeItem('sw_token');
   localStorage.removeItem('sw_name');
   localStorage.removeItem('sw_fbId');
