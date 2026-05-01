@@ -3998,10 +3998,9 @@ function fbLogin() {
   }, { scope: 'public_profile' });
 }
 
-// Purge complète des données blink : localStorage ET col J du Sheets
-// Appelée à chaque déconnexion, avant que sw_name et NV.fbId soient effacés
+// Purge des données blink dans le localStorage uniquement à la déconnexion
+// NE TOUCHE PAS au Sheets (col J doit rester pour restauration sur autre appareil)
 function _nvClearAll() {
-  // 1) Purger TOUTES les clés nv_ du localStorage (sans dépendre de NV.fbId)
   var _toRemove = [];
   for (var _i = 0; _i < localStorage.length; _i++) {
     var _k = localStorage.key(_i);
@@ -4011,16 +4010,6 @@ function _nvClearAll() {
   }
   _toRemove.forEach(function(k) { localStorage.removeItem(k); });
   console.log('_nvClearAll — localStorage purgé: ' + (_toRemove.length ? _toRemove.join(', ') : 'rien'));
-  // 2) Effacer la col J dans Sheets pour ce nom (fire & forget)
-  var _name = localStorage.getItem('sw_name') || '';
-  if (_name) {
-    fetch('/api?action=setBlinkData', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: _name.toLowerCase(), data: '' })
-    }).then(function(){ console.log('_nvClearAll — col J Sheets effacée pour: ' + _name); })
-      .catch(function(e){ console.log('_nvClearAll — erreur effacement Sheets: ' + e); });
-  }
 }
 
 function fbLogout() {
@@ -4029,7 +4018,7 @@ function fbLogout() {
   window._swLoaded = false;
   // Arrêter tout polling en cours
   if (typeof _swPendingPollTimer !== 'undefined' && _swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
-  // Purger localStorage ET col J Sheets — avant de nullifier NV.fbId/sw_name
+  // Purger les clés nv_ du localStorage AVANT de nullifier NV.fbId
   _nvClearAll();
   localStorage.removeItem('sw_token');
   localStorage.removeItem('sw_name');
@@ -5006,7 +4995,7 @@ function swChangeAccount() {
   var pending = document.getElementById('m-sw-pending');
   if (pending && pending.classList.contains('open')) closeM('m-sw-pending');
   // Effacer les données de session (déconnexion complète)
-  // Purger localStorage ET col J Sheets — avant de nullifier NV.fbId/sw_name
+  // Purger les clés nv_ du localStorage AVANT de nullifier NV.fbId
   _nvClearAll();
   localStorage.removeItem('sw_token');
   localStorage.removeItem('sw_name');
