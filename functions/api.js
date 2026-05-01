@@ -1162,8 +1162,13 @@ window.addEventListener('DOMContentLoaded',function(){openAdminM();swLoadAdminRe
 
   // GET searchVideos : recherche par phrase (mode texte libre)
   // Colonnes recherchées : B(index 1), C(index 2), G(index 6), H(index 7), K(index 10)
-  // Exclusion : toute vidéo dont l'une des colonnes B/C/G/H/K contient un nom Facebook
-  //             complet de la liste IDS_FBK col A (comparaison insensible casse/accents)
+  // Exclusion : toute vidéo dont col E (fb_ids) ou col F (ids_facebook) contient
+  //             un identifiant lié à un nom de IDS_FBK col A qui correspond au keyword.
+  //             Plus précisément : on exclut si la vidéo est déjà assignée à un profil
+  //             Facebook identifié (fb_ids non vide), SAUF si le keyword ne correspond
+  //             qu'à un prénom générique non présent dans IDS_FBK.
+  //             Règle scrupuleuse : si le texte des colonnes B/C/G/H/K contient un nom
+  //             complet de IDS_FBK col A (normalisé), la vidéo est exclue.
   if (request.method === 'GET' && action === 'searchVideos') {
     try {
       const query = (url.searchParams.get('q') || '').trim();
@@ -1171,8 +1176,8 @@ window.addEventListener('DOMContentLoaded',function(){openAdminM();swLoadAdminRe
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
 
-      // Normalisation unicode : supprime accents, passe en minuscules
-      const normalize = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      // Normalisation : supprime accents, passe en minuscules, trim
+      const normalize = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
       const qNorm = normalize(query);
 
       // Charger VIDEOS et IDS_FBK en parallèle
@@ -1184,26 +1189,25 @@ window.addEventListener('DOMContentLoaded',function(){openAdminM();swLoadAdminRe
 
       if (videosData.error) throw new Error(videosData.error.message);
 
-      // Construire la liste des noms Facebook normalisés (IDS_FBK col A, skip header)
+      // Liste des noms Facebook normalisés depuis IDS_FBK col A (skip header ligne 0)
       const fbkRows = (fbkData.values || []).slice(1);
-      // fbkNamesNorm : tableau de noms normalisés (ex: "cedric cazenave")
       const fbkNamesNorm = fbkRows
-        .map(row => normalize((row[0] || '').trim()))
+        .map(row => normalize(row[0] || ''))
         .filter(n => n.length > 0);
 
-      // Vérifie si un texte contient un nom Facebook complet (comme sous-chaîne délimitée par mot)
-      // On utilise une correspondance de mot entier pour éviter les faux positifs
-      const containsFbkName = (text) => {
+      // Vérifie si un texte de recherche contient un nom Facebook complet de la liste
+      // On cherche le nom comme sous-chaîne délimitée (mot complet ou séquence de mots)
+      // Délimiteurs acceptés : début/fin de chaîne, espace, ponctuation courante
+      const textContainsFbkName = (text) => {
         const tNorm = normalize(text);
+        if (!tNorm) return false;
         for (const fbName of fbkNamesNorm) {
           if (!fbName) continue;
-          // Cherche fbName comme séquence complète dans le texte
-          // On accepte les délimiteurs : début/fin de chaîne, espace, virgule, pipe, tiret
+          // Le nom Facebook doit être une correspondance "entière" dans le texte
+          // On accepte n'importe quel non-alphanumérique comme délimiteur
           const escaped = fbName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const re = new RegExp('(?:^|[\\s,|\\-])' + escaped + '(?:$|[\\s,|\\-])', '');
+          const re = new RegExp('(?:^|[^a-z0-9\u00c0-\u024f])' + escaped + '(?:$|[^a-z0-9\u00c0-\u024f])');
           if (re.test(tNorm)) return true;
-          // aussi correspondance exacte (si le texte IS le nom)
-          if (tNorm === fbName) return true;
         }
         return false;
       };
@@ -1213,37 +1217,42 @@ window.addEventListener('DOMContentLoaded',function(){openAdminM();swLoadAdminRe
 
       for (let rowIdx = 0; rowIdx < rows.length; rowIdx++) {
         const row = rows[rowIdx];
-        const youtube     = (row[0]  || '').trim();
-        const phrase      = (row[1]  || '').trim();   // col B
-        const personnes   = (row[2]  || '').trim();   // col C
-        const date        = (row[3]  || '').trim();
-        const fb_ids      = (row[4]  || '').trim();
-        const ids_facebook = (row[5] || '').trim();
-        const titre       = (row[6]  || '').trim();   // col G
-        const phrase2     = (row[7]  || '').trim();   // col H
-        const lieu        = (row[8]  || '').trim();
-        const colK        = (row[10] || '').trim();   // col K
-        const rowIndex    = rowIdx + 2;
+        const youtube      = (row[0]  || '').trim();
+        const phrase       = (row[1]  || '').trim();   // col B
+        const personnes    = (row[2]  || '').trim();   // col C
+        const date         = (row[3]  || '').trim();
+        const fb_ids       = (row[4]  || '').trim();   // col E
+        const ids_facebook = (row[5]  || '').trim();   // col F
+        const titre        = (row[6]  || '').trim();   // col G
+        const phrase2      = (row[7]  || '').trim();   // col H
+        const lieu         = (row[8]  || '').trim();
+        const colK         = (row[10] || '').trim();   // col K
+        const rowIndex     = rowIdx + 2;
 
         if (!youtube) continue;
 
-        // Les 5 colonnes dans lesquelles on cherche
+        // Les 5 colonnes dans lesquelles on cherche le mot-clé
         const searchFields = [phrase, personnes, titre, phrase2, colK];
 
-        // 1. Le mot-clé doit apparaître dans au moins l'une des colonnes B/C/G/H/K
-        const qMatches = searchFields.some(f => normalize(f).includes(qNorm));
-        if (!qMatches) continue;
+        // 1. Le mot-clé doit apparaître dans au moins une colonne (normalisé)
+        const matchesQuery = searchFields.some(f => normalize(f).includes(qNorm));
+        if (!matchesQuery) continue;
 
-        // 2. Exclusion : si l'une des colonnes B/C/G/H/K contient un nom Facebook complet
-        //    de IDS_FBK col A, on exclut la vidéo
-        const hasFbkName = searchFields.some(f => f && containsFbkName(f));
+        // 2. Exclusion : si l'une des colonnes B/C/G/H/K contient un nom Facebook
+        //    complet de IDS_FBK col A → vidéo exclue (elle appartient à un profil identifié)
+        const hasFbkName = searchFields.some(f => f && textContainsFbkName(f));
         if (hasFbkName) continue;
 
         videos.push({ youtube, phrase, personnes, date, fb_ids, ids_facebook, titre, phrase2, lieu, colK, rowIndex });
       }
 
       videos.sort((a, b) => {
-        const parseDate = d => { if (!d) return 0; const p = d.split('/'); if (p.length === 3) return new Date(p[2], p[1]-1, p[0]).getTime(); return 0; };
+        const parseDate = d => {
+          if (!d) return 0;
+          const p = d.split('/');
+          if (p.length === 3) return new Date(p[2], p[1]-1, p[0]).getTime();
+          return 0;
+        };
         return parseDate(b.date) - parseDate(a.date);
       });
 
