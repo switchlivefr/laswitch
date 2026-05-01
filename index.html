@@ -4942,7 +4942,7 @@ function adminTap() {
       if (currentPage === 'p-prestas') checkFbSession();
     }
     var t = document.createElement('div');
-    t.innerHTML = _adminMode ? '🔧 ADMIN' : '👤 UTILISATEUR';
+    t.innerHTML = _adminMode ? '🔧 ADMIN' : '<span style="filter:brightness(0) invert(1);font-style:normal">👤</span> UTILISATEUR';
     t.style.cssText = 'position:fixed;top:130px;left:50%;transform:translateX(-50%);background:' + (_adminMode ? '#e53935' : '#1877f2') + ';color:#fff;padding:10px 24px;border-radius:20px;font-size:15px;font-weight:700;z-index:9999;font-family:DM Sans,sans-serif;white-space:nowrap';
     document.body.appendChild(t);
     setTimeout(function(){ if(t.parentNode)t.parentNode.removeChild(t); }, 3000);
