@@ -4004,6 +4004,14 @@ function fbLogout() {
   window._swLoaded = false;
   // Arrêter tout polling en cours
   if (typeof _swPendingPollTimer !== 'undefined' && _swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
+  // Effacer les clés nv_ liées au fbId AVANT de nullifier NV.fbId
+  var _logoutFbId = NV.fbId || localStorage.getItem('sw_fbId');
+  if (_logoutFbId) {
+    localStorage.removeItem('nv_snap_' + _logoutFbId);
+    localStorage.removeItem('nv_seen_date_' + _logoutFbId);
+    localStorage.removeItem('nv_count_' + _logoutFbId);
+    console.log('fbLogout — clés nv_ effacées pour fbId=' + _logoutFbId);
+  }
   localStorage.removeItem('sw_token');
   localStorage.removeItem('sw_name');
   localStorage.removeItem('sw_fbId');
@@ -4979,6 +4987,14 @@ function swChangeAccount() {
   var pending = document.getElementById('m-sw-pending');
   if (pending && pending.classList.contains('open')) closeM('m-sw-pending');
   // Effacer les données de session (déconnexion complète)
+  // Effacer les clés nv_ liées au fbId AVANT de nullifier NV.fbId
+  var _logoutFbId = NV.fbId || localStorage.getItem('sw_fbId');
+  if (_logoutFbId) {
+    localStorage.removeItem('nv_snap_' + _logoutFbId);
+    localStorage.removeItem('nv_seen_date_' + _logoutFbId);
+    localStorage.removeItem('nv_count_' + _logoutFbId);
+    console.log('swChangeAccount — clés nv_ effacées pour fbId=' + _logoutFbId);
+  }
   localStorage.removeItem('sw_token');
   localStorage.removeItem('sw_name');
   localStorage.removeItem('sw_fbId');
