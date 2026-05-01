@@ -1107,16 +1107,6 @@ var NV = {
             }
             // Période encore active : restaurer depuis Sheets dans localStorage
             var restoredYtIds = parsed.ytIds || [];
-            // Détection corruption : si tous les ytIds Sheets sont déjà dans currentYtIds
-            // ET qu'il n'y a pas de snap.ids de référence, c'est suspect — on ignore
-            var corrompu = restoredYtIds.length > 0 && restoredYtIds.length === currentYtIds.length &&
-              restoredYtIds.every(function(id){ return currentYtIds.indexOf(id) !== -1; });
-            if (corrompu) {
-              console.log('NV.checkBlink — données Sheets corrompues (= toutes vidéos), réinitialisation');
-              NV._saveSnapshot(fbId, videos);
-              NV.newYtIds = [];
-              return false;
-            }
             var extra = NV._calcNewIds(restoredYtIds, currentYtIds);
             extra.forEach(function(id){ if(restoredYtIds.indexOf(id)===-1) restoredYtIds.push(id); });
             NV.newYtIds = restoredYtIds;
@@ -1151,18 +1141,8 @@ var NV = {
 
     // Période encore active : restaurer les newYtIds sauvegardés + détecter d'éventuelles nouvelles
     if (NV._blinkStillActive(seenDate) && snap.newYtIds && snap.newYtIds.length) {
-      // Détection corruption : si tous les newYtIds étaient déjà dans snap.ids, le snap est corrompu
-      // (newYtIds ne doit contenir que des ids ABSENTS de snap.ids)
-      var snapIds = snap.ids || [];
-      var corrompu = snap.newYtIds.length > 0 && snap.newYtIds.every(function(id){ return snapIds.indexOf(id) !== -1; });
-      if (corrompu) {
-        console.log('NV.checkBlink — snap corrompu détecté (newYtIds ⊆ ids), réinitialisation');
-        NV._saveSnapshot(fbId, videos);
-        NV.newYtIds = [];
-        return;
-      }
       var restored = snap.newYtIds.slice();
-      var extra = NV._calcNewIds(snapIds, currentYtIds);
+      var extra = NV._calcNewIds(snap.ids || [], currentYtIds);
       extra.forEach(function(id){ if(restored.indexOf(id)===-1) restored.push(id); });
       // Filtrer : ne garder que les ytIds encore présents dans les vidéos de cet utilisateur
       NV.newYtIds = restored.filter(function(id){ return currentYtIds.indexOf(id) !== -1; });
@@ -1173,11 +1153,6 @@ var NV = {
     // Cas normal : calculer les nouveaux ytIds
     var savedIds = snap.ids || [];
     NV.newYtIds = NV._calcNewIds(savedIds, currentYtIds);
-    // Fallback si désync
-    if (NV.hasNew && NV.newYtIds.length === 0) {
-      NV.newYtIds = currentYtIds.slice(0, NV.diff);
-      console.log('NV.checkBlink — FALLBACK newYtIds=['+NV.newYtIds.join(',')+']');
-    }
     // Filtrer : ne garder que les ytIds encore présents dans les vidéos de cet utilisateur
     NV.newYtIds = NV.newYtIds.filter(function(id){ return currentYtIds.indexOf(id) !== -1; });
     console.log('NV.checkBlink — newYtIds=['+NV.newYtIds.join(',')+']');
