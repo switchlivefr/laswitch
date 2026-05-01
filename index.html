@@ -6016,7 +6016,13 @@ function _startPendingPoll(token, name) {
 }
 
 function checkFbSession() {
-  if (_adminMode) return;
+  if (_adminMode) {
+    // En mode admin, masquer les panneaux utilisateur qui n'ont rien à faire ici
+    ['prestas-nologin','prestas-nofriend','prestas-empty','prestas-loading'].forEach(function(id){
+      var el = document.getElementById(id); if (el) el.style.display = 'none';
+    });
+    return;
+  }
   if (window._swLoaded) return;
   // Déconnexion volontaire : ne pas reconnecter automatiquement
   if (localStorage.getItem('sw_disconnected') === '1') {
