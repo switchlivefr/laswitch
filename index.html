@@ -4004,14 +4004,16 @@ function fbLogout() {
   window._swLoaded = false;
   // Arrêter tout polling en cours
   if (typeof _swPendingPollTimer !== 'undefined' && _swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
-  // Effacer les clés nv_ liées au fbId AVANT de nullifier NV.fbId
-  var _logoutFbId = NV.fbId || localStorage.getItem('sw_fbId');
-  if (_logoutFbId) {
-    localStorage.removeItem('nv_snap_' + _logoutFbId);
-    localStorage.removeItem('nv_seen_date_' + _logoutFbId);
-    localStorage.removeItem('nv_count_' + _logoutFbId);
-    console.log('fbLogout — clés nv_ effacées pour fbId=' + _logoutFbId);
+  // Purger TOUTES les clés nv_ (snap, seen_date, count) — sans dépendre de NV.fbId
+  var _nvKeys = [];
+  for (var _i = 0; _i < localStorage.length; _i++) {
+    var _k = localStorage.key(_i);
+    if (_k && (_k.indexOf('nv_snap_') === 0 || _k.indexOf('nv_seen_date_') === 0 || _k.indexOf('nv_count_') === 0)) {
+      _nvKeys.push(_k);
+    }
   }
+  _nvKeys.forEach(function(k){ localStorage.removeItem(k); });
+  console.log('fbLogout — clés nv_ purgées: ' + _nvKeys.join(', '));
   localStorage.removeItem('sw_token');
   localStorage.removeItem('sw_name');
   localStorage.removeItem('sw_fbId');
@@ -4987,14 +4989,16 @@ function swChangeAccount() {
   var pending = document.getElementById('m-sw-pending');
   if (pending && pending.classList.contains('open')) closeM('m-sw-pending');
   // Effacer les données de session (déconnexion complète)
-  // Effacer les clés nv_ liées au fbId AVANT de nullifier NV.fbId
-  var _logoutFbId = NV.fbId || localStorage.getItem('sw_fbId');
-  if (_logoutFbId) {
-    localStorage.removeItem('nv_snap_' + _logoutFbId);
-    localStorage.removeItem('nv_seen_date_' + _logoutFbId);
-    localStorage.removeItem('nv_count_' + _logoutFbId);
-    console.log('swChangeAccount — clés nv_ effacées pour fbId=' + _logoutFbId);
+  // Purger TOUTES les clés nv_ (snap, seen_date, count) — sans dépendre de NV.fbId
+  var _nvKeys = [];
+  for (var _i = 0; _i < localStorage.length; _i++) {
+    var _k = localStorage.key(_i);
+    if (_k && (_k.indexOf('nv_snap_') === 0 || _k.indexOf('nv_seen_date_') === 0 || _k.indexOf('nv_count_') === 0)) {
+      _nvKeys.push(_k);
+    }
   }
+  _nvKeys.forEach(function(k){ localStorage.removeItem(k); });
+  console.log('swChangeAccount — clés nv_ purgées: ' + _nvKeys.join(', '));
   localStorage.removeItem('sw_token');
   localStorage.removeItem('sw_name');
   localStorage.removeItem('sw_fbId');
