@@ -148,7 +148,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:repeat
 .stitle{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--white);display:flex;align-items:center;gap:5px;padding-left:8px;margin-top:2px}
 .stag{font-size:11px;color:var(--cyan);background:var(--cdim);border:1px solid rgba(52,209,192,.2);border-radius:4px;padding:1px 4px;white-space:nowrap;flex-shrink:0}
 .sart{font-size:11px;color:var(--gold);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.scol-i{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1px;color:var(--pink);flex-shrink:0;text-align:right;min-width:38px;max-width:64px}
+.scol-i{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1px;color:#ff85b3;flex-shrink:0;text-align:right;min-width:38px;max-width:64px}
 .stitle-grey{color:var(--muted2) !important}
 .sdot{width:4px;height:4px;border-radius:50%;background:var(--border2);flex-shrink:0}
 .cc-wrap{padding:0 16px;margin-bottom:10px}
@@ -4942,8 +4942,8 @@ function adminTap() {
       if (currentPage === 'p-prestas') checkFbSession();
     }
     var t = document.createElement('div');
-    t.textContent = _adminMode ? '🔧 MODE ADMIN ACTIF' : '👤 MODE UTILISATEUR';
-    t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:' + (_adminMode ? '#e53935' : '#1877f2') + ';color:#fff;padding:10px 24px;border-radius:20px;font-size:15px;font-weight:700;z-index:9999;font-family:DM Sans,sans-serif';
+    t.innerHTML = _adminMode ? '🔧 ADMIN' : '👤 UTILISATEUR';
+    t.style.cssText = 'position:fixed;top:130px;left:50%;transform:translateX(-50%);background:' + (_adminMode ? '#e53935' : '#1877f2') + ';color:#fff;padding:10px 24px;border-radius:20px;font-size:15px;font-weight:700;z-index:9999;font-family:DM Sans,sans-serif;white-space:nowrap';
     document.body.appendChild(t);
     setTimeout(function(){ if(t.parentNode)t.parentNode.removeChild(t); }, 3000);
   }
