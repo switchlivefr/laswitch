@@ -1143,11 +1143,10 @@ var NV = {
     if (NV._blinkStillActive(seenDate) && snap.newYtIds && snap.newYtIds.length) {
       var restored = snap.newYtIds.slice();
       // Ne calculer les "extra" que si snap.ids est fiable (non vide)
-      // Si ids est vide (snapshot reconstitué depuis Sheets), on ne peut pas détecter de nouvelles
       if (snap.ids && snap.ids.length > 0) {
         var extra = NV._calcNewIds(snap.ids, currentYtIds);
         extra.forEach(function(id){ if(restored.indexOf(id)===-1) restored.push(id); });
-        console.log('NV.checkBlink — période active, extra=['+extra.join(',')+']');
+        console.log('NV.checkBlink — période active extra=['+extra.join(',')+']');
       }
       // Filtrer : ne garder que les ytIds encore présents dans les vidéos de cet utilisateur
       NV.newYtIds = restored.filter(function(id){ return currentYtIds.indexOf(id) !== -1; });
@@ -1199,16 +1198,16 @@ var NV = {
     var seenDate = localStorage.getItem('nv_seen_date_' + fbId);
     var name = localStorage.getItem('sw_name') || '';
     if (NV._blinkStillActive(seenDate)) {
-      // Période active : mettre à jour newYtIds ET ids dans le snapshot
+      // Période active : mettre à jour newYtIds ET ids (pour fiabiliser les prochains checkBlink)
       var snapRaw = localStorage.getItem(NV._snapKey(fbId));
       if (snapRaw) {
         try {
           var snap = JSON.parse(snapRaw);
-          snap.newYtIds = NV.newYtIds;  // fusionnés par checkBlink
-          snap.ids = videos.map(function(v){ return extractYtId(v.youtube); }).filter(Boolean); // ids fiables
+          snap.newYtIds = NV.newYtIds;
+          snap.ids = videos.map(function(v){ return extractYtId(v.youtube); }).filter(Boolean);
           snap.count = videos.length;
           localStorage.setItem(NV._snapKey(fbId), JSON.stringify(snap));
-          console.log('NV.saveBlink — période active, newYtIds mis à jour=['+NV.newYtIds.join(',')+']');
+          console.log('NV.saveBlink — période active, newYtIds=['+NV.newYtIds.join(',')+'] ids mis à jour');
         } catch(e) {}
       }
       // Persister la mise à jour des ytIds en Sheets
@@ -5760,10 +5759,18 @@ function swAccVerifyPinConnect(pin) {
             if (raw && NV.fbId) {
               var parsed = NV._parseBlinkData(raw);
               if (parsed && NV._blinkStillActive(parsed.seenDate)) {
-                var snap = { count: 0, ids: [], newYtIds: parsed.ytIds || [] };
-                localStorage.setItem(NV._snapKey(NV.fbId), JSON.stringify(snap));
-                localStorage.setItem('nv_seen_date_' + NV.fbId, parsed.seenDate);
-                console.log('PIN connect — blink restauré depuis Sheets, newYtIds=[' + (parsed.ytIds||[]).join(',') + ']');
+                // Ne restaurer depuis Sheets que si aucun snapshot local valide n'existe déjà
+                // (évite d'écraser un snap existant avec ids:[] ce qui ferait clignoter toutes les vidéos)
+                var existingSnap = localStorage.getItem(NV._snapKey(NV.fbId));
+                var existingDate = localStorage.getItem('nv_seen_date_' + NV.fbId);
+                if (!existingSnap || !NV._blinkStillActive(existingDate)) {
+                  var snap = { count: 0, ids: parsed.ytIds || [], newYtIds: parsed.ytIds || [] };
+                  localStorage.setItem(NV._snapKey(NV.fbId), JSON.stringify(snap));
+                  localStorage.setItem('nv_seen_date_' + NV.fbId, parsed.seenDate);
+                  console.log('PIN connect — blink restauré depuis Sheets, newYtIds=[' + (parsed.ytIds||[]).join(',') + ']');
+                } else {
+                  console.log('PIN connect — snap local valide trouvé, pas de restauration Sheets');
+                }
               }
             }
             loadPrestas(fakeMe);
