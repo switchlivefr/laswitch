@@ -5682,25 +5682,7 @@ function swAccVerifyPinConnect(pin) {
         swAccCleanupAndClose();
         nav('p-prestas');
         var fakeMe = { id: data.fbId || '', name: _swAccName, first_name: _swAccName.split(' ')[0] };
-        // Assigner NV.fbId maintenant — indispensable pour que checkBlink tourne dans loadPrestas
-        NV.fbId = data.fbId || '';
-        // Restaurer les données de clignotement depuis Sheets (col J) avant loadPrestas
-        fetch('/api?action=getBlinkData&name=' + encodeURIComponent(_swAccName.toLowerCase()))
-          .then(function(r){ return r.json(); })
-          .then(function(bd){
-            var raw = (bd && bd.data) ? bd.data.trim() : '';
-            if (raw && NV.fbId) {
-              var parsed = NV._parseBlinkData(raw);
-              if (parsed && NV._blinkStillActive(parsed.seenDate)) {
-                var snap = { count: 0, ids: [], newYtIds: parsed.ytIds || [] };
-                localStorage.setItem(NV._snapKey(NV.fbId), JSON.stringify(snap));
-                localStorage.setItem('nv_seen_date_' + NV.fbId, parsed.seenDate);
-                console.log('PIN connect — blink restauré depuis Sheets, newYtIds=[' + (parsed.ytIds||[]).join(',') + ']');
-              }
-            }
-            loadPrestas(fakeMe);
-          })
-          .catch(function(){ loadPrestas(fakeMe); });
+        loadPrestas(fakeMe);
       } else if (data.reason === 'not_validated') {
         // PIN correct MAIS Marco n'a pas encore validé → afficher écran inline + polling
         swAccHideLoading();
