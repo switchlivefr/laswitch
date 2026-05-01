@@ -1107,6 +1107,16 @@ var NV = {
             }
             // Période encore active : restaurer depuis Sheets dans localStorage
             var restoredYtIds = parsed.ytIds || [];
+            // Détection corruption : si tous les ytIds Sheets sont déjà dans currentYtIds
+            // ET qu'il n'y a pas de snap.ids de référence, c'est suspect — on ignore
+            var corrompu = restoredYtIds.length > 0 && restoredYtIds.length === currentYtIds.length &&
+              restoredYtIds.every(function(id){ return currentYtIds.indexOf(id) !== -1; });
+            if (corrompu) {
+              console.log('NV.checkBlink — données Sheets corrompues (= toutes vidéos), réinitialisation');
+              NV._saveSnapshot(fbId, videos);
+              NV.newYtIds = [];
+              return false;
+            }
             var extra = NV._calcNewIds(restoredYtIds, currentYtIds);
             extra.forEach(function(id){ if(restoredYtIds.indexOf(id)===-1) restoredYtIds.push(id); });
             NV.newYtIds = restoredYtIds;
@@ -1141,8 +1151,18 @@ var NV = {
 
     // Période encore active : restaurer les newYtIds sauvegardés + détecter d'éventuelles nouvelles
     if (NV._blinkStillActive(seenDate) && snap.newYtIds && snap.newYtIds.length) {
+      // Détection corruption : si tous les newYtIds étaient déjà dans snap.ids, le snap est corrompu
+      // (newYtIds ne doit contenir que des ids ABSENTS de snap.ids)
+      var snapIds = snap.ids || [];
+      var corrompu = snap.newYtIds.length > 0 && snap.newYtIds.every(function(id){ return snapIds.indexOf(id) !== -1; });
+      if (corrompu) {
+        console.log('NV.checkBlink — snap corrompu détecté (newYtIds ⊆ ids), réinitialisation');
+        NV._saveSnapshot(fbId, videos);
+        NV.newYtIds = [];
+        return;
+      }
       var restored = snap.newYtIds.slice();
-      var extra = NV._calcNewIds(snap.ids || [], currentYtIds);
+      var extra = NV._calcNewIds(snapIds, currentYtIds);
       extra.forEach(function(id){ if(restored.indexOf(id)===-1) restored.push(id); });
       // Filtrer : ne garder que les ytIds encore présents dans les vidéos de cet utilisateur
       NV.newYtIds = restored.filter(function(id){ return currentYtIds.indexOf(id) !== -1; });
@@ -3998,28 +4018,12 @@ function fbLogin() {
   }, { scope: 'public_profile' });
 }
 
-// Purge des données blink dans le localStorage uniquement à la déconnexion
-// NE TOUCHE PAS au Sheets (col J doit rester pour restauration sur autre appareil)
-function _nvClearAll() {
-  var _toRemove = [];
-  for (var _i = 0; _i < localStorage.length; _i++) {
-    var _k = localStorage.key(_i);
-    if (_k && (_k.indexOf('nv_snap_') === 0 || _k.indexOf('nv_seen_date_') === 0 || _k.indexOf('nv_count_') === 0)) {
-      _toRemove.push(_k);
-    }
-  }
-  _toRemove.forEach(function(k) { localStorage.removeItem(k); });
-  console.log('_nvClearAll — localStorage purgé: ' + (_toRemove.length ? _toRemove.join(', ') : 'rien'));
-}
-
 function fbLogout() {
   stopPrestasVideo();
   _fbUser = null;
   window._swLoaded = false;
   // Arrêter tout polling en cours
   if (typeof _swPendingPollTimer !== 'undefined' && _swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
-  // Purger les clés nv_ du localStorage AVANT de nullifier NV.fbId
-  _nvClearAll();
   localStorage.removeItem('sw_token');
   localStorage.removeItem('sw_name');
   localStorage.removeItem('sw_fbId');
@@ -4995,8 +4999,6 @@ function swChangeAccount() {
   var pending = document.getElementById('m-sw-pending');
   if (pending && pending.classList.contains('open')) closeM('m-sw-pending');
   // Effacer les données de session (déconnexion complète)
-  // Purger les clés nv_ du localStorage AVANT de nullifier NV.fbId
-  _nvClearAll();
   localStorage.removeItem('sw_token');
   localStorage.removeItem('sw_name');
   localStorage.removeItem('sw_fbId');
