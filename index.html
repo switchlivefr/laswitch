@@ -4633,8 +4633,11 @@ function renderVideoList(videos, onDone) {
       function startVideo() {
         if (!capturedYtId) return;
 
-        // Fermer l'autre carte ouverte avec animation simultanée
-        if (window._prestasOpenCardData && window._prestasOpenCardData.card !== capturedCard) {
+        var prevData = window._prestasOpenCardData;
+        var closingDifferent = prevData && prevData.card !== capturedCard;
+
+        // Fermer l'autre carte si différente
+        if (closingDifferent) {
           closePrestasOpenCard(false);
         }
 
@@ -4655,9 +4658,14 @@ function renderVideoList(videos, onDone) {
         capturedThumb.appendChild(container);
         window._prestasActiveThumb = capturedThumb;
 
-        // Ouvrir l'espace avec animation 0.5s
+        // Forcer le reflow pour que les deux transitions démarrent dans le même frame
+        capturedThumb.style.transition = 'none';
+        capturedThumb.style.maxHeight = '0px';
+        capturedThumb.style.opacity = '0';
+        capturedThumb.getBoundingClientRect(); // force reflow
+
+        // Lancer l'ouverture dans le même frame que la fermeture
         capturedThumb.style.transition = 'max-height 0.5s ease, opacity 0.4s ease';
-        // hauteur cible = 56.25vw (aspect-ratio 16/9, largeur = 100% de la carte)
         capturedThumb.style.maxHeight = '56.25vw';
         capturedThumb.style.opacity = '1';
 
