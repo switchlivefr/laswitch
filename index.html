@@ -1153,11 +1153,6 @@ var NV = {
     // Cas normal : calculer les nouveaux ytIds
     var savedIds = snap.ids || [];
     NV.newYtIds = NV._calcNewIds(savedIds, currentYtIds);
-    // Fallback si désync
-    if (NV.hasNew && NV.newYtIds.length === 0) {
-      NV.newYtIds = currentYtIds.slice(0, NV.diff);
-      console.log('NV.checkBlink — FALLBACK newYtIds=['+NV.newYtIds.join(',')+']');
-    }
     // Filtrer : ne garder que les ytIds encore présents dans les vidéos de cet utilisateur
     NV.newYtIds = NV.newYtIds.filter(function(id){ return currentYtIds.indexOf(id) !== -1; });
     console.log('NV.checkBlink — newYtIds=['+NV.newYtIds.join(',')+']');
@@ -4004,23 +3999,6 @@ function fbLogout() {
   window._swLoaded = false;
   // Arrêter tout polling en cours
   if (typeof _swPendingPollTimer !== 'undefined' && _swPendingPollTimer) { clearInterval(_swPendingPollTimer); _swPendingPollTimer = null; }
-  // Effacer col J Sheets + clés nv_ localStorage — AVANT de perdre sw_name et fbId
-  var _logoutName = localStorage.getItem('sw_name') || '';
-  var _logoutFbId = NV.fbId || localStorage.getItem('sw_fbId') || '';
-  if (_logoutName) {
-    fetch('/api?action=setBlinkData', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: _logoutName.toLowerCase(), data: '' })
-    }).catch(function(){});
-    console.log('fbLogout — col J Sheets effacée pour: ' + _logoutName);
-  }
-  if (_logoutFbId) {
-    localStorage.removeItem('nv_snap_' + _logoutFbId);
-    localStorage.removeItem('nv_seen_date_' + _logoutFbId);
-    localStorage.removeItem('nv_count_' + _logoutFbId);
-    console.log('fbLogout — clés nv_ localStorage effacées pour fbId: ' + _logoutFbId);
-  }
   localStorage.removeItem('sw_token');
   localStorage.removeItem('sw_name');
   localStorage.removeItem('sw_fbId');
@@ -4996,23 +4974,6 @@ function swChangeAccount() {
   var pending = document.getElementById('m-sw-pending');
   if (pending && pending.classList.contains('open')) closeM('m-sw-pending');
   // Effacer les données de session (déconnexion complète)
-  // Effacer col J Sheets + clés nv_ localStorage — AVANT de perdre sw_name et fbId
-  var _logoutName = localStorage.getItem('sw_name') || '';
-  var _logoutFbId = NV.fbId || localStorage.getItem('sw_fbId') || '';
-  if (_logoutName) {
-    fetch('/api?action=setBlinkData', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: _logoutName.toLowerCase(), data: '' })
-    }).catch(function(){});
-    console.log('swChangeAccount — col J Sheets effacée pour: ' + _logoutName);
-  }
-  if (_logoutFbId) {
-    localStorage.removeItem('nv_snap_' + _logoutFbId);
-    localStorage.removeItem('nv_seen_date_' + _logoutFbId);
-    localStorage.removeItem('nv_count_' + _logoutFbId);
-    console.log('swChangeAccount — clés nv_ localStorage effacées pour fbId: ' + _logoutFbId);
-  }
   localStorage.removeItem('sw_token');
   localStorage.removeItem('sw_name');
   localStorage.removeItem('sw_fbId');
